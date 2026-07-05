@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Kayıt Başarılı";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <style>
+        .sqm-success-ring {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            background: rgba(212, 165, 116, 0.1);
+            border: 2px dashed var(--sqm-gold);
+            color: var(--sqm-gold);
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            animation: spin 12deg linear infinite;
+        }
+
+        .sqm-feedback-text {
+            color: var(--sqm-cream-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+    </style>
+}
+
+<section class="sqm-auth">
+
+   
+
+    <div class="sqm-auth-card" style="text-align: center;">
+        <div class="sqm-success-ring">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        </div>
+
+        <h1 class="sqm-auth-title">@TempData["RegisteredUserName"] KullanıcıAdı ile Kaydınız Oluşturuldu</h1>
+        <p class="sqm-feedback-text">
+            Hesabınız başarıyla oluşturulmuştur. Akıllı QR Menü sistemini ve yerel yapay zeka asistanını kullanabilmek
+            için lütfen hesabınıza giriş yapın.
+        </p>
+
+        <a asp-controller="Account" asp-action="Login" class="sqm-auth-submit" style="text-decoration: none;">
+            <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+            Giriş Sayfasına Git
+        </a>
+    </div>
+</section>

@@ -1,0 +1,86 @@
+@model UserLoginDto
+@{
+    ViewData["Title"] = "Giriş Yap";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+}
+
+<section class="sqm-auth">
+    <div class="sqm-auth-bg"></div>
+    <div class="sqm-auth-grid"></div>
+
+    <div class="sqm-auth-card">
+        <div class="sqm-auth-icon">
+            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        </div>
+
+        <h1 class="sqm-auth-title">Tekrar hoş geldiniz</h1>
+        <p class="sqm-auth-subtitle">Hesabınıza giriş yaparak devam edin.</p>
+
+        <form asp-controller="Account" asp-action="Login" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="sqm-auth-summary"></div>
+
+            <div class="sqm-field">
+                <label asp-for="UserName" class="sqm-label">Kullanıcı Adı</label>
+                <div class="sqm-input-wrap">
+                    <i class="fa-solid fa-user sqm-input-icon" aria-hidden="true"></i>
+                    <input asp-for="UserName" class="sqm-input" placeholder="kullanici.adi" autocomplete="username"
+                           autofocus />
+                </div>
+                <span asp-validation-for="UserName" class="sqm-field-validation"></span>
+            </div>
+
+            <div class="sqm-field">
+                <label asp-for="Password" class="sqm-label">Şifre</label>
+                <div class="sqm-input-wrap">
+                    <i class="fa-solid fa-key sqm-input-icon" aria-hidden="true"></i>
+                    <input asp-for="Password" type="password" class="sqm-input" placeholder="••••••••"
+                           autocomplete="current-password" id="sqmPassword" />
+                    <button type="button" class="sqm-toggle-pass" id="sqmTogglePass" aria-label="Şifreyi göster">
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="Password" class="sqm-field-validation"></span>
+            </div>
+
+            <div class="sqm-auth-row">
+                <label class="sqm-check">
+                    <input asp-for="RememberMe" type="checkbox" />
+                    Beni hatırla
+                </label>
+                <a href="#" class="sqm-link">Şifremi unuttum</a>
+            </div>
+
+            <button type="submit" class="sqm-auth-submit">
+                <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                Giriş Yap
+            </button>
+
+            <div class="sqm-auth-divider">veya</div>
+
+            <p class="sqm-auth-footer">
+                Hesabınız yok mu?
+                <a asp-controller="Account" asp-action="Register" class="sqm-link">Kayıt olun</a>
+            </p>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const toggle = document.getElementById('sqmTogglePass');
+            const input = document.getElementById('sqmPassword');
+            if (!toggle || !input) return;
+            toggle.addEventListener('click', function () {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                toggle.querySelector('i').className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+                toggle.setAttribute('aria-label', isHidden ? 'Şifreyi gizle' : 'Şifreyi göster');
+            });
+        })();
+    </script>
+}

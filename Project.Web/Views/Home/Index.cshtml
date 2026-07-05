@@ -1,0 +1,469 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+@section Styles {
+    <style>
+        .sqm-hero {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            display: flex;
+            align-items: center;
+            padding: 3rem 0 4rem;
+            overflow: hidden;
+        }
+
+        .sqm-hero-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212, 165, 116, 0.18), transparent),
+                radial-gradient(ellipse 50% 40% at 90% 80%, rgba(212, 165, 116, 0.08), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(245, 240, 232, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(245, 240, 232, 0.03) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black, transparent);
+            z-index: 0;
+        }
+
+        .sqm-hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sqm-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 2rem;
+            background: rgba(212, 165, 116, 0.12);
+            border: 1px solid rgba(212, 165, 116, 0.25);
+            color: #d4a574;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            animation: sqm-fade-up 0.6s ease both;
+        }
+
+        .sqm-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #d4a574;
+            animation: sqm-pulse 2s ease infinite;
+        }
+
+        .sqm-title {
+            font-size: clamp(2.25rem, 8vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -0.03em;
+            color: #f5f0e8;
+            margin: 1.25rem 0 0.75rem;
+            animation: sqm-fade-up 0.6s 0.1s ease both;
+        }
+
+        .sqm-title-accent {
+            background: linear-gradient(135deg, #f5f0e8 30%, #d4a574 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sqm-subtitle {
+            font-size: clamp(1.05rem, 3.5vw, 1.45rem);
+            font-weight: 400;
+            color: #c8c0b4;
+            max-width: 32rem;
+            line-height: 1.55;
+            animation: sqm-fade-up 0.6s 0.2s ease both;
+        }
+
+        .sqm-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 2rem;
+            animation: sqm-fade-up 0.6s 0.3s ease both;
+        }
+
+        .sqm-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.625rem;
+            background: linear-gradient(135deg, #d4a574, #b8895a);
+            color: #121214;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sqm-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212, 165, 116, 0.35);
+            color: #121214;
+        }
+
+        .sqm-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.625rem;
+            background: transparent;
+            color: #f5f0e8;
+            font-weight: 500;
+            font-size: 0.95rem;
+            text-decoration: none;
+            border: 1px solid rgba(245, 240, 232, 0.2);
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .sqm-btn-outline:hover {
+            border-color: rgba(212, 165, 116, 0.5);
+            background: rgba(212, 165, 116, 0.08);
+            color: #f5f0e8;
+        }
+
+        .sqm-hero-visual {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 280px;
+            animation: sqm-fade-up 0.7s 0.25s ease both;
+        }
+
+        .sqm-orbit {
+            position: relative;
+            width: min(320px, 80vw);
+            height: min(320px, 80vw);
+        }
+
+        .sqm-orbit-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1px dashed rgba(212, 165, 116, 0.25);
+            animation: sqm-spin 20s linear infinite;
+        }
+
+        .sqm-orbit-ring:nth-child(2) {
+            inset: 12%;
+            animation-direction: reverse;
+            animation-duration: 15s;
+        }
+
+        .sqm-orbit-center {
+            position: absolute;
+            inset: 22%;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid rgba(245, 240, 232, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+        }
+
+        .sqm-orbit-center i {
+            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            color: #d4a574;
+        }
+
+        .sqm-orbit-center span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #c8c0b4;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .sqm-orbit-icon {
+            position: absolute;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            background: #252528;
+            border: 1px solid rgba(245, 240, 232, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            color: #d4a574;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .sqm-orbit-icon--ai {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: sqm-float 3s ease-in-out infinite;
+        }
+
+        .sqm-orbit-icon--qr {
+            bottom: 5%;
+            left: 5%;
+            animation: sqm-float 3s 0.5s ease-in-out infinite;
+        }
+
+        .sqm-orbit-icon--food {
+            bottom: 5%;
+            right: 5%;
+            animation: sqm-float 3s 1s ease-in-out infinite;
+        }
+
+        .sqm-features {
+            padding: 4rem 0 5rem;
+            background: #1c1c1f;
+            border-top: 1px solid rgba(245, 240, 232, 0.06);
+        }
+
+        .sqm-section-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #d4a574;
+            margin-bottom: 0.5rem;
+        }
+
+        .sqm-section-title {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 700;
+            color: #f5f0e8;
+            margin-bottom: 2.5rem;
+        }
+
+        .sqm-feature-card {
+            height: 100%;
+            padding: 1.75rem;
+            border-radius: 1rem;
+            background: #252528;
+            border: 1px solid rgba(245, 240, 232, 0.06);
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .sqm-feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(212, 165, 116, 0.25);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .sqm-feature-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .sqm-feature-icon--ai {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+        }
+
+        .sqm-feature-icon--qr {
+            background: rgba(212, 165, 116, 0.15);
+            color: #d4a574;
+        }
+
+        .sqm-feature-icon--menu {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+        }
+
+        .sqm-feature-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f5f0e8;
+            margin-bottom: 0.5rem;
+        }
+
+        .sqm-feature-card p {
+            font-size: 0.9rem;
+            color: #c8c0b4;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        @@keyframes sqm-fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes sqm-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @@keyframes sqm-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @@keyframes sqm-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .sqm-orbit-icon--ai {
+            animation: sqm-float-ai 3s ease-in-out infinite;
+        }
+
+        .sqm-orbit-icon--qr {
+            animation: sqm-float-qr 3s 0.5s ease-in-out infinite;
+        }
+
+        .sqm-orbit-icon--food {
+            animation: sqm-float-food 3s 1s ease-in-out infinite;
+        }
+
+        @@keyframes sqm-float-ai {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-8px); }
+        }
+
+        @@keyframes sqm-float-qr {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @@keyframes sqm-float-food {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+    </style>
+}
+
+<section class="sqm-hero">
+    <div class="sqm-hero-bg"></div>
+    <div class="sqm-hero-grid"></div>
+
+    <div class="container sqm-hero-content">
+        <div class="row align-items-center gy-5">
+            <div class="col-12 col-lg-6">
+                <div class="sqm-badge">
+                    <span class="sqm-badge-dot" aria-hidden="true"></span>
+                    Yapay Zeka Destekli Menü
+                </div>
+
+                <h1 class="sqm-title">
+                    <span class="sqm-title-accent">Smart QR</span> Menu
+                </h1>
+
+                <p class="sqm-subtitle">
+                    Menünüz artık konuşuyor!
+                </p>
+
+                <div class="sqm-hero-actions">
+                    <a href="#" class="sqm-btn-primary">
+                        <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+                        Menüyü Keşfet
+                    </a>
+                    <a href="#ozellikler" class="sqm-btn-outline">
+                        <i class="fa-solid fa-circle-play" aria-hidden="true"></i>
+                        Nasıl Çalışır?
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="sqm-hero-visual" aria-hidden="true">
+                    <div class="sqm-orbit">
+                        <div class="sqm-orbit-ring"></div>
+                        <div class="sqm-orbit-ring"></div>
+
+                        <div class="sqm-orbit-icon sqm-orbit-icon--ai">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="sqm-orbit-icon sqm-orbit-icon--qr">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </div>
+                        <div class="sqm-orbit-icon sqm-orbit-icon--food">
+                            <i class="fa-solid fa-utensils"></i>
+                        </div>
+
+                        <div class="sqm-orbit-center">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Smart Menu</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="sqm-features" id="ozellikler">
+    <div class="container">
+        <p class="sqm-section-label text-center">Teknoloji</p>
+        <h2 class="sqm-section-title text-center">Gastronomi ile teknoloji buluşuyor</h2>
+
+        <div class="row g-4">
+            <div class="col-12 col-md-4">
+                <article class="sqm-feature-card">
+                    <div class="sqm-feature-icon sqm-feature-icon--ai">
+                        <i class="fa-solid fa-robot" aria-hidden="true"></i>
+                    </div>
+                    <h3>Yapay Zeka Asistanı</h3>
+                    <p>
+                        Müşterileriniz menü hakkında soru sorabilir, öneri alabilir
+                        ve kişiselleştirilmiş deneyim yaşayabilir.
+                    </p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <article class="sqm-feature-card">
+                    <div class="sqm-feature-icon sqm-feature-icon--qr">
+                        <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+                    </div>
+                    <h3>QR Kod Erişimi</h3>
+                    <p>
+                        Tek bir QR kod taramasıyla dijital menünüze anında erişim.
+                        Temassız, hızlı ve modern.
+                    </p>
+                </article>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <article class="sqm-feature-card">
+                    <div class="sqm-feature-icon sqm-feature-icon--menu">
+                        <i class="fa-solid fa-utensils" aria-hidden="true"></i>
+                    </div>
+                    <h3>Akıllı Menü Yönetimi</h3>
+                    <p>
+                        Lezzetleri ön plana çıkaran şık bir arayüz.
+                        Gastronomi dünyasına yakışan premium deneyim.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>

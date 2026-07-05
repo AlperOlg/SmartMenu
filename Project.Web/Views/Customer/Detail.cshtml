@@ -1,0 +1,449 @@
+@model Project.Web.Models.RestaurantDetailViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+@section Styles {
+    <style>
+        .sqm-detail {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 2.5rem 0 4rem;
+            overflow: hidden;
+        }
+
+        .sqm-detail-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-detail-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sqm-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--sqm-cream-muted);
+            text-decoration: none;
+            margin-bottom: 1.25rem;
+            transition: color 0.2s ease;
+        }
+
+        .sqm-back:hover {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-detail-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 1.75rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            box-shadow: var(--sqm-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .sqm-detail-avatar {
+            flex-shrink: 0;
+            width: 4rem;
+            height: 4rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sqm-bg);
+            font-size: 1.7rem;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(212, 165, 116, 0.28);
+        }
+
+        .sqm-detail-title {
+            font-size: clamp(1.5rem, 4vw, 2.1rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0;
+        }
+
+        .sqm-detail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            margin-top: 0.5rem;
+            color: var(--sqm-cream-muted);
+            font-size: 0.85rem;
+        }
+
+        .sqm-detail-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .sqm-detail-meta i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-panel {
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            height: 100%;
+        }
+
+        .sqm-panel-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sqm-panel-title i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-tabs {
+            border: none;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .sqm-tabs .nav-link {
+            border: 1px solid var(--sqm-border);
+            border-radius: 2rem;
+            padding: 0.45rem 1.05rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--sqm-cream-muted);
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .sqm-tabs .nav-link:hover {
+            color: var(--sqm-cream);
+            border-color: rgba(212, 165, 116, 0.4);
+        }
+
+        .sqm-tabs .nav-link.active {
+            color: var(--sqm-bg);
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            border-color: transparent;
+        }
+
+        .sqm-tabs .nav-link .count {
+            opacity: 0.7;
+            font-weight: 500;
+            margin-left: 0.25rem;
+        }
+
+        .sqm-menu-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--sqm-border);
+        }
+
+        .sqm-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .sqm-menu-item h4 {
+            font-size: 0.98rem;
+            font-weight: 600;
+            color: var(--sqm-cream);
+            margin: 0 0 0.3rem;
+        }
+
+        .sqm-menu-item p {
+            font-size: 0.85rem;
+            color: var(--sqm-cream-muted);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .sqm-menu-price {
+            flex-shrink: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--sqm-gold);
+            white-space: nowrap;
+        }
+
+        .sqm-muted {
+            color: var(--sqm-cream-muted);
+            font-size: 0.9rem;
+            padding: 1rem 0;
+            margin: 0;
+        }
+
+        .sqm-tables-legend {
+            display: flex;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.8rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-tables-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .sqm-legend-dot {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 0.25rem;
+        }
+
+        .sqm-legend-dot.free {
+            background: #34d399;
+        }
+
+        .sqm-legend-dot.busy {
+            background: #e57373;
+        }
+
+        .sqm-tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .sqm-table {
+            aspect-ratio: 1 / 1;
+            border-radius: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            border: 1px solid var(--sqm-border);
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .sqm-table:hover {
+            transform: translateY(-2px);
+        }
+
+        .sqm-table i {
+            font-size: 1.1rem;
+        }
+
+        .sqm-table .num {
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .sqm-table .state {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .sqm-table.free {
+            background: rgba(52, 211, 153, 0.1);
+            border-color: rgba(52, 211, 153, 0.3);
+            color: #34d399;
+        }
+
+        .sqm-table.busy {
+            background: rgba(229, 115, 115, 0.1);
+            border-color: rgba(229, 115, 115, 0.3);
+            color: #e57373;
+        }
+
+        .sqm-table .num,
+        .sqm-table.free .num {
+            color: var(--sqm-cream);
+        }
+
+        .sqm-tables-summary {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+        }
+
+        .sqm-summary-chip {
+            flex: 1;
+            text-align: center;
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.5);
+        }
+
+        .sqm-summary-chip strong {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .sqm-summary-chip span {
+            font-size: 0.72rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-summary-chip.free strong {
+            color: #34d399;
+        }
+
+        .sqm-summary-chip.busy strong {
+            color: #e57373;
+        }
+    </style>
+}
+
+<section class="sqm-detail">
+    <div class="sqm-detail-bg"></div>
+
+    <div class="container sqm-detail-content">
+        <a class="sqm-back" asp-controller="Customer" asp-action="Index">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Restoranlara dön
+        </a>
+
+        <div class="sqm-detail-header">
+            <span class="sqm-detail-avatar">
+                @(string.IsNullOrWhiteSpace(Model.Name) ? "?" : Model.Name.Trim().Substring(0, 1).ToUpper())
+            </span>
+            <div>
+                <h1 class="sqm-detail-title">@Model.Name</h1>
+                <div class="sqm-detail-meta">
+                    <span><i class="fa-solid fa-layer-group" aria-hidden="true"></i> @Model.CategoryCount Kategori</span>
+                    <span><i class="fa-solid fa-utensils" aria-hidden="true"></i> @Model.MenuItemCount Ürün</span>
+                    <span><i class="fa-solid fa-chair" aria-hidden="true"></i> @Model.TableCount Masa</span>
+                    <span><i class="fa-solid fa-circle-check" aria-hidden="true"></i> @Model.AvailableTableCount Boş / @Model.OccupiedTableCount Dolu</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-8">
+                <div class="sqm-panel">
+                    <h2 class="sqm-panel-title"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Menü</h2>
+
+                    @if (!Model.Categories.Any())
+                    {
+                        <p class="sqm-muted">Bu restoran için henüz menü kategorisi eklenmemiş.</p>
+                    }
+                    else
+                    {
+                        <ul class="nav sqm-tabs" role="tablist">
+                            @for (var i = 0; i < Model.Categories.Count; i++)
+                            {
+                                var category = Model.Categories[i];
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link @(i == 0 ? "active" : "")"
+                                            id="tab-btn-@category.Id"
+                                            data-bs-toggle="tab"
+                                            data-bs-target="#tab-pane-@category.Id"
+                                            type="button" role="tab"
+                                            aria-controls="tab-pane-@category.Id"
+                                            aria-selected="@(i == 0 ? "true" : "false")">
+                                        @category.Name <span class="count">(@category.Items.Count)</span>
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+
+                        <div class="tab-content">
+                            @for (var i = 0; i < Model.Categories.Count; i++)
+                            {
+                                var category = Model.Categories[i];
+                                <div class="tab-pane fade @(i == 0 ? "show active" : "")"
+                                     id="tab-pane-@category.Id"
+                                     role="tabpanel"
+                                     aria-labelledby="tab-btn-@category.Id"
+                                     tabindex="0">
+                                    @if (!category.Items.Any())
+                                    {
+                                        <p class="sqm-muted">Bu kategoride henüz ürün bulunmuyor.</p>
+                                    }
+                                    else
+                                    {
+                                        foreach (var item in category.Items)
+                                        {
+                                            <div class="sqm-menu-item">
+                                                <div>
+                                                    <h4>@item.Name</h4>
+                                                    @if (!string.IsNullOrWhiteSpace(item.Description))
+                                                    {
+                                                        <p>@item.Description</p>
+                                                    }
+                                                </div>
+                                                <div class="sqm-menu-price">@item.Price.ToString("N2") ₺</div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="sqm-panel">
+                    <h2 class="sqm-panel-title"><i class="fa-solid fa-chair" aria-hidden="true"></i> Masa Durumu</h2>
+
+                    @if (!Model.Tables.Any())
+                    {
+                        <p class="sqm-muted">Bu restoran için tanımlı masa bulunmuyor.</p>
+                    }
+                    else
+                    {
+                        <div class="sqm-tables-legend">
+                            <span><span class="sqm-legend-dot free" aria-hidden="true"></span> Boş</span>
+                            <span><span class="sqm-legend-dot busy" aria-hidden="true"></span> Dolu</span>
+                        </div>
+
+                        <div class="sqm-tables-grid">
+                            @foreach (var table in Model.Tables)
+                            {
+                                <div class="sqm-table @(table.IsOccupied ? "busy" : "free")"
+                                     title="Masa @table.TableNumber - @(table.IsOccupied ? "Dolu" : "Boş")">
+                                    <i class="fa-solid @(table.IsOccupied ? "fa-users" : "fa-check")" aria-hidden="true"></i>
+                                    <span class="num">@table.TableNumber</span>
+                                    <span class="state">@(table.IsOccupied ? "Dolu" : "Boş")</span>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="sqm-tables-summary">
+                            <div class="sqm-summary-chip free">
+                                <strong>@Model.AvailableTableCount</strong>
+                                <span>Boş Masa</span>
+                            </div>
+                            <div class="sqm-summary-chip busy">
+                                <strong>@Model.OccupiedTableCount</strong>
+                                <span>Dolu Masa</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

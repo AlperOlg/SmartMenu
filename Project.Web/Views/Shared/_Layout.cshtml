@@ -1,0 +1,309 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Smart QR Menu — Yapay zeka destekli dijital menü deneyimi." />
+    <title>@ViewData["Title"] - Smart QR Menu</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          integrity="sha512-SnH5WKIbnXk7fd0nGJ8Z1zFu+f6lakCRMYa+IMQ06OrwQGvD9MbYHzrJ55+2h4fXzUin4hGaq5YVNiHnF7Ngw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        :root {
+            --sqm-bg: #121214;
+            --sqm-surface: #1c1c1f;
+            --sqm-surface-elevated: #252528;
+            --sqm-cream: #f5f0e8;
+            --sqm-cream-muted: #c8c0b4;
+            --sqm-gold: #d4a574;
+            --sqm-gold-soft: rgba(212, 165, 116, 0.15);
+            --sqm-border: rgba(245, 240, 232, 0.08);
+            --sqm-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--sqm-bg);
+            color: var(--sqm-cream);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .sqm-navbar {
+            background: rgba(18, 18, 20, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--sqm-border);
+            padding-block: 0.75rem;
+        }
+
+        .sqm-brand {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--sqm-cream) !important;
+            letter-spacing: -0.02em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .sqm-brand-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sqm-bg);
+            font-size: 0.9rem;
+        }
+
+        .sqm-nav-link {
+            color: var(--sqm-cream-muted) !important;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.5rem 0.85rem !important;
+            border-radius: 0.5rem;
+            transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .sqm-nav-link:hover,
+        .sqm-nav-link:focus {
+            color: var(--sqm-cream) !important;
+            background: var(--sqm-gold-soft);
+        }
+
+        .sqm-nav-cta {
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            color: var(--sqm-bg) !important;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.45rem 1rem !important;
+        }
+
+        .sqm-nav-cta:hover {
+            opacity: 0.92;
+            color: var(--sqm-bg) !important;
+        }
+
+        .navbar-toggler {
+            border-color: var(--sqm-border);
+            padding: 0.35rem 0.55rem;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.2rem var(--sqm-gold-soft);
+        }
+
+        .navbar-toggler-icon {
+            filter: invert(1) opacity(0.75);
+        }
+
+        .sqm-main {
+            flex: 1;
+            width: 100%;
+        }
+
+        .sqm-footer {
+            background: var(--sqm-surface);
+            border-top: 1px solid var(--sqm-border);
+            padding: 1.5rem 0;
+            margin-top: auto;
+        }
+
+        .sqm-footer-text {
+            color: var(--sqm-cream-muted);
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .sqm-footer-link {
+            color: var(--sqm-gold);
+            text-decoration: none;
+        }
+
+        .sqm-footer-link:hover {
+            color: var(--sqm-cream);
+        }
+
+        .sqm-footer-social a {
+            color: var(--sqm-cream-muted);
+            font-size: 1.1rem;
+            transition: color 0.2s ease;
+        }
+
+        .sqm-footer-social a:hover {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.85rem;
+            border-radius: 0.5rem;
+            background: var(--sqm-gold-soft);
+            border: 1px solid rgba(212, 165, 116, 0.25);
+            color: var(--sqm-cream) !important;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .sqm-user-chip i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-logout-form {
+            margin: 0;
+        }
+
+        .sqm-logout-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: transparent;
+            border: 1px solid var(--sqm-border);
+            color: var(--sqm-cream-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.45rem 0.9rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .sqm-logout-btn:hover {
+            color: var(--sqm-cream);
+            border-color: rgba(212, 165, 116, 0.5);
+            background: var(--sqm-gold-soft);
+        }
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg sqm-navbar sticky-top">
+            <div class="container">
+                <a class="sqm-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="sqm-brand-icon"><i class="fa-solid fa-qrcode" aria-hidden="true"></i></span>
+                    Smart QR Menu
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#sqmNavbar" aria-controls="sqmNavbar"
+                        aria-expanded="false" aria-label="Menüyü aç">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="sqmNavbar">
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+                        <li class="nav-item">
+                            <a class="nav-link sqm-nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="fa-solid fa-house me-1" aria-hidden="true"></i> Ana Sayfa
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sqm-nav-link" href="#ozellikler">
+                                <i class="fa-solid fa-sparkles me-1" aria-hidden="true"></i> Özellikler
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link sqm-nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                <i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i> Gizlilik
+                            </a>
+                        </li>
+                        @if (User.Identity is not null && User.Identity.IsAuthenticated)
+                        {
+                            string panelController = User.IsInRole("Admin") ? "Admin" : "Customer";
+
+                            <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                                <a class="nav-link sqm-nav-link" asp-area="" asp-controller="@panelController" asp-action="Index">
+                                    <i class="fa-solid fa-gauge-high me-1" aria-hidden="true"></i> Panel
+                                </a>
+                            </li>
+                            <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                                <span class="sqm-user-chip">
+                                    <i class="fa-solid fa-circle-user" aria-hidden="true"></i>
+                                    @User.Identity.Name
+                                </span>
+                            </li>
+                            <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                                <form class="sqm-logout-form" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="sqm-logout-btn">
+                                        <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Çıkış Yap
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                                <a class="nav-link sqm-nav-link" asp-area="" asp-controller="Account" asp-action="Login">
+                                    <i class="fa-solid fa-right-to-bracket me-1" aria-hidden="true"></i> Giriş Yap
+                                </a>
+                            </li>
+                            <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                                <a class="nav-link sqm-nav-link sqm-nav-cta" asp-area="" asp-controller="Account" asp-action="Register">
+                                    <i class="fa-solid fa-arrow-right me-1" aria-hidden="true"></i> Başlayalım
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="sqm-main" role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="sqm-footer">
+        <div class="container">
+            <div class="row align-items-center gy-3">
+                <div class="col-12 col-md-6 text-center text-md-start">
+                    <p class="sqm-footer-text">
+                        &copy; @DateTime.Now.Year Smart QR Menu — Gastronomi için akıllı dijital menü.
+                    </p>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="d-flex justify-content-center justify-content-md-end align-items-center gap-3 sqm-footer-social">
+                        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a asp-area="" asp-controller="Home" asp-action="Privacy" class="sqm-footer-link">Gizlilik Politikası</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,91 @@
+/* ==========================================================================
+   1. GLOBAL TEMA DEĞİŞKENLERİ (CSS VARIABLES)
+   ========================================================================== */
+:root {
+  --sqm-bg: #121214;
+  --sqm-card-bg: rgba(28, 28, 31, 0.95);
+  --sqm-border: rgba(245, 240, 232, 0.08);
+  --sqm-gold: #d4a574;
+  --sqm-gold-soft: rgba(212, 165, 116, 0.15);
+  --sqm-cream: #f5f0e8;
+  --sqm-cream-muted: #c8c0b4;
+  --sqm-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   2. TEMEL SAYFA AYARLARI
+   ========================================================================== */
+html {
+  font-size: 14px;
+  position: relative;
+  min-height: 100%;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+body {
+  background-color: var(--sqm-bg);
+  color: var(--sqm-cream);
+  margin-bottom: 60px;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   3. LOGO, UTILITY VE İKON GÖRÜNÜRLÜK AYARLARI
+   ========================================================================== */
+/* İkonların (Font Awesome) kendi renklerini ezmesini ve düzgün basılmasını sağlar */
+.fa,
+.fas,
+.far,
+.fab,
+.fa-solid {
+  display: inline-block;
+  color: currentColor;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+/* Sitedeki genel animasyon (Örn: feedback sayfasındaki çark efekti) */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   4. FORM VE FOCUS ELEMANLARI (Mevcut Kurallarınız)
+   ========================================================================== */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+  box-shadow:
+    0 0 0 0.1rem white,
+    0 0 0 0.25rem #258cfb;
+}
+
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}

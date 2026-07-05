@@ -1,0 +1,265 @@
+@model IEnumerable<Project.Business.Dtos.RestaurantListDto>
+@{
+    ViewData["Title"] = "Restoranlar";
+}
+
+@section Styles {
+    <style>
+        .sqm-list {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 3rem 0 4rem;
+            overflow: hidden;
+        }
+
+        .sqm-list-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 50% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-list-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sqm-list-head {
+            margin-bottom: 2.5rem;
+        }
+
+        .sqm-list-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--sqm-gold);
+            margin-bottom: 0.4rem;
+        }
+
+        .sqm-list-title {
+            font-size: clamp(1.75rem, 5vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0;
+        }
+
+        .sqm-list-subtitle {
+            color: var(--sqm-cream-muted);
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .sqm-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            text-decoration: none;
+            overflow: hidden;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .sqm-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 100% 0%, rgba(212, 165, 116, 0.12), transparent 55%);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .sqm-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(212, 165, 116, 0.35);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .sqm-card:hover::after {
+            opacity: 1;
+        }
+
+        .sqm-card-head {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .sqm-card-avatar {
+            flex-shrink: 0;
+            width: 3.25rem;
+            height: 3.25rem;
+            border-radius: 0.875rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sqm-bg);
+            font-size: 1.35rem;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(212, 165, 116, 0.28);
+        }
+
+        .sqm-card-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            margin: 0 0 0.25rem;
+            line-height: 1.25;
+        }
+
+        .sqm-card-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #34d399;
+        }
+
+        .sqm-card-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #34d399;
+            box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18);
+        }
+
+        .sqm-card-stats {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--sqm-border);
+        }
+
+        .sqm-card-stat {
+            text-align: center;
+        }
+
+        .sqm-card-stat strong {
+            display: block;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            line-height: 1.1;
+        }
+
+        .sqm-card-stat span {
+            font-size: 0.72rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-card-cta {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 1.25rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--sqm-gold);
+        }
+
+        .sqm-card:hover .sqm-card-cta i {
+            transform: translateX(3px);
+        }
+
+        .sqm-card-cta i {
+            transition: transform 0.2s ease;
+        }
+
+        .sqm-empty {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 4rem 1rem;
+            border-radius: 1rem;
+            background: var(--sqm-surface);
+            border: 1px dashed var(--sqm-border);
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-empty i {
+            font-size: 2.5rem;
+            color: var(--sqm-gold);
+            margin-bottom: 1rem;
+        }
+    </style>
+}
+
+<section class="sqm-list">
+    <div class="sqm-list-bg"></div>
+
+    <div class="container sqm-list-content">
+        <div class="sqm-list-head">
+            <p class="sqm-list-label">Keşfet</p>
+            <h1 class="sqm-list-title">Restoranlar</h1>
+            <p class="sqm-list-subtitle">Dijital menüsünü keşfetmek için bir restoran seçin.</p>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="sqm-empty">
+                <i class="fa-solid fa-utensils" aria-hidden="true"></i>
+                <p class="mb-0">Şu anda listelenecek aktif restoran bulunmuyor.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var restaurant in Model)
+                {
+                    <div class="col-12 col-sm-6 col-lg-4">
+                        <a class="sqm-card" asp-controller="Customer" asp-action="Detail" asp-route-id="@restaurant.Id">
+                            <div class="sqm-card-head">
+                                <span class="sqm-card-avatar">
+                                    @(string.IsNullOrWhiteSpace(restaurant.Name) ? "?" : restaurant.Name.Trim().Substring(0, 1).ToUpper())
+                                </span>
+                                <div>
+                                    <h2 class="sqm-card-name">@restaurant.Name</h2>
+                                    <span class="sqm-card-badge">
+                                        <span class="dot" aria-hidden="true"></span> Aktif
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="sqm-card-stats">
+                                <div class="sqm-card-stat">
+                                    <strong>@restaurant.CategoryCount</strong>
+                                    <span>Kategori</span>
+                                </div>
+                                <div class="sqm-card-stat">
+                                    <strong>@restaurant.MenuItemCount</strong>
+                                    <span>Ürün</span>
+                                </div>
+                                <div class="sqm-card-stat">
+                                    <strong>@restaurant.TableCount</strong>
+                                    <span>Masa</span>
+                                </div>
+                            </div>
+
+                            <span class="sqm-card-cta">
+                                Menüyü Gör <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                            </span>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
