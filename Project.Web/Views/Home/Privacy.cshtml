@@ -1,6 +1,161 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Gizlilik Politikası";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+@section Styles {
+    <style>
+        .sqm-privacy {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 2.5rem 0 5rem;
+            overflow: hidden;
+        }
+
+        .sqm-privacy-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-privacy-content {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .sqm-privacy-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 2rem;
+            background: var(--sqm-gold-soft);
+            border: 1px solid rgba(212, 165, 116, 0.3);
+            color: var(--sqm-gold);
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 1.25rem;
+        }
+
+        .sqm-privacy-title {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0 0 0.6rem;
+        }
+
+        .sqm-privacy-updated {
+            color: var(--sqm-cream-muted);
+            font-size: 0.85rem;
+            margin: 0 0 2.5rem;
+        }
+
+        .sqm-privacy-section {
+            padding: 1.75rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            margin-bottom: 1.25rem;
+        }
+
+        .sqm-privacy-section h2 {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            margin: 0 0 0.85rem;
+        }
+
+        .sqm-privacy-section h2 i {
+            color: var(--sqm-gold);
+            font-size: 0.95rem;
+        }
+
+        .sqm-privacy-section p,
+        .sqm-privacy-section li {
+            color: var(--sqm-cream-muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .sqm-privacy-section ul {
+            margin: 0;
+            padding-left: 1.15rem;
+        }
+
+        .sqm-privacy-section li+li {
+            margin-top: 0.4rem;
+        }
+
+        .sqm-privacy-section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .sqm-privacy-contact {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: var(--sqm-gold);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+    </style>
+}
+
+<section class="sqm-privacy">
+    <div class="sqm-privacy-bg"></div>
+
+    <div class="container sqm-privacy-content">
+        <span class="sqm-privacy-eyebrow">
+            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Gizlilik
+        </span>
+
+        <h1 class="sqm-privacy-title">@ViewData["Title"]</h1>
+        <p class="sqm-privacy-updated">Son güncelleme: @DateTime.Now.ToString("dd MMMM yyyy", new
+                                    System.Globalization.CultureInfo("tr-TR"))</p>
+
+            <div class="sqm-privacy-section">
+                <h2><i class="fa-solid fa-database" aria-hidden="true"></i> Topladığımız veriler</h2>
+                <p>
+                    Sipariş verirken masa numaranız, seçtiğiniz ürünler ve sipariş zamanı sistemimizde tutulur.
+                    Hesap oluşturduysanız ayrıca ad, e-posta ve kullanıcı adı bilgileriniz saklanır.
+                </p>
+            </div>
+
+            <div class="sqm-privacy-section">
+                <h2><i class="fa-solid fa-eye" aria-hidden="true"></i> Verileri nasıl kullanıyoruz</h2>
+                <ul>
+                    <li>Siparişinizi ilgili restorana iletmek için</li>
+                    <li>Masa doluluk durumunu güncel tutmak için</li>
+                    <li>Hesabınızla giriş yapmanızı sağlamak için</li>
+                </ul>
+            </div>
+
+            <div class="sqm-privacy-section">
+                <h2><i class="fa-solid fa-lock" aria-hidden="true"></i> Veri güvenliği</h2>
+                <p>
+                    Bilgileriniz yalnızca hizmetin çalışması için gerekli süre boyunca saklanır ve yetkisiz erişime
+                    karşı standart güvenlik önlemleriyle korunur.
+                </p>
+            </div>
+
+            <div class="sqm-privacy-section">
+                <h2><i class="fa-solid fa-user-shield" aria-hidden="true"></i> Haklarınız</h2>
+                <p>
+                    Hesabınıza ait verilerin değişmesini veya silinmesini veya herhangi bir düzenlemeyi talep edebilirsiniz.
+                </p>
+                <p class="sqm-privacy-contact">
+                    <i class="fa-solid fa-envelope" aria-hidden="true"></i> alperolgun1@gmail.com
+                </p>
+            </div>
+        </div>
+    </section>

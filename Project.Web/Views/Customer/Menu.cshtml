@@ -1,0 +1,563 @@
+@model OrderMenuViewModel
+@{
+    ViewData["Title"] = "Sipariş - " + Model.RestaurantName;
+}
+
+@section Styles {
+    <style>
+        .sqm-order {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 2.5rem 0 6rem;
+            overflow: hidden;
+        }
+
+        .sqm-order-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-order-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sqm-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--sqm-cream-muted);
+            text-decoration: none;
+            margin-bottom: 1.25rem;
+            transition: color 0.2s ease;
+        }
+
+        .sqm-back:hover {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-order-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.75rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            box-shadow: var(--sqm-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .sqm-order-title {
+            font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0;
+        }
+
+        .sqm-order-sub {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            margin-top: 0.5rem;
+            color: var(--sqm-cream-muted);
+            font-size: 0.85rem;
+        }
+
+        .sqm-order-sub span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .sqm-order-sub i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-table-chip {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.1rem;
+            border-radius: 2rem;
+            background: var(--sqm-gold-soft);
+            border: 1px solid rgba(212, 165, 116, 0.3);
+            color: var(--sqm-gold);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .sqm-panel {
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            height: 100%;
+        }
+
+        .sqm-panel-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sqm-panel-title i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-tabs {
+            border: none;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .sqm-tabs .nav-link {
+            border: 1px solid var(--sqm-border);
+            border-radius: 2rem;
+            padding: 0.45rem 1.05rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--sqm-cream-muted);
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .sqm-tabs .nav-link:hover {
+            color: var(--sqm-cream);
+            border-color: rgba(212, 165, 116, 0.4);
+        }
+
+        .sqm-tabs .nav-link.active {
+            color: var(--sqm-bg);
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            border-color: transparent;
+        }
+
+        .sqm-tabs .nav-link .count {
+            opacity: 0.7;
+            font-weight: 500;
+            margin-left: 0.25rem;
+        }
+
+        .sqm-order-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--sqm-border);
+        }
+
+        .sqm-order-item:last-child {
+            border-bottom: none;
+        }
+
+        .sqm-order-item h4 {
+            font-size: 0.98rem;
+            font-weight: 600;
+            color: var(--sqm-cream);
+            margin: 0 0 0.3rem;
+        }
+
+        .sqm-order-item p {
+            font-size: 0.85rem;
+            color: var(--sqm-cream-muted);
+            margin: 0 0 0.5rem;
+            line-height: 1.5;
+        }
+
+        .sqm-order-item-price {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--sqm-gold);
+        }
+
+        .sqm-order-item-right {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.6rem;
+        }
+
+        .sqm-qty {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            border: 1px solid var(--sqm-border);
+            border-radius: 2rem;
+            padding: 0.3rem 0.4rem;
+            background: rgba(18, 18, 20, 0.5);
+        }
+
+        .sqm-qty button {
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            color: var(--sqm-bg);
+            font-weight: 800;
+            font-size: 0.95rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.15s ease;
+        }
+
+        .sqm-qty button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .sqm-qty .qty-value {
+            min-width: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            font-size: 0.9rem;
+        }
+
+        .sqm-muted {
+            color: var(--sqm-cream-muted);
+            font-size: 0.9rem;
+            padding: 1rem 0;
+            margin: 0;
+        }
+
+        /* Sipariş özeti - sağ panel, sticky */
+        .sqm-summary-panel {
+            position: sticky;
+            top: 1.5rem;
+        }
+
+        .sqm-summary-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .sqm-summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .sqm-summary-row .name {
+            color: var(--sqm-cream);
+            font-weight: 600;
+        }
+
+        .sqm-summary-row .qty {
+            color: var(--sqm-cream-muted);
+            font-size: 0.78rem;
+        }
+
+        .sqm-summary-row .line-price {
+            color: var(--sqm-gold);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sqm-summary-empty {
+            color: var(--sqm-cream-muted);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+
+        .sqm-summary-divider {
+            border-top: 1px solid var(--sqm-border);
+            margin: 1rem 0;
+        }
+
+        .sqm-summary-total {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--sqm-cream);
+        }
+
+        .sqm-summary-total span.amount {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-place-order-btn {
+            width: 100%;
+            margin-top: 1.25rem;
+            padding: 0.85rem 1rem;
+            border-radius: 0.85rem;
+            border: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--sqm-bg);
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .sqm-place-order-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .sqm-place-order-btn:not(:disabled):hover {
+            transform: translateY(-1px);
+        }
+    </style>
+}
+
+<section class="sqm-order">
+    <div class="sqm-order-bg"></div>
+
+    <div class="container sqm-order-content">
+        <a class="sqm-back" asp-controller="Customer" asp-action="Detail" asp-route-id="@Model.RestaurantId">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Restorana dön
+        </a>
+
+        <div class="sqm-order-header">
+            <div>
+                <h1 class="sqm-order-title">@Model.RestaurantName</h1>
+                <div class="sqm-order-sub">
+                    <span><i class="fa-solid fa-book-open" aria-hidden="true"></i> Menüden seçim yapın</span>
+                </div>
+            </div>
+            <span class="sqm-table-chip">
+                <i class="fa-solid fa-chair" aria-hidden="true"></i> Masa @Model.TableNumber
+            </span>
+        </div>
+
+        <form id="sqmOrderForm" asp-controller="Customer" asp-action="PlaceOrder" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="TableId" value="@Model.TableId" />
+            <input type="hidden" name="RestaurantId" value="@Model.RestaurantId" />
+            <div id="sqmOrderItemsInputs"></div>
+
+            <div class="row g-4">
+                <div class="col-12 col-lg-8">
+                    <div class="sqm-panel">
+                        <h2 class="sqm-panel-title"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Menü</h2>
+
+                        @if (!Model.Categories.Any())
+                        {
+                            <p class="sqm-muted">Bu restoran için henüz menü kategorisi eklenmemiş.</p>
+                        }
+                        else
+                        {
+                            <ul class="nav sqm-tabs" role="tablist">
+                                @for (var i = 0; i < Model.Categories.Count; i++)
+                                {
+                                    var category = Model.Categories[i];
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link @(i == 0 ? "active" : "")"
+                                                id="tab-btn-@category.Id"
+                                                data-bs-toggle="tab"
+                                                data-bs-target="#tab-pane-@category.Id"
+                                                type="button" role="tab"
+                                                aria-controls="tab-pane-@category.Id"
+                                                aria-selected="@(i == 0 ? "true" : "false")">
+                                            @category.Name <span class="count">(@category.Items.Count)</span>
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+
+                            <div class="tab-content">
+                                @for (var i = 0; i < Model.Categories.Count; i++)
+                                {
+                                    var category = Model.Categories[i];
+                                    <div class="tab-pane fade @(i == 0 ? "show active" : "")"
+                                         id="tab-pane-@category.Id"
+                                         role="tabpanel"
+                                         aria-labelledby="tab-btn-@category.Id"
+                                         tabindex="0">
+                                        @if (!category.Items.Any())
+                                        {
+                                            <p class="sqm-muted">Bu kategoride henüz ürün bulunmuyor.</p>
+                                        }
+                                        else
+                                        {
+                                            foreach (var item in category.Items)
+                                            {
+                                                <div class="sqm-order-item"
+                                                     data-item-id="@item.Id"
+                                                     data-item-name="@item.Name"
+                                                     data-item-price="@item.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                                    <div>
+                                                        <h4>@item.Name</h4>
+                                                        @if (!string.IsNullOrWhiteSpace(item.Description))
+                                                        {
+                                                            <p>@item.Description</p>
+                                                        }
+                                                        <div class="sqm-order-item-price">@item.Price.ToString("N2") ₺</div>
+                                                    </div>
+                                                    <div class="sqm-order-item-right">
+                                                        <div class="sqm-qty">
+                                                            <button type="button" class="sqm-qty-minus" aria-label="Azalt">−</button>
+                                                            <span class="qty-value">0</span>
+                                                            <button type="button" class="sqm-qty-plus" aria-label="Artır">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="sqm-panel sqm-summary-panel">
+                        <h2 class="sqm-panel-title"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Sipariş Özeti</h2>
+
+                        <div class="sqm-summary-list" id="sqmSummaryList">
+                            <p class="sqm-summary-empty" id="sqmSummaryEmpty">Henüz ürün seçmediniz.</p>
+                        </div>
+
+                        <div class="sqm-summary-divider"></div>
+
+                        <div class="sqm-summary-total">
+                            <span>Toplam</span>
+                            <span class="amount" id="sqmSummaryTotal">0,00 ₺</span>
+                        </div>
+
+                        <button type="submit" class="sqm-place-order-btn" id="sqmPlaceOrderBtn" disabled>
+                            Sipariş Et
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('sqmOrderForm');
+            const placeOrderBtn = document.getElementById('sqmPlaceOrderBtn');
+            const summaryList = document.getElementById('sqmSummaryList');
+            const summaryEmpty = document.getElementById('sqmSummaryEmpty');
+            const summaryTotal = document.getElementById('sqmSummaryTotal');
+            const itemsInputsContainer = document.getElementById('sqmOrderItemsInputs');
+
+            if (!form) return;
+
+            const quantities = new Map(); // itemId -> { name, price, qty }
+
+            function formatPrice(value) {
+                return value.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺';
+            }
+
+            function renderSummary() {
+                summaryList.querySelectorAll('.sqm-summary-row').forEach(el => el.remove());
+
+                const entries = Array.from(quantities.entries()).filter(([, v]) => v.qty > 0);
+
+                summaryEmpty.style.display = entries.length === 0 ? 'block' : 'none';
+
+                let total = 0;
+
+                entries.forEach(([itemId, v]) => {
+                    const lineTotal = v.price * v.qty;
+                    total += lineTotal;
+
+                    const row = document.createElement('div');
+                    row.className = 'sqm-summary-row';
+                    row.innerHTML = `
+                        <div>
+                            <div class="name">${v.name}</div>
+                            <div class="qty">${v.qty} adet</div>
+                        </div>
+                        <div class="line-price">${formatPrice(lineTotal)}</div>
+                    `;
+                    summaryList.appendChild(row);
+                });
+
+                summaryTotal.textContent = formatPrice(total);
+                placeOrderBtn.disabled = entries.length === 0;
+            }
+
+            function syncHiddenInputs() {
+                itemsInputsContainer.innerHTML = '';
+
+                let index = 0;
+                quantities.forEach((v, itemId) => {
+                    if (v.qty <= 0) return;
+
+                    const idInput = document.createElement('input');
+                    idInput.type = 'hidden';
+                    idInput.name = `Items[${index}].MenuItemId`;
+                    idInput.value = itemId;
+
+                    const qtyInput = document.createElement('input');
+                    qtyInput.type = 'hidden';
+                    qtyInput.name = `Items[${index}].Quantity`;
+                    qtyInput.value = v.qty;
+
+                    itemsInputsContainer.appendChild(idInput);
+                    itemsInputsContainer.appendChild(qtyInput);
+                    index++;
+                });
+            }
+
+            function updateAll() {
+                renderSummary();
+                syncHiddenInputs();
+            }
+
+            document.querySelectorAll('.sqm-order-item').forEach(itemEl => {
+                const itemId = itemEl.dataset.itemId;
+                const name = itemEl.dataset.itemName;
+                const price = parseFloat(itemEl.dataset.itemPrice);
+
+                quantities.set(itemId, { name, price, qty: 0 });
+
+                const qtyValueEl = itemEl.querySelector('.qty-value');
+                const minusBtn = itemEl.querySelector('.sqm-qty-minus');
+                const plusBtn = itemEl.querySelector('.sqm-qty-plus');
+
+                plusBtn.addEventListener('click', function () {
+                    const entry = quantities.get(itemId);
+                    entry.qty += 1;
+                    qtyValueEl.textContent = entry.qty;
+                    updateAll();
+                });
+
+                minusBtn.addEventListener('click', function () {
+                    const entry = quantities.get(itemId);
+                    if (entry.qty === 0) return;
+                    entry.qty -= 1;
+                    qtyValueEl.textContent = entry.qty;
+                    updateAll();
+                });
+            });
+
+            updateAll();
+        })();
+    </script>
+}

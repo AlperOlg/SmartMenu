@@ -6,11 +6,13 @@ using Project.DataAccess.Concrete;
 using Project.DataAccess.Abstract;
 using Microsoft.AspNetCore.Identity;
 using Project.Core.Entities;
+using Project.Web.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericManager<>));
 
@@ -19,6 +21,15 @@ builder.Services.AddScoped<IAccountService, EfAccountManager>();
 
 builder.Services.AddScoped<IRestaurantRepository, EfRestaurantRepository>();
 builder.Services.AddScoped<IRestaurantService, EfRestaurantManager>();
+
+builder.Services.AddScoped<ITableRepository, EfTableRepository>();
+builder.Services.AddScoped<ITableService, EfTableManager>();
+
+builder.Services.AddScoped<IOrderRepository, EfOrderRepository>();
+builder.Services.AddScoped<IOrderService, EfOrderManager>();
+
+builder.Services.AddScoped<IGenericRepository<MenuItem>, GenericRepository<MenuItem>>();
+builder.Services.AddHostedService<TableReleaseBackgroundService>();
 
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
 {
@@ -65,7 +76,7 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<SmartMenuDbContext>();
         var userManager = services.GetRequiredService<UserManager<AppUser>>();
         var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
-
+        await RoleSeeder.SeedRolesAsync(scope.ServiceProvider);
         await DbSeeder.SeedAsync(context, userManager, roleManager);
     }
     catch (Exception ex)

@@ -69,7 +69,8 @@
             line-height: 1.08;
             letter-spacing: -0.03em;
             color: #f5f0e8;
-            margin: 1.25rem 0 0.75rem;
+            margin: 1.25rem 0 0.25rem;
+            /* Alttaki hoş geldin yazısı için margin azaltıldı */
             animation: sqm-fade-up 0.6s 0.1s ease both;
         }
 
@@ -80,12 +81,26 @@
             background-clip: text;
         }
 
+        /* YENİ STİL: Hoş geldin metninin ana başlıkla aynı premium stilde parlamasını sağlar */
+        .sqm-welcome-text {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #d4a574 0%, #b8895a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: sqm-fade-up 0.6s 0.15s ease both;
+        }
+
         .sqm-subtitle {
             font-size: clamp(1.05rem, 3.5vw, 1.45rem);
             font-weight: 400;
             color: #c8c0b4;
             max-width: 32rem;
             line-height: 1.55;
+            margin-bottom: 0;
             animation: sqm-fade-up 0.6s 0.2s ease both;
         }
 
@@ -210,25 +225,6 @@
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
 
-        .sqm-orbit-icon--ai {
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            animation: sqm-float 3s ease-in-out infinite;
-        }
-
-        .sqm-orbit-icon--qr {
-            bottom: 5%;
-            left: 5%;
-            animation: sqm-float 3s 0.5s ease-in-out infinite;
-        }
-
-        .sqm-orbit-icon--food {
-            bottom: 5%;
-            right: 5%;
-            animation: sqm-float 3s 1s ease-in-out infinite;
-        }
-
         .sqm-features {
             padding: 4rem 0 5rem;
             background: #1c1c1f;
@@ -311,6 +307,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -318,18 +315,25 @@
         }
 
         @@keyframes sqm-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
         }
 
         @@keyframes sqm-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+            from {
+                transform: rotate(0deg);
+            }
 
-        @@keyframes sqm-float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .sqm-orbit-icon--ai {
@@ -345,18 +349,39 @@
         }
 
         @@keyframes sqm-float-ai {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-8px); }
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-8px);
+            }
         }
 
         @@keyframes sqm-float-qr {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
         }
 
         @@keyframes sqm-float-food {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
         }
     </style>
 }
@@ -367,8 +392,8 @@
 
     <div class="container sqm-hero-content">
         <div class="row align-items-center gy-5">
-            <div class="col-12 col-lg-6">
-                <div class="sqm-badge">
+            <div class="col-12 col-lg-6 text-center text-lg-start">
+                <div class="sqm-badge mx-auto mx-lg-0">
                     <span class="sqm-badge-dot" aria-hidden="true"></span>
                     Yapay Zeka Destekli Menü
                 </div>
@@ -377,15 +402,45 @@
                     <span class="sqm-title-accent">Smart QR</span> Menu
                 </h1>
 
-                <p class="sqm-subtitle">
-                    Menünüz artık konuşuyor!
-                </p>
+                @if (User.Identity is not null && User.Identity.IsAuthenticated)
+                {
+                    <div class="sqm-welcome-text">
+                        Hoş geldin, @User.Identity.Name!
+                    </div>
+                    <p class="sqm-subtitle mx-auto mx-lg-0">
+                        Menünüz artık konuşuyor! Panel üzerinden restoranınızı, menü içeriklerinizi ve masalarınızı hemen
+                        yönetmeye başlayın.
+                    </p>
+                }
+                else
+                {
+                    <div class="sqm-welcome-text"
+                         style="font-size: clamp(1.2rem, 4vw, 1.75rem); font-weight: 500; color: #c8c0b4; -webkit-text-fill-color: initial; background: none;">
+                        Geleceğin Dijital Menü Deneyimi
+                    </div>
+                    <p class="sqm-subtitle mx-auto mx-lg-0">
+                        Menünüz artık konuşuyor! Müşterilerinize akıllı RAG teknolojisiyle donatılmış, benzersiz bir asistan
+                        deneyimi sunun.
+                    </p>
+                }
 
-                <div class="sqm-hero-actions">
-                    <a href="#" class="sqm-btn-primary">
-                        <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
-                        Menüyü Keşfet
-                    </a>
+                <div class="sqm-hero-actions justify-content-center justify-content-lg-start">
+                    @if (User.Identity is not null && User.Identity.IsAuthenticated)
+                    {
+                        string panelController = User.IsInRole("Admin") ? "Admin" : "Customer";
+                        <a asp-area="" asp-controller="@panelController" asp-action="Index" class="sqm-btn-primary">
+                            <i class="fa-solid fa-utensils" aria-hidden="true"></i>
+                            Restorantları Keşfet
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-area="" asp-controller="Account" asp-action="Login" class="sqm-btn-primary">
+                            <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                            Hemen Giriş Yap
+                        </a>
+                    }
+
                     <a href="#ozellikler" class="sqm-btn-outline">
                         <i class="fa-solid fa-circle-play" aria-hidden="true"></i>
                         Nasıl Çalışır?

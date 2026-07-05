@@ -9,11 +9,10 @@
             position: relative;
             min-height: calc(100vh - 72px);
             padding: 2.5rem 0 4rem;
-            overflow: hidden;
         }
 
         .sqm-detail-bg {
-            position: absolute;
+            position: fixed;
             inset: 0;
             background:
                 radial-gradient(ellipse 70% 45% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
@@ -103,6 +102,7 @@
             background: linear-gradient(145deg, #252528, #1c1c1f);
             border: 1px solid var(--sqm-border);
             height: 100%;
+            overflow: visible
         }
 
         .sqm-panel-title {
@@ -241,6 +241,57 @@
             border: 1px solid var(--sqm-border);
             text-align: center;
             transition: transform 0.2s ease;
+            position: relative;
+        }
+
+        .sqm-qr-popover {
+            position: absolute;
+            bottom: calc(100% + 0.6rem);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            background: linear-gradient(145deg, #2a2a2d, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            border-radius: 0.85rem;
+            padding: 0.6rem;
+            box-shadow: var(--sqm-shadow);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .sqm-qr-popover::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #1c1c1f;
+        }
+
+        .sqm-qr-popover img {
+            display: block;
+            width: 120px;
+            height: 120px;
+            border-radius: 0.5rem;
+            background: #fff;
+            padding: 6px;
+        }
+
+        .sqm-qr-popover .qr-label {
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--sqm-cream-muted);
+            margin-top: 0.4rem;
+        }
+
+        .sqm-table.qr-visible .sqm-qr-popover {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
         }
 
         .sqm-table:hover {
@@ -284,6 +335,44 @@
             display: flex;
             gap: 0.75rem;
             margin-top: 1.25rem;
+        }
+
+        .sqm-table {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sqm-table.busy {
+            cursor: not-allowed;
+        }
+
+        .sqm-table.selected {
+            outline: 3px solid var(--sqm-gold);
+            outline-offset: 2px;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 165, 116, 0.35);
+        }
+
+        .sqm-select-table-btn {
+            width: 100%;
+            margin-top: 1.25rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.85rem;
+            border: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--sqm-bg);
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .sqm-select-table-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .sqm-select-table-btn:not(:disabled):hover {
+            transform: translateY(-1px);
         }
 
         .sqm-summary-chip {
@@ -331,119 +420,204 @@
             <div>
                 <h1 class="sqm-detail-title">@Model.Name</h1>
                 <div class="sqm-detail-meta">
-                    <span><i class="fa-solid fa-layer-group" aria-hidden="true"></i> @Model.CategoryCount Kategori</span>
-                    <span><i class="fa-solid fa-utensils" aria-hidden="true"></i> @Model.MenuItemCount Ürün</span>
-                    <span><i class="fa-solid fa-chair" aria-hidden="true"></i> @Model.TableCount Masa</span>
-                    <span><i class="fa-solid fa-circle-check" aria-hidden="true"></i> @Model.AvailableTableCount Boş / @Model.OccupiedTableCount Dolu</span>
+                    <span><i class="fa-solid fa-layer-group" aria-hidden="true"></i> @Model.CategoryCount
+                        Kategori</span>
+                        <span><i class="fa-solid fa-utensils" aria-hidden="true"></i> @Model.MenuItemCount Ürün</span>
+                        <span><i class="fa-solid fa-chair" aria-hidden="true"></i> @Model.TableCount Masa</span>
+                        <span><i class="fa-solid fa-circle-check" aria-hidden="true"></i> @Model.AvailableTableCount Boş /
+                            @Model.OccupiedTableCount Dolu</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="row g-4">
-            <div class="col-12 col-lg-8">
-                <div class="sqm-panel">
-                    <h2 class="sqm-panel-title"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Menü</h2>
+                <div class="row g-4">
+                    <div class="col-12 col-lg-8">
+                        <div class="sqm-panel">
+                            <h2 class="sqm-panel-title"><i class="fa-solid fa-book-open" aria-hidden="true"></i> Menü</h2>
 
-                    @if (!Model.Categories.Any())
-                    {
-                        <p class="sqm-muted">Bu restoran için henüz menü kategorisi eklenmemiş.</p>
-                    }
-                    else
-                    {
-                        <ul class="nav sqm-tabs" role="tablist">
-                            @for (var i = 0; i < Model.Categories.Count; i++)
+                            @if (!Model.Categories.Any())
                             {
-                                var category = Model.Categories[i];
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link @(i == 0 ? "active" : "")"
-                                            id="tab-btn-@category.Id"
-                                            data-bs-toggle="tab"
-                                            data-bs-target="#tab-pane-@category.Id"
-                                            type="button" role="tab"
-                                            aria-controls="tab-pane-@category.Id"
-                                            aria-selected="@(i == 0 ? "true" : "false")">
-                                        @category.Name <span class="count">(@category.Items.Count)</span>
-                                    </button>
-                                </li>
+                                <p class="sqm-muted">Bu restoran için henüz menü kategorisi eklenmemiş.</p>
                             }
-                        </ul>
-
-                        <div class="tab-content">
-                            @for (var i = 0; i < Model.Categories.Count; i++)
+                            else
                             {
-                                var category = Model.Categories[i];
-                                <div class="tab-pane fade @(i == 0 ? "show active" : "")"
-                                     id="tab-pane-@category.Id"
-                                     role="tabpanel"
-                                     aria-labelledby="tab-btn-@category.Id"
-                                     tabindex="0">
-                                    @if (!category.Items.Any())
+                                <ul class="nav sqm-tabs" role="tablist">
+                                    @for (var i = 0; i < Model.Categories.Count; i++)
                                     {
-                                        <p class="sqm-muted">Bu kategoride henüz ürün bulunmuyor.</p>
+                                        var category = Model.Categories[i];
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link @(i == 0 ? "active" : "")" id="tab-btn-@category.Id"
+                                                    data-bs-toggle="tab" data-bs-target="#tab-pane-@category.Id" type="button" role="tab"
+                                                    aria-controls="tab-pane-@category.Id" aria-selected="@(i == 0 ? "true" : "false")">
+                                                @category.Name <span class="count">(@category.Items.Count)</span>
+                                            </button>
+                                        </li>
                                     }
-                                    else
+                                </ul>
+
+                                <div class="tab-content">
+                                    @for (var i = 0; i < Model.Categories.Count; i++)
                                     {
-                                        foreach (var item in category.Items)
-                                        {
-                                            <div class="sqm-menu-item">
-                                                <div>
-                                                    <h4>@item.Name</h4>
-                                                    @if (!string.IsNullOrWhiteSpace(item.Description))
-                                                    {
-                                                        <p>@item.Description</p>
-                                                    }
-                                                </div>
-                                                <div class="sqm-menu-price">@item.Price.ToString("N2") ₺</div>
+                                        var category = Model.Categories[i];
+                                        <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="tab-pane-@category.Id"
+                                             role="tabpanel" aria-labelledby="tab-btn-@category.Id" tabindex="0">
+                                            @if (!category.Items.Any())
+                                            {
+                                                <p class="sqm-muted">Bu kategoride henüz ürün bulunmuyor.</p>
+                                            }
+                                            else
+                                            {
+                                                foreach (var item in category.Items)
+                                                {
+                                                    <div class="sqm-menu-item">
+                                                        <div>
+                                                            <h4>@item.Name</h4>
+                                                            @if (!string.IsNullOrWhiteSpace(item.Description))
+                                                            {
+                                                                <p>@item.Description</p>
+                                                            }
+                                                        </div>
+                                                        <div class="sqm-menu-price">@item.Price.ToString("N2") ₺</div>
+                                                    </div>
+                                                }
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="sqm-panel">
+                            <h2 class="sqm-panel-title"><i class="fa-solid fa-chair" aria-hidden="true"></i> Masa Durumu</h2>
+
+                            @if (!Model.Tables.Any())
+                            {
+                                <p class="sqm-muted">Bu restoran için tanımlı masa bulunmuyor.</p>
+                            }
+                            else
+                            {
+                                <div class="sqm-tables-legend">
+                                    <span><span class="sqm-legend-dot free" aria-hidden="true"></span> Boş</span>
+                                    <span><span class="sqm-legend-dot busy" aria-hidden="true"></span> Dolu</span>
+                                </div>
+
+                                <div class="sqm-tables-grid" id="sqmTablesGrid">
+                                    @foreach (var table in Model.Tables)
+                                    {
+                                        <div class="sqm-table @(table.IsOccupied ? "busy" : "free")" data-table-id="@table.Id"
+                                             data-table-number="@table.TableNumber"
+                                             data-occupied="@table.IsOccupied.ToString().ToLower()"
+                                             title="Masa @table.TableNumber - @(table.IsOccupied ? "Dolu" : "Boş")">
+                                            <i class="fa-solid @(table.IsOccupied ? "fa-users" : "fa-check")" aria-hidden="true"></i>
+                                            <span class="num">@table.TableNumber</span>
+                                            <span class="state">@(table.IsOccupied ? "Dolu" : "Boş")</span>
+
+                                            <div class="sqm-qr-popover">
+                                                <img src="@Url.Action("QrCode", "Table", new { tableId = table.Id })"
+                                                     alt="Masa @table.TableNumber QR kodu" loading="lazy" />
+                                                <div class="qr-label">Masa @table.TableNumber</div>
                                             </div>
-                                        }
+                                        </div>
                                     }
                                 </div>
-                            }
-                        </div>
-                    }
-                </div>
-            </div>
 
-            <div class="col-12 col-lg-4">
-                <div class="sqm-panel">
-                    <h2 class="sqm-panel-title"><i class="fa-solid fa-chair" aria-hidden="true"></i> Masa Durumu</h2>
+                                <div class="sqm-tables-summary">
+                                    <div class="sqm-summary-chip free">
+                                        <strong>@Model.AvailableTableCount</strong>
+                                        <span>Boş Masa</span>
+                                    </div>
+                                    <div class="sqm-summary-chip busy">
+                                        <strong>@Model.OccupiedTableCount</strong>
+                                        <span>Dolu Masa</span>
+                                    </div>
+                                </div>
 
-                    @if (!Model.Tables.Any())
-                    {
-                        <p class="sqm-muted">Bu restoran için tanımlı masa bulunmuyor.</p>
-                    }
-                    else
-                    {
-                        <div class="sqm-tables-legend">
-                            <span><span class="sqm-legend-dot free" aria-hidden="true"></span> Boş</span>
-                            <span><span class="sqm-legend-dot busy" aria-hidden="true"></span> Dolu</span>
-                        </div>
+                                <button type="button" class="sqm-select-table-btn" id="sqmSelectTableBtn" disabled>
+                                    Masayı Seç
+                                </button>
 
-                        <div class="sqm-tables-grid">
-                            @foreach (var table in Model.Tables)
-                            {
-                                <div class="sqm-table @(table.IsOccupied ? "busy" : "free")"
-                                     title="Masa @table.TableNumber - @(table.IsOccupied ? "Dolu" : "Boş")">
-                                    <i class="fa-solid @(table.IsOccupied ? "fa-users" : "fa-check")" aria-hidden="true"></i>
-                                    <span class="num">@table.TableNumber</span>
-                                    <span class="state">@(table.IsOccupied ? "Dolu" : "Boş")</span>
+                                <div class="sqm-tables-summary">
+                                    <div class="sqm-summary-chip free">
+                                        <strong>@Model.AvailableTableCount</strong>
+                                        <span>Boş Masa</span>
+                                    </div>
+                                    <div class="sqm-summary-chip busy">
+                                        <strong>@Model.OccupiedTableCount</strong>
+                                        <span>Dolu Masa</span>
+                                    </div>
                                 </div>
                             }
                         </div>
-
-                        <div class="sqm-tables-summary">
-                            <div class="sqm-summary-chip free">
-                                <strong>@Model.AvailableTableCount</strong>
-                                <span>Boş Masa</span>
-                            </div>
-                            <div class="sqm-summary-chip busy">
-                                <strong>@Model.OccupiedTableCount</strong>
-                                <span>Dolu Masa</span>
-                            </div>
-                        </div>
-                    }
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
+        </section>
+        @section Scripts {
+            <script>
+                (function () {
+                    const grid = document.getElementById('sqmTablesGrid');
+                    const selectBtn = document.getElementById('sqmSelectTableBtn');
+                    if (!grid || !selectBtn) return;
+
+                    let selectedTableId = null;
+                    let selectedTableNumber = null;
+
+                    grid.addEventListener('click', function (e) {
+                        const cell = e.target.closest('.sqm-table');
+                        if (!cell || cell.dataset.occupied === 'true') return;
+
+                        const alreadySelected = cell.classList.contains('selected');
+
+                        grid.querySelectorAll('.sqm-table.selected')
+                            .forEach(el => el.classList.remove('selected'));
+
+                        if (alreadySelected) {
+                            selectedTableId = null;
+                            selectedTableNumber = null;
+                        } else {
+                            cell.classList.add('selected');
+                            selectedTableId = cell.dataset.tableId;
+                            selectedTableNumber = cell.dataset.tableNumber;
+                        }
+
+                        selectBtn.disabled = !selectedTableId;
+                        selectBtn.textContent = selectedTableId
+                            ? `Masa ${selectedTableNumber} - Seç`
+                            : 'Masayı Seç';
+                    });
+
+                    selectBtn.addEventListener('click', function () {
+                        if (!selectedTableId) return;
+                        window.location.href = '@Url.Action("Menu", "Customer")' + '?tableId=' + selectedTableId;
+                    });
+
+                    // Masa üzerine gelince (desktop) / basılı tutunca (mobil) QR göster
+                    let longPressTimer = null;
+                    const LONG_PRESS_MS = 400;
+
+                    grid.querySelectorAll('.sqm-table').forEach(cell => {
+                        cell.addEventListener('mouseenter', () => cell.classList.add('qr-visible'));
+                        cell.addEventListener('mouseleave', () => cell.classList.remove('qr-visible'));
+
+                        cell.addEventListener('touchstart', () => {
+                            longPressTimer = setTimeout(() => {
+                                grid.querySelectorAll('.sqm-table.qr-visible')
+                                    .forEach(el => el.classList.remove('qr-visible'));
+                                cell.classList.add('qr-visible');
+                            }, LONG_PRESS_MS);
+                        }, { passive: true });
+
+                        cell.addEventListener('touchend', () => {
+                            clearTimeout(longPressTimer);
+                            cell.classList.remove('qr-visible');
+                        });
+
+                        cell.addEventListener('touchmove', () => {
+                            clearTimeout(longPressTimer);
+                        });
+                    });
+                })();
+            </script>
+        }

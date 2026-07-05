@@ -40,4 +40,17 @@ public class EfRestaurantRepository : IRestaurantRepository
             .Include(r => r.Orders.Where(o => o.OrderDate >= today && o.OrderDate < tomorrow))
             .FirstOrDefaultAsync(r => r.Id == id);
     }
+
+    public async Task<Restaurant?> GetByOwnerIdAsync(int ownerId)
+    {
+        return await _context.Restaurants
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(r => r.OwnerId == ownerId);
+    }
+
+    public async Task AddAsync(Restaurant restaurant)
+    {
+        await _context.Restaurants.AddAsync(restaurant);
+        await _context.SaveChangesAsync();
+    }
 }

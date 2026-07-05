@@ -15,16 +15,17 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
     public DbSet<MenuItem> MenuItems { get; set; } = null!;
     public DbSet<Table> Tables { get; set; } = null!;
     public DbSet<Order> Orders { get; set; } = null!;
+    public DbSet<OrderItem> OrderItems { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
-
         builder.Entity<Category>().HasQueryFilter(x => x.RestaurantId == 1);
         builder.Entity<MenuItem>().HasQueryFilter(x => x.RestaurantId == 1);
         builder.Entity<Table>().HasQueryFilter(x => x.RestaurantId == 1);
         builder.Entity<Order>().HasQueryFilter(x => x.RestaurantId == 1);
+        builder.Entity<OrderItem>().HasQueryFilter(x => x.Order.RestaurantId == 1);
 
         // 3. Cascade Delete (Döngüsel Silme) Engelleme Kuralları
         // SQL Server'daki "multiple cascade paths" (çakışan silme yolları) hatasını önler.
@@ -43,6 +44,13 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
             .HasForeignKey(o => o.RestaurantId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Order -> Table İlişkisi
+        builder.Entity<Order>()
+            .HasOne(o => o.Table)
+            .WithMany()
+            .HasForeignKey(o => o.TableId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Category -> Restaurant İlişkisi
         builder.Entity<Category>()
             .HasOne(c => c.Restaurant)
@@ -56,6 +64,19 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
             .WithMany(r => r.Tables)
             .HasForeignKey(t => t.RestaurantId)
             .OnDelete(DeleteBehavior.Restrict);
-    }
 
+        // OrderItem -> Order İlişkisi (sipariş silinirse kalemleri de silinsin)
+        builder.Entity<OrderItem>()
+            .HasOne(oi => oi.Order)
+            .WithMany(o => o.OrderItems)
+            .HasForeignKey(oi => oi.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // OrderItem -> MenuItem İlişkisi (menü ürünü silinse bile geçmiş sipariş kaydı bozulmasın)
+        builder.Entity<OrderItem>()
+            .HasOne(oi => oi.MenuItem)
+            .WithMany()
+            .HasForeignKey(oi => oi.MenuItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
 }

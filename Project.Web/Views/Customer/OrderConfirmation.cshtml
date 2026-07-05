@@ -1,0 +1,218 @@
+@model Project.Core.Entities.Order
+@{
+    ViewData["Title"] = "Sipariş Onayı";
+}
+
+@section Styles {
+    <style>
+        .sqm-confirm {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 2.5rem 0 4rem;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .sqm-confirm-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-confirm-content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .sqm-confirm-card {
+            padding: 2rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            box-shadow: var(--sqm-shadow);
+        }
+
+        .sqm-confirm-icon {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sqm-bg);
+            font-size: 1.6rem;
+            box-shadow: 0 8px 20px rgba(212, 165, 116, 0.28);
+            margin: 0 auto 1.25rem;
+        }
+
+        .sqm-confirm-title {
+            font-size: clamp(1.4rem, 3.5vw, 1.8rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0 0 0.4rem;
+            text-align: center;
+        }
+
+        .sqm-confirm-sub {
+            color: var(--sqm-cream-muted);
+            font-size: 0.9rem;
+            text-align: center;
+            margin: 0 0 1.75rem;
+        }
+
+        .sqm-confirm-meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.25rem;
+            margin-bottom: 1.75rem;
+            color: var(--sqm-cream-muted);
+            font-size: 0.85rem;
+        }
+
+        .sqm-confirm-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .sqm-confirm-meta i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-confirm-items {
+            border-top: 1px solid var(--sqm-border);
+            padding-top: 1.25rem;
+        }
+
+        .sqm-confirm-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.85rem 0;
+            border-bottom: 1px solid var(--sqm-border);
+        }
+
+        .sqm-confirm-item:last-child {
+            border-bottom: none;
+        }
+
+        .sqm-confirm-item h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--sqm-cream);
+            margin: 0 0 0.2rem;
+        }
+
+        .sqm-confirm-item .qty {
+            font-size: 0.8rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-confirm-item-price {
+            flex-shrink: 0;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--sqm-gold);
+            white-space: nowrap;
+        }
+
+        .sqm-confirm-total {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--sqm-border);
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--sqm-cream);
+        }
+
+        .sqm-confirm-total span.amount {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-confirm-actions {
+            margin-top: 1.75rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .sqm-confirm-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 2rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            color: var(--sqm-bg);
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: transform 0.2s ease;
+        }
+
+        .sqm-confirm-back:hover {
+            transform: translateY(-1px);
+            color: var(--sqm-bg);
+        }
+    </style>
+}
+
+<section class="sqm-confirm">
+    <div class="sqm-confirm-bg"></div>
+
+    <div class="container sqm-confirm-content">
+        <div class="sqm-confirm-card">
+            <div class="text-center">
+                <span class="sqm-confirm-icon">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                </span>
+            </div>
+
+            <h1 class="sqm-confirm-title">Siparişiniz Alındı</h1>
+            <p class="sqm-confirm-sub">Afiyet olsun! Siparişiniz mutfağa iletildi.</p>
+
+            <div class="sqm-confirm-meta">
+                <span><i class="fa-solid fa-hashtag" aria-hidden="true"></i> Sipariş #@Model.Id</span>
+                <span><i class="fa-solid fa-chair" aria-hidden="true"></i> Masa @Model.Table.TableNumber</span>
+                <span><i class="fa-solid fa-clock" aria-hidden="true"></i> @Model.OrderDate.ToString("dd.MM.yyyy HH:mm")</span>
+            </div>
+
+            <div class="sqm-confirm-items">
+                @foreach (var item in Model.OrderItems)
+                {
+                    <div class="sqm-confirm-item">
+                        <div>
+                            <h4>@item.MenuItem.Name</h4>
+                            <div class="qty">@item.Quantity adet × @item.UnitPrice.ToString("N2") ₺</div>
+                        </div>
+                        <div class="sqm-confirm-item-price">@((item.Quantity * item.UnitPrice).ToString("N2")) ₺</div>
+                    </div>
+                }
+            </div>
+
+            <div class="sqm-confirm-total">
+                <span>Toplam</span>
+                <span class="amount">@Model.TotalAmount.ToString("N2") ₺</span>
+            </div>
+
+            <div class="sqm-confirm-actions">
+                <a class="sqm-confirm-back" asp-controller="Customer" asp-action="Index">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Restoranlara dön
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
