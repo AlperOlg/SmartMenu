@@ -1,0 +1,262 @@
+@model Project.Web.Models.OwnerManageViewModel
+@using System.Globalization
+
+<style>
+    /* Sayfa ilk açıldığında değil, sadece bu sınıf eklendiğinde input kırmızı olacak */
+    .sqm-input-warning {
+        border-color: rgba(229, 115, 115, 0.55) !important;
+        box-shadow: 0 0 0 3px rgba(229, 115, 115, 0.12) !important;
+    }
+
+    .sqm-field-warn {
+        color: #e57373;
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin-left: 0.35rem;
+    }
+
+    .sqm-field-hint {
+        display: none;
+        /* İlk başta tamamen gizli */
+        margin-top: 0.35rem;
+        font-size: 0.75rem;
+        color: #e57373;
+    }
+</style>
+
+<div class="sqm-owner-panel">
+    <div class="sqm-owner-panel-head">
+        <h2 class="sqm-owner-panel-title">
+            <i class="fa-solid fa-book-open" aria-hidden="true"></i> Menü Yönetimi
+        </h2>
+    </div>
+
+    @if (!Model.Categories.Any())
+    {
+        <div class="sqm-owner-empty">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            Yemek eklemek için önce kategori oluşturun.
+        </div>
+    }
+    else
+    {
+        <form asp-controller="Owner" asp-action="AddMenuItem" method="post" class="sqm-owner-add cols-menu" novalidate
+              id="sqm-add-menu-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />
+
+            <div class="sqm-field">
+                <label>Yemek Adı</label>
+                <input class="sqm-input" name="Name" id="sqm-add-name" placeholder="ör. Izgara Köfte" required />
+                <span class="sqm-field-hint" id="sqm-add-name-hint">Lütfen yemek adı girin.</span>
+            </div>
+
+            <div class="sqm-field">
+                <label>Açıklama <span class="sqm-field-warn">*</span></label>
+                <input class="sqm-input" name="Description" id="sqm-add-description"
+                       placeholder="Kısa açıklama (RAG altyapısı için zorunludur)" required />
+                <span class="sqm-field-hint" id="sqm-add-description-hint">Açıklama boş bırakılamaz.</span>
+            </div>
+
+            <div class="sqm-field">
+                <label>Fiyat (₺)</label>
+                <input class="sqm-input" name="Price" id="sqm-add-price" type="number" step="0.01" min="0.01" lang="en"
+                       inputmode="decimal" placeholder="ör. 125.00" required />
+                <span class="sqm-field-hint" id="sqm-add-price-hint">Lütfen geçerli bir fiyat girin.</span>
+            </div>
+
+            <div class="sqm-field">
+                <label>Kategori</label>
+                <select class="sqm-select" name="CategoryId" required>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="sqm-field">
+                <label>&nbsp;</label>
+                <button type="submit" class="sqm-btn-primary w-100">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i> Ekle
+                </button>
+            </div>
+        </form>
+
+        @if (!Model.MenuItems.Any())
+        {
+            <div class="sqm-owner-empty">
+                <i class="fa-solid fa-utensils" aria-hidden="true"></i>
+                Henüz menü ürünü eklenmemiş.
+            </div>
+        }
+        else
+        {
+            @foreach (var item in Model.MenuItems)
+            {
+                var descEmpty = string.IsNullOrWhiteSpace(item.Description);
+                var priceInvariant = item.Price.ToString("0.00", CultureInfo.InvariantCulture);
+                var pricePlaceholder = item.Price.ToString("N2", CultureInfo.GetCultureInfo("tr-TR")) + " ₺";
+
+                <div class="sqm-menu-row">
+                    <form asp-controller="Owner" asp-action="UpdateMenuItem" method="post" class="sqm-menu-row-form" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />
+                        <input type="hidden" name="menuItemId" value="@item.Id" />
+
+                        <div class="sqm-field">
+                            <label>Ad</label>
+                            <input class="sqm-input" name="name" value="@item.Name" required />
+                        </div>
+
+                        <div class="sqm-field">
+                            <label>Açıklama</label>
+                            <input class="sqm-input" name="description" value="@item.Description" placeholder="Açıklama zorunludur"
+                                   required />
+                        </div>
+
+                        <div class="sqm-field">
+                            <label>Fiyat</label>
+                            <input class="sqm-input" name="price" type="number" step="0.01" min="0.01" lang="en" inputmode="decimal"
+                                   value="@priceInvariant" placeholder="@pricePlaceholder" required />
+                        </div>
+
+                        <div class="sqm-field">
+                            <label>Kategori</label>
+                            <select class="sqm-select" name="categoryId" required>
+                                @foreach (var c in Model.Categories)
+                                {
+                                    if (c.Id == item.CategoryId)
+                                    {
+                                        <option value="@c.Id" selected>@c.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@c.Id">@c.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="sqm-field">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="sqm-btn-outline w-100">
+                                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Kaydet
+                            </button>
+                        </div>
+                    </form>
+                    <div class="sqm-menu-row-footer">
+                        <form asp-controller="Owner" asp-action="DeleteMenuItem" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />
+                            <input type="hidden" name="menuItemId" value="@item.Id" />
+                            <button type="submit" class="sqm-btn-danger" onclick="return confirm('Bu yemek silinsin mi?')">
+                                <i class="fa-solid fa-trash" aria-hidden="true"></i> Sil
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+    }
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // 1. YENİ YEMEK EKLEME FORMU DOĞRULAMASI
+        const addForm = document.getElementById('sqm-add-menu-form');
+        if (addForm) {
+            const nameInput = document.getElementById('sqm-add-name');
+            const descInput = document.getElementById('sqm-add-description');
+            const priceInput = document.getElementById('sqm-add-price');
+
+            const nameHint = document.getElementById('sqm-add-name-hint');
+            const descHint = document.getElementById('sqm-add-description-hint');
+            const priceHint = document.getElementById('sqm-add-price-hint');
+
+            // Form Submit Tetiklendiğinde (Butona Basıldığında) Kontrol Et
+            addForm.addEventListener('submit', function (e) {
+                let isValid = true;
+
+                // Yemek Adı Kontrolü
+                if (!nameInput.value.trim()) {
+                    nameInput.classList.add('sqm-input-warning');
+                    nameHint.style.display = 'block';
+                    isValid = false;
+                }
+
+                // Açıklama Kontrolü (RAG için Kritik Alan)
+                if (!descInput.value.trim()) {
+                    descInput.classList.add('sqm-input-warning');
+                    descHint.style.display = 'block';
+                    isValid = false;
+                }
+
+                // Fiyat Kontrolü
+                if (!priceInput.value.trim() || parseFloat(priceInput.value) <= 0) {
+                    priceInput.classList.add('sqm-input-warning');
+                    priceHint.style.display = 'block';
+                    isValid = false;
+                }
+
+                // Eğer tek bir alan bile boşsa post etmeyi engelle
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+
+            // Kullanıcı inputlara veri girmeye başladığı an kırmızı uyarıları dinamik olarak kaldır
+            nameInput.addEventListener('input', function () {
+                if (nameInput.value.trim()) {
+                    nameInput.classList.remove('sqm-input-warning');
+                    nameHint.style.display = 'none';
+                }
+            });
+
+            descInput.addEventListener('input', function () {
+                if (descInput.value.trim()) {
+                    descInput.classList.remove('sqm-input-warning');
+                    descHint.style.display = 'none';
+                }
+            });
+
+            priceInput.addEventListener('input', function () {
+                if (priceInput.value.trim() && parseFloat(priceInput.value) > 0) {
+                    priceInput.classList.remove('sqm-input-warning');
+                    priceHint.style.display = 'none';
+                }
+            });
+        }
+
+        // 2. MEVCUT ÜRÜNLERİ GÜNCELLEME FORMLARI DOĞRULAMASI (Döngüdeki Formlar)
+        const updateForms = document.querySelectorAll('.sqm-menu-row-form');
+        updateForms.forEach(form => {
+            form.addEventListener('submit', function (e) {
+                let isValid = true;
+                const inputs = form.querySelectorAll('input[required]');
+
+                inputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        input.classList.add('sqm-input-warning');
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Lütfen boş alanları doldurunuz. Açıklama ve fiyat alanları zorunludur.');
+                }
+            });
+
+            // Güncelleme formundaki inputlar değiştikçe kırmızılığı sil
+            form.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', function () {
+                    if (input.value.trim()) {
+                        input.classList.remove('sqm-input-warning');
+                    }
+                });
+            });
+        });
+    });
+</script>

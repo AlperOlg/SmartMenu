@@ -30,4 +30,14 @@ public class EfOrderRepository : GenericRepository<Order>, IOrderRepository
             .Where(o => o.TableId == tableId)
             .ToListAsync();
     }
+    public async Task<IEnumerable<Order>> GetActiveOrdersByRestaurantIdAsync(int restaurantId)
+    {
+        return await _context.Orders
+            .Where(o => o.RestaurantId == restaurantId && !o.IsPaid)
+            .Include(o => o.Table)
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.MenuItem)
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync();
+    }
 }

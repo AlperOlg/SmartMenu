@@ -1,0 +1,220 @@
+@model Project.Business.Dtos.CreateRestaurantDto
+@{
+    ViewData["Title"] = "Restoran Oluştur";
+}
+
+@section Styles {
+    <style>
+        .sqm-create-restaurant {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 3rem 0;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .sqm-create-restaurant-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-create-card {
+            position: relative;
+            z-index: 1;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 2.25rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            box-shadow: var(--sqm-shadow);
+        }
+
+        .sqm-create-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sqm-bg);
+            font-size: 1.5rem;
+            box-shadow: 0 8px 20px rgba(212, 165, 116, 0.28);
+            margin-bottom: 1.25rem;
+        }
+
+        .sqm-create-title {
+            font-size: clamp(1.4rem, 3.5vw, 1.8rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0 0 0.5rem;
+        }
+
+        .sqm-create-subtitle {
+            color: var(--sqm-cream-muted);
+            font-size: 0.9rem;
+            margin: 0 0 2rem;
+            line-height: 1.6;
+        }
+
+        .sqm-field {
+            margin-bottom: 1.5rem;
+        }
+
+        .sqm-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--sqm-cream);
+            margin-bottom: 0.5rem;
+        }
+
+        .sqm-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .sqm-input-icon {
+            position: absolute;
+            left: 1rem;
+            color: var(--sqm-gold);
+            font-size: 0.95rem;
+            pointer-events: none;
+        }
+
+        .sqm-input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.5);
+            color: var(--sqm-cream);
+            font-size: 0.92rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sqm-input::placeholder {
+            color: var(--sqm-cream-muted);
+            opacity: 0.6;
+        }
+
+        .sqm-input:focus {
+            outline: none;
+            border-color: var(--sqm-gold);
+            box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+        }
+
+        .sqm-field-validation {
+            display: block;
+            color: #e57373;
+            font-size: 0.8rem;
+            margin-top: 0.4rem;
+        }
+
+        .sqm-create-summary {
+            color: #e57373;
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .sqm-create-summary:empty {
+            display: none;
+        }
+
+        .sqm-create-submit {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border-radius: 0.85rem;
+            border: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--sqm-bg);
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .sqm-create-submit:hover {
+            transform: translateY(-1px);
+        }
+
+        .sqm-create-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            margin-top: 1.5rem;
+            padding: 0.9rem 1rem;
+            border-radius: 0.75rem;
+            background: rgba(212, 165, 116, 0.08);
+            border: 1px solid rgba(212, 165, 116, 0.2);
+            color: var(--sqm-cream-muted);
+            font-size: 0.82rem;
+            line-height: 1.55;
+        }
+
+        .sqm-create-note i {
+            color: var(--sqm-gold);
+            margin-top: 0.15rem;
+            flex-shrink: 0;
+        }
+    </style>
+}
+
+<section class="sqm-create-restaurant">
+    <div class="sqm-create-restaurant-bg"></div>
+
+    <div class="container">
+        <div class="sqm-create-card">
+            <span class="sqm-create-icon">
+                <i class="fa-solid fa-store" aria-hidden="true"></i>
+            </span>
+
+            <h1 class="sqm-create-title">Restoranınızı Oluşturun</h1>
+            <p class="sqm-create-subtitle">
+                Restoran adınızı girin, hemen ardından menü, kategori ve masa yönetimine geçebilirsiniz.
+            </p>
+
+            <form asp-controller="Owner" asp-action="CreateRestaurant" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="sqm-create-summary"></div>
+
+                <div class="sqm-field">
+                    <label asp-for="Name" class="sqm-label">Restoran Adı</label>
+                    <div class="sqm-input-wrap">
+                        <i class="fa-solid fa-utensils sqm-input-icon" aria-hidden="true"></i>
+                        <input asp-for="Name" class="sqm-input" placeholder="ör. Anadolu Sofrası" autocomplete="off"
+                               autofocus />
+                    </div>
+                    <span asp-validation-for="Name" class="sqm-field-validation"></span>
+                </div>
+
+                <button type="submit" class="sqm-create-submit">
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    Restoranı Oluştur
+                </button>
+            </form>
+
+            <div class="sqm-create-note">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                <span>
+                    Restoranı oluşturduktan sonra hesabınız otomatik olarak "Restoran Sahibi" rolüne
+                    yükseltilir ve panelinize yönlendirilirsiniz.
+                </span>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

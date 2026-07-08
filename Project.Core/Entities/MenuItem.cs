@@ -10,4 +10,11 @@ public class MenuItem
     public Category Category { get; set; } = null!;
     public int RestaurantId { get; set; }
     public Restaurant Restaurant { get; set; } = null!;
+
+    public bool IsVegan { get; set; }
+    public bool IsVegetarian { get; set; }
+    public bool ContainsGluten { get; set; }
+    public bool ContainsNuts { get; set; }
+
+    public ICollection<MenuItemIngredient> MenuItemIngredients { get; set; } = new List<MenuItemIngredient>();
 }

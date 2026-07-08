@@ -1,0 +1,618 @@
+@model Project.Web.Models.OwnerManageViewModel
+@{
+    ViewData["Title"] = $"{Model.RestaurantName} — Yönetim";
+    var active = Model.ActiveTab;
+}
+
+@section Styles {
+    <style>
+        .sqm-manage {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 2.5rem 0 4rem;
+            overflow: hidden;
+        }
+
+        .sqm-manage-bg {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
+                radial-gradient(ellipse 40% 35% at 95% 90%, rgba(212, 165, 116, 0.06), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-manage-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sqm-manage-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 1.75rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            box-shadow: var(--sqm-shadow);
+            margin-bottom: 1.75rem;
+        }
+
+        .sqm-manage-avatar {
+            flex-shrink: 0;
+            width: 3.75rem;
+            height: 3.75rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sqm-bg);
+            font-size: 1.5rem;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(212, 165, 116, 0.28);
+        }
+
+        .sqm-manage-title {
+            font-size: clamp(1.4rem, 4vw, 2rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0;
+        }
+
+        .sqm-manage-subtitle {
+            color: var(--sqm-cream-muted);
+            font-size: 0.88rem;
+            margin: 0.35rem 0 0;
+        }
+
+        .sqm-manage-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 0.75rem;
+        }
+
+        .sqm-manage-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 2rem;
+            background: var(--sqm-gold-soft);
+            border: 1px solid rgba(212, 165, 116, 0.2);
+            color: var(--sqm-cream-muted);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .sqm-manage-stat i {
+            color: var(--sqm-gold);
+            font-size: 0.72rem;
+        }
+
+        .sqm-manage-actions {
+            margin-left: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+
+        .sqm-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.65rem 1.15rem;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            color: var(--sqm-bg);
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .sqm-btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.3);
+            color: var(--sqm-bg);
+        }
+
+        .sqm-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.65rem 1.15rem;
+            border-radius: 0.75rem;
+            background: transparent;
+            color: var(--sqm-cream);
+            font-weight: 500;
+            font-size: 0.88rem;
+            text-decoration: none;
+            border: 1px solid var(--sqm-border);
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .sqm-btn-outline:hover {
+            border-color: rgba(212, 165, 116, 0.5);
+            background: var(--sqm-gold-soft);
+            color: var(--sqm-cream);
+        }
+
+        .sqm-btn-danger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            padding: 0.45rem 0.85rem;
+            border-radius: 0.6rem;
+            background: rgba(229, 115, 115, 0.1);
+            color: #e57373;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border: 1px solid rgba(229, 115, 115, 0.3);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .sqm-btn-danger:hover {
+            background: rgba(229, 115, 115, 0.2);
+            color: #f0a9a9;
+        }
+
+        .sqm-btn-danger-lg {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.65rem 1.15rem;
+            border-radius: 0.75rem;
+            background: rgba(229, 115, 115, 0.12);
+            color: #e57373;
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-decoration: none;
+            border: 1px solid rgba(229, 115, 115, 0.35);
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .sqm-btn-danger-lg:hover {
+            background: rgba(229, 115, 115, 0.22);
+            border-color: rgba(229, 115, 115, 0.55);
+            color: #f0a9a9;
+        }
+
+        .sqm-modal-content {
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            border-radius: 1.25rem;
+            color: var(--sqm-cream);
+        }
+
+        .sqm-modal-content .modal-header,
+        .sqm-modal-content .modal-footer {
+            border-color: var(--sqm-border);
+        }
+
+        .sqm-modal-content .modal-title {
+            font-weight: 700;
+            color: var(--sqm-cream);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sqm-modal-content .modal-title i {
+            color: #e57373;
+        }
+
+        .sqm-modal-content .modal-body {
+            color: var(--sqm-cream-muted);
+            font-size: 0.9rem;
+        }
+
+        .sqm-modal-content .modal-body strong {
+            color: var(--sqm-cream);
+        }
+
+        .sqm-manage-shell {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        @@media (min-width: 992px) {
+            .sqm-manage-shell {
+                grid-template-columns: 220px 1fr;
+            }
+        }
+
+        .sqm-manage-nav {
+            padding: 1rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            height: fit-content;
+        }
+
+        .sqm-manage-nav .nav {
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .sqm-manage-nav .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.7rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid transparent;
+            color: var(--sqm-cream-muted);
+            font-size: 0.88rem;
+            font-weight: 600;
+            background: transparent;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .sqm-manage-nav .nav-link:hover {
+            color: var(--sqm-cream);
+            background: rgba(212, 165, 116, 0.06);
+            border-color: var(--sqm-border);
+        }
+
+        .sqm-manage-nav .nav-link.active {
+            color: var(--sqm-bg);
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            border-color: transparent;
+            box-shadow: 0 4px 16px rgba(212, 165, 116, 0.25);
+        }
+
+        .sqm-manage-nav .nav-link .badge-count {
+            margin-left: auto;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 1rem;
+            background: rgba(18, 18, 20, 0.25);
+        }
+
+        .sqm-manage-nav .nav-link.active .badge-count {
+            background: rgba(18, 18, 20, 0.2);
+        }
+
+        .sqm-owner-panel {
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+        }
+
+        .sqm-owner-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--sqm-border);
+        }
+
+        .sqm-owner-panel-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sqm-owner-panel-title i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-owner-add {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+            padding: 1.15rem;
+            border-radius: 1rem;
+            background: rgba(18, 18, 20, 0.45);
+            border: 1px dashed rgba(212, 165, 116, 0.25);
+            margin-bottom: 1.5rem;
+        }
+
+        @@media (min-width: 768px) {
+            .sqm-owner-add.cols-2 {
+                grid-template-columns: 1fr auto;
+            }
+
+            .sqm-owner-add.cols-menu {
+                grid-template-columns: 1.2fr 1.5fr 0.8fr 1fr auto;
+                align-items: end;
+            }
+        }
+
+        .sqm-field label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--sqm-cream-muted);
+            margin-bottom: 0.35rem;
+        }
+
+        .sqm-input,
+        .sqm-select {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border-radius: 0.7rem;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.55);
+            color: var(--sqm-cream);
+            font-size: 0.88rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sqm-input::placeholder {
+            color: rgba(200, 192, 180, 0.45);
+        }
+
+        .sqm-input:focus,
+        .sqm-select:focus {
+            outline: none;
+            border-color: var(--sqm-gold);
+            box-shadow: 0 0 0 3px var(--sqm-gold-soft);
+        }
+
+        .sqm-select option {
+            background: #1c1c1f;
+            color: var(--sqm-cream);
+        }
+
+        .sqm-owner-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .sqm-owner-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.85rem 1rem;
+            border-radius: 0.85rem;
+            background: rgba(18, 18, 20, 0.35);
+            border: 1px solid var(--sqm-border);
+        }
+
+        .sqm-owner-row .sqm-input {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .sqm-owner-row-actions {
+            display: flex;
+            gap: 0.45rem;
+            margin-left: auto;
+        }
+
+        .sqm-owner-empty {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--sqm-cream-muted);
+            font-size: 0.9rem;
+        }
+
+        .sqm-owner-empty i {
+            display: block;
+            font-size: 2rem;
+            color: var(--sqm-gold);
+            margin-bottom: 0.75rem;
+            opacity: 0.7;
+        }
+
+        .sqm-tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.85rem;
+        }
+
+        .sqm-owner-table-card {
+            padding: 1.15rem 0.85rem;
+            border-radius: 1rem;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.4);
+            text-align: center;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .sqm-owner-table-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(212, 165, 116, 0.3);
+        }
+
+        .sqm-owner-table-card.free {
+            border-color: rgba(52, 211, 153, 0.25);
+        }
+
+        .sqm-owner-table-card.busy {
+            border-color: rgba(229, 115, 115, 0.25);
+        }
+
+        .sqm-owner-table-num {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--sqm-cream);
+            margin-bottom: 0.25rem;
+        }
+
+        .sqm-owner-table-state {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .sqm-owner-table-state.free { color: #34d399; }
+        .sqm-owner-table-state.busy { color: #e57373; }
+
+        .sqm-owner-table-card .sqm-qr-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 0.65rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--sqm-gold);
+            text-decoration: none;
+        }
+
+        .sqm-owner-table-card .sqm-qr-link:hover {
+            color: var(--sqm-cream);
+        }
+
+        .sqm-menu-row {
+            padding: 1rem;
+            border-radius: 0.85rem;
+            background: rgba(18, 18, 20, 0.35);
+            border: 1px solid var(--sqm-border);
+            margin-bottom: 0.65rem;
+        }
+
+        .sqm-menu-row-form {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.65rem;
+        }
+
+        @@media (min-width: 992px) {
+            .sqm-menu-row-form {
+                grid-template-columns: 1.1fr 1.4fr 0.7fr 1fr auto;
+                align-items: end;
+            }
+        }
+
+        .sqm-menu-row-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 0.25rem;
+        }
+
+        @@media (min-width: 992px) {
+            .sqm-menu-row-footer {
+                grid-column: 1 / -1;
+            }
+        }
+    </style>
+}
+
+<section class="sqm-manage">
+    <div class="sqm-manage-bg"></div>
+
+    <div class="container sqm-manage-content">
+        <div class="sqm-manage-header">
+            <span class="sqm-manage-avatar">
+                @(string.IsNullOrWhiteSpace(Model.RestaurantName) ? "?" : Model.RestaurantName.Trim().Substring(0, 1).ToUpper())
+            </span>
+            <div class="flex-grow-1">
+                <h1 class="sqm-manage-title">@Model.RestaurantName</h1>
+                <p class="sqm-manage-subtitle">Restoran yönetim paneli</p>
+                <div class="sqm-manage-stats">
+                    <span class="sqm-manage-stat"><i class="fa-solid fa-layer-group"></i> @Model.Categories.Count Kategori</span>
+                    <span class="sqm-manage-stat"><i class="fa-solid fa-utensils"></i> @Model.MenuItems.Count Ürün</span>
+                    <span class="sqm-manage-stat"><i class="fa-solid fa-chair"></i> @Model.Tables.Count Masa</span>
+                </div>
+            </div>
+            <div class="sqm-manage-actions">
+                <a class="sqm-btn-outline" asp-controller="Customer" asp-action="Detail" asp-route-id="@Model.RestaurantId">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i> Müşteri Görünümü
+                </a>
+                <button type="button" class="sqm-btn-danger-lg" data-bs-toggle="modal" data-bs-target="#sqmDeleteRestaurantModal">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Restoranı Sil
+                </button>
+            </div>
+        </div>
+
+        <div class="sqm-manage-shell">
+            <nav class="sqm-manage-nav">
+                <ul class="nav" role="tablist">
+                    <li class="nav-item w-100">
+                        <button class="nav-link @(active == "categories" ? "active" : "")"
+                                data-bs-toggle="tab" data-bs-target="#tab-categories" type="button" role="tab">
+                            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                            Kategoriler
+                            <span class="badge-count">@Model.Categories.Count</span>
+                        </button>
+                    </li>
+                    <li class="nav-item w-100">
+                        <button class="nav-link @(active == "tables" ? "active" : "")"
+                                data-bs-toggle="tab" data-bs-target="#tab-tables" type="button" role="tab">
+                            <i class="fa-solid fa-chair" aria-hidden="true"></i>
+                            Masalar
+                            <span class="badge-count">@Model.Tables.Count</span>
+                        </button>
+                    </li>
+                    <li class="nav-item w-100">
+                        <button class="nav-link @(active == "menu" ? "active" : "")"
+                                data-bs-toggle="tab" data-bs-target="#tab-menu" type="button" role="tab">
+                            <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                            Menü
+                            <span class="badge-count">@Model.MenuItems.Count</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="tab-content">
+                <div class="tab-pane fade @(active == "categories" ? "show active" : "")" id="tab-categories" role="tabpanel">
+                    <partial name="_OwnerCategories" model="Model" />
+                </div>
+                <div class="tab-pane fade @(active == "tables" ? "show active" : "")" id="tab-tables" role="tabpanel">
+                    <partial name="_OwnerTables" model="Model" />
+                </div>
+                <div class="tab-pane fade @(active == "menu" ? "show active" : "")" id="tab-menu" role="tabpanel">
+                    <partial name="_OwnerMenuItems" model="Model" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="sqmDeleteRestaurantModal" tabindex="-1" aria-labelledby="sqmDeleteRestaurantLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content sqm-modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sqmDeleteRestaurantLabel">
+                        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Restoranı Sil
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>@Model.RestaurantName</strong> restoranını silmek üzeresiniz.</p>
+                    <p class="mb-0">Bu işlem <strong>geri alınamaz</strong>; tüm kategoriler, menü ürünleri, masalar ve sipariş kayıtları kalıcı olarak silinecektir.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="sqm-btn-outline" data-bs-dismiss="modal">Vazgeç</button>
+                    <form asp-controller="Owner" asp-action="DeleteRestaurant" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />
+                        <button type="submit" class="sqm-btn-danger-lg">
+                            <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Evet, Kalıcı Olarak Sil
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

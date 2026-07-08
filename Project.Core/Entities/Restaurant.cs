@@ -8,6 +8,7 @@ public class Restaurant
     public string Name { get; set; } = string.Empty;
     public int OwnerId { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool IsDeleted { get; set; } = false;
 
     public ICollection<Category> Categories { get; set; } = new List<Category>();
     public ICollection<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
@@ -28,4 +29,6 @@ public class Restaurant
 
     [NotMapped]
     public int AvailableTableCount => Tables?.Count(t => !t.IsOccupied) ?? 0;
+    public decimal LoyaltyRewardRate { get; set; } = 0.05m; // Varsayılan olarak %5 puan verir.
+    public ICollection<RestaurantLoyalty> RestaurantRoyalties { get; set; } = new List<RestaurantLoyalty>();
 }

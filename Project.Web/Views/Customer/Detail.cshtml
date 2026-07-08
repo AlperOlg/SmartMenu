@@ -402,6 +402,30 @@
         .sqm-summary-chip.busy strong {
             color: #e57373;
         }
+
+        .sqm-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.75rem;
+            border: 1px solid transparent;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--sqm-bg) !important;
+            /* Arka plan koyu olduğu için yazı rengini korur */
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.15);
+        }
+
+        .sqm-btn-primary:hover {
+            color: var(--sqm-bg) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(212, 165, 116, 0.25);
+            opacity: 0.9;
+        }
     </style>
 }
 
@@ -412,6 +436,22 @@
         <a class="sqm-back" asp-controller="Customer" asp-action="Index">
             <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Restoranlara dön
         </a>
+
+        
+        <div class="sqm-detail-header">
+            <!-- mevcut avatar + başlık -->
+            <div class="flex-grow-1">
+                <h1 class="sqm-detail-title">@Model.Name</h1>
+                <!-- meta bilgiler -->
+            </div>
+            @if (Model.CanManageRestaurant)
+            {
+                <a class="sqm-btn-primary" asp-controller="Owner" asp-action="Manage" asp-route-id="@Model.Id">
+                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                    Restoranı Düzenle / Yönet
+                </a>
+            }
+        </div>
 
         <div class="sqm-detail-header">
             <span class="sqm-detail-avatar">
@@ -522,6 +562,7 @@
                                         </div>
                                     }
                                 </div>
+                                @*test*@
 
                                 <div class="sqm-tables-summary">
                                     <div class="sqm-summary-chip free">
@@ -537,17 +578,12 @@
                                 <button type="button" class="sqm-select-table-btn" id="sqmSelectTableBtn" disabled>
                                     Masayı Seç
                                 </button>
-
-                                <div class="sqm-tables-summary">
-                                    <div class="sqm-summary-chip free">
-                                        <strong>@Model.AvailableTableCount</strong>
-                                        <span>Boş Masa</span>
+                                @if (Model.CanManageRestaurant)
+                                {
+                                    <div class="col-12 my-5">
+                                        @await Html.PartialAsync("~/Views/Owner/_Orders.cshtml", Model.OwnerOrders)
                                     </div>
-                                    <div class="sqm-summary-chip busy">
-                                        <strong>@Model.OccupiedTableCount</strong>
-                                        <span>Dolu Masa</span>
-                                    </div>
-                                </div>
+                                }
                             }
                         </div>
                     </div>

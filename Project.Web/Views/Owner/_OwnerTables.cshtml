@@ -1,0 +1,271 @@
+@model Project.Web.Models.OwnerManageViewModel
+
+<style>
+    .sqm-tables-bulk-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-bottom: 1.25rem;
+        padding: 1rem;
+        border-radius: 0.85rem;
+        background: rgba(18, 18, 20, 0.4);
+        border: 1px solid var(--sqm-border);
+    }
+
+    .sqm-btn-outline-sm {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 0.6rem;
+        background: transparent;
+        color: var(--sqm-cream);
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-decoration: none;
+        border: 1px solid var(--sqm-border);
+        cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .sqm-btn-outline-sm:hover {
+        border-color: rgba(212, 165, 116, 0.5);
+        background: var(--sqm-gold-soft);
+        color: var(--sqm-cream);
+    }
+
+    .sqm-owner-table-card .sqm-qr-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-top: 0.65rem;
+        width: 100%;
+    }
+
+    .sqm-owner-table-card .sqm-qr-link,
+    .sqm-owner-table-card .sqm-qr-download {
+        width: 100%;
+    }
+</style>
+
+<div class="sqm-owner-panel">
+    <div class="sqm-owner-panel-head">
+        <h2 class="sqm-owner-panel-title">
+            <i class="fa-solid fa-chair" aria-hidden="true"></i> Masa Yönetimi
+        </h2>
+    </div>
+
+    <form asp-controller="Owner" asp-action="AddTable" method="post" class="sqm-owner-add cols-2">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />
+        <div class="sqm-field">
+            <label>Yeni Masa</label>
+            <input class="sqm-input" name="TableNumber" placeholder="ör. A1, B2" required />
+        </div>
+        <div class="sqm-field">
+            <label>&nbsp;</label>
+            <button type="submit" class="sqm-btn-primary w-100">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Masa Ekle
+            </button>
+        </div>
+    </form>
+
+    @if (!Model.Tables.Any())
+    {
+        <div class="sqm-owner-empty">
+            <i class="fa-solid fa-chair" aria-hidden="true"></i>
+            Henüz masa tanımlanmamış.
+        </div>
+    }
+    else
+    {
+        <div class="sqm-tables-bulk-actions">
+            <button type="button" class="sqm-btn-outline-sm" id="sqm-download-all-qr">
+                <i class="fa-solid fa-download" aria-hidden="true"></i> Tüm QR Kodları İndir
+            </button>
+            <button type="button" class="sqm-btn-outline-sm" id="sqm-print-all-qr">
+                <i class="fa-solid fa-print" aria-hidden="true"></i> Tümünü Yazdır
+            </button>
+        </div>
+
+        <div class="sqm-tables-grid" id="sqm-tables-grid">
+            @foreach (var table in Model.Tables)
+            {
+                var fileName = $"Masa-{table.TableNumber}-QR.png";
+
+                <div class="sqm-owner-table-card @(table.IsOccupied ? "busy" : "free")" data-table-number="@table.TableNumber"
+                     data-qr-url="@table.QrCodeUrl" data-qr-filename="@fileName">
+                    <div class="sqm-owner-table-num">@table.TableNumber</div>
+                    <div class="sqm-owner-table-state @(table.IsOccupied ? "busy" : "free")">
+                        @(table.IsOccupied ? "Dolu" : "Boş")
+                    </div>
+                    <div class="sqm-qr-actions">
+                        <a href="@table.QrCodeUrl" target="_blank" rel="noopener" class="sqm-btn-outline-sm sqm-qr-link">
+                            <i class="fa-solid fa-qrcode" aria-hidden="true"></i> QR Görüntüle
+                        </a>
+                        <a href="@table.QrCodeUrl" download="@fileName" class="sqm-btn-outline-sm sqm-qr-download"
+                           data-qr-download data-download-name="@fileName">
+                            <i class="fa-solid fa-download" aria-hidden="true"></i> QR İndir
+                        </a>
+                    </div>
+                    <form asp-controller="Owner" asp-action="DeleteTable" method="post" class="mt-2 w-100">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />
+                        <input type="hidden" name="tableId" value="@table.Id" />
+                        <button type="submit" class="sqm-btn-danger w-100" onclick="return confirm('Bu masa silinsin mi?')">
+                            <i class="fa-solid fa-trash" aria-hidden="true"></i> Sil
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (Model.Tables.Any())
+{
+    <template id="sqm-print-template">
+        <div class="print-container">
+            <h1 class="print-title"> — Masa QR Kodları</h1>
+            <div class="print-grid"></div>
+        </div>
+        <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 24px;
+                    color: #111;
+                    background: #fff !important;
+                }
+
+                .print-title {
+                    font-size: 1.25rem;
+                    margin: 0 0 20px;
+                    text-align: center;
+                }
+
+                .print-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 20px;
+                }
+
+                .tile {
+                    border: 1px solid #ccc;
+                    border-radius: 12px;
+                    padding: 16px;
+                    text-align: center;
+                    page-break-inside: avoid;
+                }
+
+                .tile img {
+                    width: 140px;
+                    height: 140px;
+                    object-fit: contain;
+                    display: inline-block;
+                }
+
+                .label {
+                    margin: 10px 0 0;
+                    font-weight: 700;
+                    font-size: 0.95rem;
+                }
+        </style>
+    </template>
+
+    <script>
+        (function () {
+            // Güvenli veri aktarımı için data attribute kullanımı (Dize hatalarını önler)
+            const restaurantName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RestaurantName));
+
+            async function triggerDownload(url, filename) {
+                try {
+                    const response = await fetch(url, { credentials: 'same-origin' });
+                    if (!response.ok) throw new Error('download failed');
+                    const blob = await response.blob();
+                    const objectUrl = URL.createObjectURL(blob);
+                    const anchor = document.createElement('a');
+                    anchor.href = objectUrl;
+                    anchor.download = filename;
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                    anchor.remove();
+                    URL.revokeObjectURL(objectUrl);
+                } catch {
+                    const fallback = document.createElement('a');
+                    fallback.href = url;
+                    fallback.download = filename;
+                    fallback.target = '_blank';
+                    document.body.appendChild(fallback);
+                    fallback.click();
+                    fallback.remove();
+                }
+            }
+
+            // Toplu İndirme
+            document.getElementById('sqm-download-all-qr')?.addEventListener('click', async function () {
+                const cards = document.querySelectorAll('#sqm-tables-grid .sqm-owner-table-card');
+                for (const card of cards) {
+                    const url = card.dataset.qrUrl;
+                    const filename = card.dataset.qrFilename;
+                    if (!url || !filename) continue;
+                    await triggerDownload(url, filename);
+                    await new Promise(resolve => setTimeout(resolve, 350));
+                }
+            });
+
+            // Toplu Yazdırma (Şablon Klonlama Yöntemi)
+            document.getElementById('sqm-print-all-qr')?.addEventListener('click', function () {
+                const cards = document.querySelectorAll('#sqm-tables-grid .sqm-owner-table-card');
+                const printWindow = window.open('', '_blank');
+                if (!printWindow) return;
+
+                // Şablonu kopyala
+                const template = document.getElementById('sqm-print-template');
+                const clone = template.content.cloneNode(true);
+
+                // Başlığı ayarla
+                clone.querySelector('.print-title').textContent = restaurantName + " — Masa QR Kodları";
+
+                // Masaları ekle
+                const grid = clone.querySelector('.print-grid');
+                cards.forEach(card => {
+                    const num = card.dataset.tableNumber;
+                    const url = card.dataset.qrUrl;
+
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    tile.innerHTML = '<img src="' + url + '" alt="Masa ' + num + ' QR" /><p class="label">Masa ' + num + '</p>';
+                    grid.appendChild(tile);
+                });
+
+                // Yeni pencereye temizce aktar
+                printWindow.document.body.appendChild(clone);
+                printWindow.document.title = restaurantName + " — Masa QR Kodları";
+
+                // Görsellerin yüklenmesini bekle ve yazdır
+                const images = printWindow.document.querySelectorAll('img');
+                const promises = Array.from(images).map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+                });
+
+                Promise.all(promises).then(() => {
+                    setTimeout(() => {
+                        printWindow.print();
+                        printWindow.close();
+                    }, 300);
+                });
+            });
+
+            // Tekli İndirme tetikleyicileri
+            document.querySelectorAll('[data-qr-download]').forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    triggerDownload(link.href, link.dataset.downloadName || 'Masa-QR.png');
+                });
+            });
+        })();
+    </script>
+}

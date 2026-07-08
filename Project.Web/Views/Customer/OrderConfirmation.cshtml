@@ -127,12 +127,47 @@
             white-space: nowrap;
         }
 
+        /* 🔥 Sadakat Programı Bilgi Paneli Tasarımı */
+        .sqm-loyalty-card {
+            background: rgba(212, 165, 116, 0.06);
+            border: 1px dashed rgba(212, 165, 116, 0.3);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .sqm-loyalty-card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--sqm-gold);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sqm-loyalty-card p {
+            font-size: 0.85rem;
+            color: var(--sqm-cream-muted);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .sqm-confirm-discount-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.75rem;
+            font-size: 0.95rem;
+            color: #e57373;
+        }
+
         .sqm-confirm-total {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 1.25rem;
-            padding-top: 1.25rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
             border-top: 1px solid var(--sqm-border);
             font-size: 1.15rem;
             font-weight: 800;
@@ -186,7 +221,7 @@
 
             <div class="sqm-confirm-meta">
                 <span><i class="fa-solid fa-hashtag" aria-hidden="true"></i> Sipariş #@Model.Id</span>
-                <span><i class="fa-solid fa-chair" aria-hidden="true"></i> Masa @Model.Table.TableNumber</span>
+                <span><i class="fa-solid fa-chair" aria-hidden="true"></i> Masa @Model.Table?.TableNumber</span>
                 <span><i class="fa-solid fa-clock" aria-hidden="true"></i> @Model.OrderDate.ToString("dd.MM.yyyy HH:mm")</span>
             </div>
 
@@ -195,7 +230,7 @@
                 {
                     <div class="sqm-confirm-item">
                         <div>
-                            <h4>@item.MenuItem.Name</h4>
+                            <h4>@item.MenuItem?.Name</h4>
                             <div class="qty">@item.Quantity adet × @item.UnitPrice.ToString("N2") ₺</div>
                         </div>
                         <div class="sqm-confirm-item-price">@((item.Quantity * item.UnitPrice).ToString("N2")) ₺</div>
@@ -203,8 +238,33 @@
                 }
             </div>
 
+            @if (Model.AppUserId.HasValue)
+            {
+                <div class="sqm-loyalty-card">
+                    <div class="sqm-loyalty-card-title">
+                        <i class="fa-solid fa-star animate-pulse"></i> Restoran Sadakat Programı
+                    </div>
+                    <p>
+                        Siparişiniz teslim edilip ödemesi restoran tarafından onaylandığında hesabınıza
+                        <strong>@Model.PointsEarned Puan</strong> eklenecektir.
+                        @if (Model.PointsSpent > 0)
+                        {
+                            <span> Bu siparişte indirim için <strong>@Model.PointsSpent puan</strong> kullandınız.</span>
+                        }
+                    </p>
+                </div>
+            }
+
+            @if (Model.DiscountAmount > 0)
+            {
+                <div class="sqm-confirm-discount-row">
+                    <span>Puan İndirimi</span>
+                    <span>-@Model.DiscountAmount.ToString("N2") ₺</span>
+                </div>
+            }
+
             <div class="sqm-confirm-total">
-                <span>Toplam</span>
+                <span>Ödenen Toplam</span>
                 <span class="amount">@Model.TotalAmount.ToString("N2") ₺</span>
             </div>
 

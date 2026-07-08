@@ -7,4 +7,5 @@ public class AppUser : IdentityUser<int>
     public string FullName { get; set; } = string.Empty;
     public int? RestaurantId { get; set; }
     public Restaurant? Restaurant { get; set; }
+    public ICollection<RestaurantLoyalty> Royalties { get; set; } = new List<RestaurantLoyalty>();
 }

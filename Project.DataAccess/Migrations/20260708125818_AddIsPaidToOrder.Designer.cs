@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Project.DataAccess;
 
@@ -11,9 +12,11 @@ using Project.DataAccess;
 namespace Project.DataAccess.Migrations
 {
     [DbContext(typeof(SmartMenuDbContext))]
-    partial class SmartMenuDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708125818_AddIsPaidToOrder")]
+    partial class AddIsPaidToOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -372,12 +375,6 @@ namespace Project.DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AppUserId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
 
@@ -386,12 +383,6 @@ namespace Project.DataAccess.Migrations
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("PointsEarned")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PointsSpent")
-                        .HasColumnType("int");
 
                     b.Property<int>("RestaurantId")
                         .HasColumnType("int");
@@ -403,8 +394,6 @@ namespace Project.DataAccess.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AppUserId");
 
                     b.HasIndex("RestaurantId");
 
@@ -424,12 +413,6 @@ namespace Project.DataAccess.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("LoyaltyRewardRate")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -440,32 +423,6 @@ namespace Project.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Restaurants");
-                });
-
-            modelBuilder.Entity("Project.Core.Entities.RestaurantLoyalty", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AppUserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RestaurantId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalPoints")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppUserId");
-
-                    b.HasIndex("RestaurantId");
-
-                    b.ToTable("RestaurantLoyalties");
                 });
 
             modelBuilder.Entity("Project.Core.Entities.Table", b =>
@@ -626,10 +583,6 @@ namespace Project.DataAccess.Migrations
 
             modelBuilder.Entity("Project.Core.Entities.Order", b =>
                 {
-                    b.HasOne("Project.Core.Entities.AppUser", "AppUser")
-                        .WithMany()
-                        .HasForeignKey("AppUserId");
-
                     b.HasOne("Project.Core.Entities.Restaurant", "Restaurant")
                         .WithMany("Orders")
                         .HasForeignKey("RestaurantId")
@@ -642,30 +595,9 @@ namespace Project.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("AppUser");
-
                     b.Navigation("Restaurant");
 
                     b.Navigation("Table");
-                });
-
-            modelBuilder.Entity("Project.Core.Entities.RestaurantLoyalty", b =>
-                {
-                    b.HasOne("Project.Core.Entities.AppUser", "AppUser")
-                        .WithMany("Royalties")
-                        .HasForeignKey("AppUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Project.Core.Entities.Restaurant", "Restaurant")
-                        .WithMany("RestaurantRoyalties")
-                        .HasForeignKey("RestaurantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AppUser");
-
-                    b.Navigation("Restaurant");
                 });
 
             modelBuilder.Entity("Project.Core.Entities.Table", b =>
@@ -677,11 +609,6 @@ namespace Project.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("Restaurant");
-                });
-
-            modelBuilder.Entity("Project.Core.Entities.AppUser", b =>
-                {
-                    b.Navigation("Royalties");
                 });
 
             modelBuilder.Entity("Project.Core.Entities.Category", b =>
@@ -711,8 +638,6 @@ namespace Project.DataAccess.Migrations
                     b.Navigation("MenuItems");
 
                     b.Navigation("Orders");
-
-                    b.Navigation("RestaurantRoyalties");
 
                     b.Navigation("Tables");
                 });

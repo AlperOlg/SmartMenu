@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Project.DataAccess;
 
@@ -11,9 +12,11 @@ using Project.DataAccess;
 namespace Project.DataAccess.Migrations
 {
     [DbContext(typeof(SmartMenuDbContext))]
-    partial class SmartMenuDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708154342_AddLoyaltyFieldsToOrder")]
+    partial class AddLoyaltyFieldsToOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -423,9 +426,6 @@ namespace Project.DataAccess.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<decimal>("LoyaltyRewardRate")
                         .HasColumnType("decimal(18,2)");

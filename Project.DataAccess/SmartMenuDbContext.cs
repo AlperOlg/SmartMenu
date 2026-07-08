@@ -16,16 +16,12 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
     public DbSet<Table> Tables { get; set; } = null!;
     public DbSet<Order> Orders { get; set; } = null!;
     public DbSet<OrderItem> OrderItems { get; set; } = null!;
-
+    public DbSet<Ingredient> Ingredients { get; set; } = null!;
+    public DbSet<MenuItemIngredient> MenuItemIngredients { get; set; } = null!;
+    public DbSet<RestaurantLoyalty> RestaurantLoyalties { get; set; } = null!;
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-
-        builder.Entity<Category>().HasQueryFilter(x => x.RestaurantId == 1);
-        builder.Entity<MenuItem>().HasQueryFilter(x => x.RestaurantId == 1);
-        builder.Entity<Table>().HasQueryFilter(x => x.RestaurantId == 1);
-        builder.Entity<Order>().HasQueryFilter(x => x.RestaurantId == 1);
-        builder.Entity<OrderItem>().HasQueryFilter(x => x.Order.RestaurantId == 1);
 
         // 3. Cascade Delete (Döngüsel Silme) Engelleme Kuralları
         // SQL Server'daki "multiple cascade paths" (çakışan silme yolları) hatasını önler.
@@ -77,6 +73,37 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
             .HasOne(oi => oi.MenuItem)
             .WithMany()
             .HasForeignKey(oi => oi.MenuItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+        // MenuItemIngredient - composite primary key
+        builder.Entity<MenuItemIngredient>()
+            .HasKey(mi => new { mi.MenuItemId, mi.IngredientId });
+
+        builder.Entity<MenuItemIngredient>()
+            .HasOne(mi => mi.MenuItem)
+            .WithMany(m => m.MenuItemIngredients)
+            .HasForeignKey(mi => mi.MenuItemId)
+            .OnDelete(DeleteBehavior.Cascade); // ürün silinirse ilişki kayıtları da silinsin
+
+        builder.Entity<MenuItemIngredient>()
+            .HasOne(mi => mi.Ingredient)
+            .WithMany(i => i.MenuItemIngredients)
+            .HasForeignKey(mi => mi.IngredientId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Ingredient>()
+            .HasIndex(i => i.Name)
+            .IsUnique();
+
+        builder.Entity<RestaurantLoyalty>()
+            .HasOne(rl => rl.AppUser)
+            .WithMany(u => u.Royalties)
+            .HasForeignKey(rl => rl.AppUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<RestaurantLoyalty>()
+            .HasOne(rl => rl.Restaurant)
+            .WithMany(r => r.RestaurantRoyalties)
+            .HasForeignKey(rl => rl.RestaurantId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

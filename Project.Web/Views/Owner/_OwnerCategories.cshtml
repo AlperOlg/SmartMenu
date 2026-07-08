@@ -1,0 +1,60 @@
+@model Project.Web.Models.OwnerManageViewModel
+
+<div class="sqm-owner-panel">
+    <div class="sqm-owner-panel-head">
+        <h2 class="sqm-owner-panel-title">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i> Kategori Yönetimi
+        </h2>
+    </div>
+
+    <form asp-controller="Owner" asp-action="AddCategory" method="post" class="sqm-owner-add cols-2">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />
+        <div class="sqm-field">
+            <label>Yeni Kategori</label>
+            <input class="sqm-input" name="Name" placeholder="ör. Ana Yemekler" required />
+        </div>
+        <div class="sqm-field">
+            <label>&nbsp;</label>
+            <button type="submit" class="sqm-btn-primary w-100">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Ekle
+            </button>
+        </div>
+    </form>
+
+    @if (!Model.Categories.Any())
+    {
+        <div class="sqm-owner-empty">
+            <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
+            Henüz kategori eklenmemiş.
+        </div>
+    }
+    else
+    {
+        <div class="sqm-owner-list">
+            @foreach (var cat in Model.Categories)
+            {
+                <div class="sqm-owner-row">
+                    <form asp-controller="Owner" asp-action="UpdateCategory" method="post" class="d-flex flex-wrap align-items-center gap-2 flex-grow-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />
+                        <input type="hidden" name="categoryId" value="@cat.Id" />
+                        <input class="sqm-input" name="name" value="@cat.Name" required />
+                        <button type="submit" class="sqm-btn-outline">
+                            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Kaydet
+                        </button>
+                    </form>
+                    <form asp-controller="Owner" asp-action="DeleteCategory" method="post" class="sqm-owner-row-actions">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />
+                        <input type="hidden" name="categoryId" value="@cat.Id" />
+                        <button type="submit" class="sqm-btn-danger"
+                                onclick="return confirm('Bu kategori silinsin mi?')">
+                            <i class="fa-solid fa-trash" aria-hidden="true"></i> Sil
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+</div>

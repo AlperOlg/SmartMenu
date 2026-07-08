@@ -1,0 +1,249 @@
+@model List<Project.Web.Models.OwnerOrderViewModel>
+
+<div class="sqm-panel">
+    <div class="sqm-orders-header" id="sqmOrdersToggle" role="button" tabindex="0" aria-expanded="false"
+         aria-controls="sqmOrdersBody">
+        <h2 class="sqm-panel-title">
+            <i class="fa-solid fa-receipt" aria-hidden="true"></i>
+            Siparişler
+            @if (Model.Any())
+            {
+                <span class="sqm-orders-badge">@Model.Count</span>
+            }
+        </h2>
+        <button type="button" class="sqm-orders-burger" aria-label="Siparişleri göster/gizle">
+            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
+    </div>
+
+    <div class="sqm-orders-body" id="sqmOrdersBody">
+        @if (!Model.Any())
+        {
+            <p class="sqm-muted">Şu anda bekleyen sipariş bulunmuyor.</p>
+        }
+        else
+        {
+            <div class="sqm-orders-list">
+                @foreach (var order in Model)
+                {
+                    <div class="sqm-order-card">
+                        <div class="sqm-order-head">
+                            <div>
+                                <span class="sqm-order-table"><i class="fa-solid fa-chair" aria-hidden="true"></i> Masa
+                                    @order.TableNumber</span>
+                                    <span class="sqm-order-date">@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</span>
+                                </div>
+                                <span class="sqm-order-total">@order.TotalAmount.ToString("N2") ₺</span>
+                            </div>
+
+                            <ul class="sqm-order-items">
+                                @foreach (var item in order.Items)
+                                {
+                                    <li>
+                                        <span>@item.Quantity x @item.MenuItemName</span>
+                                        <span>@((item.Quantity * item.UnitPrice).ToString("N2")) ₺</span>
+                                    </li>
+                                }
+                            </ul>
+
+                            <form asp-controller="Owner" asp-action="MarkOrderAsPaid" method="post" class="sqm-order-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="restaurantId" value="@order.RestaurantId" />
+                                <input type="hidden" name="orderId" value="@order.Id" />
+                                <button type="submit" class="sqm-pay-btn">
+                                    <i class="fa-solid fa-check" aria-hidden="true"></i> Ödeme Alındı
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <style>
+        .sqm-orders-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            gap: 0.75rem;
+        }
+
+        .sqm-orders-header .sqm-panel-title {
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        .sqm-orders-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.4rem;
+            height: 1.4rem;
+            padding: 0 0.4rem;
+            margin-left: 0.5rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            color: var(--sqm-bg);
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        .sqm-orders-burger {
+            flex-shrink: 0;
+            width: 2.4rem;
+            height: 2.4rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.5);
+            color: var(--sqm-cream-muted);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .sqm-orders-header:hover .sqm-orders-burger,
+        .sqm-orders-header[aria-expanded="true"] .sqm-orders-burger {
+            color: var(--sqm-bg);
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            border-color: transparent;
+        }
+
+        .sqm-orders-body {
+            display: grid;
+            grid-template-rows: 0fr;
+            overflow: hidden;
+            transition: grid-template-rows 0.3s ease;
+        }
+
+        .sqm-orders-body.open {
+            grid-template-rows: 1fr;
+            margin-top: 1.25rem;
+        }
+
+        .sqm-orders-body>* {
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .sqm-orders-body.open>* {
+            overflow: visible;
+        }
+
+        .sqm-orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+
+        .sqm-order-card {
+            border: 1px solid var(--sqm-border);
+            border-radius: 1rem;
+            padding: 1rem 1.1rem;
+            background: rgba(18, 18, 20, 0.4);
+        }
+
+        .sqm-order-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.6rem;
+        }
+
+        .sqm-order-table {
+            display: block;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            font-size: 0.95rem;
+        }
+
+        .sqm-order-date {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--sqm-cream-muted);
+            margin-top: 0.15rem;
+        }
+
+        .sqm-order-total {
+            font-weight: 800;
+            color: var(--sqm-gold);
+            font-size: 1.05rem;
+        }
+
+        .sqm-order-items {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 0.9rem;
+            border-top: 1px dashed var(--sqm-border);
+            padding-top: 0.6rem;
+        }
+
+        .sqm-order-items li {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--sqm-cream-muted);
+            padding: 0.2rem 0;
+        }
+
+        .sqm-order-form {
+            margin: 0;
+        }
+
+        .sqm-pay-btn {
+            width: 100%;
+            padding: 0.65rem 1rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--sqm-bg);
+            background: linear-gradient(135deg, #34d399, #10b981);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .sqm-pay-btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        /* Mobil: dokunma alanını büyüt */
+        @@media (max-width: 576px) {
+            .sqm-orders-burger {
+                width: 2.6rem;
+                height: 2.6rem;
+            }
+
+            .sqm-orders-list {
+                max-height: 50vh;
+            }
+        }
+    </style>
+
+    <script>
+        (function () {
+            const header = document.getElementById('sqmOrdersToggle');
+            const body = document.getElementById('sqmOrdersBody');
+            if (!header || !body) return;
+
+            function toggle() {
+                const isOpen = body.classList.toggle('open');
+                header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            }
+
+            header.addEventListener('click', toggle);
+            header.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggle();
+                }
+            });
+        })();
+    </script>

@@ -4,12 +4,12 @@ using Project.DataAccess.Abstract;
 
 namespace Project.Business.Concrete;
 
-public class EfTableManager : ITableService
+public class EfTableManager : GenericManager<Table>, ITableService
 {
     private readonly ITableRepository _tableRepository;
-    private static readonly TimeSpan OccupationDuration = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan OccupationDuration = TimeSpan.FromHours(1);
 
-    public EfTableManager(ITableRepository tableRepository)
+    public EfTableManager(ITableRepository tableRepository) : base(tableRepository)
     {
         _tableRepository = tableRepository;
     }
@@ -65,3 +65,4 @@ public class EfTableManager : ITableService
         }
     }
 }
+

@@ -241,10 +241,76 @@
             margin: 0;
         }
 
-        /* Sipariş özeti - sağ panel, sticky */
+        /* Sipariş özeti - sağ panel */
         .sqm-summary-panel {
-            position: sticky;
             top: 1.5rem;
+        }
+
+        .sqm-loyalty-section {
+            padding: 0.85rem 1rem;
+            border-radius: 0.85rem;
+            background: rgba(18, 18, 20, 0.5);
+            border: 1px solid var(--sqm-border);
+            margin-bottom: 1rem;
+        }
+
+        .sqm-loyalty-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-loyalty-head strong {
+            color: var(--sqm-cream);
+        }
+
+        .sqm-loyalty-head i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-loyalty-switch {
+            margin-top: 0.6rem;
+        }
+
+        .sqm-loyalty-switch .form-check-label {
+            font-size: 0.82rem;
+            color: var(--sqm-cream);
+            font-weight: 600;
+        }
+
+        .sqm-loyalty-switch .form-check-input:checked {
+            background-color: var(--sqm-gold);
+            border-color: var(--sqm-gold);
+        }
+
+        .sqm-loyalty-cta {
+            font-size: 0.82rem;
+            color: var(--sqm-cream-muted);
+            background: rgba(18, 18, 20, 0.5);
+            border: 1px solid var(--sqm-border);
+            border-radius: 0.85rem;
+            padding: 0.75rem 0.9rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .sqm-loyalty-cta a {
+            color: var(--sqm-gold);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .sqm-discount-row {
+            margin-bottom: 0.75rem;
+        }
+
+        @@media (max-width: 991.98px) {
+            .sqm-summary-list {
+                max-height: none;
+            }
         }
 
         .sqm-summary-list {
@@ -431,23 +497,55 @@
                 </div>
 
                 <div class="col-12 col-lg-4">
-                    <div class="sqm-panel sqm-summary-panel">
-                        <h2 class="sqm-panel-title"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Sipariş Özeti</h2>
+                    <div class="sqm-summary-panel sticky-lg-top">
+                        <div class="sqm-panel">
+                            <h2 class="sqm-panel-title"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Sipariş Özeti</h2>
 
-                        <div class="sqm-summary-list" id="sqmSummaryList">
-                            <p class="sqm-summary-empty" id="sqmSummaryEmpty">Henüz ürün seçmediniz.</p>
+                            <div class="sqm-summary-list" id="sqmSummaryList">
+                                <p class="sqm-summary-empty" id="sqmSummaryEmpty">Henüz ürün seçmediniz.</p>
+                            </div>
+
+                            <div class="sqm-summary-divider"></div>
+
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <div class="sqm-loyalty-section">
+                                    <div class="sqm-loyalty-head">
+                                        <span><i class="fa-solid fa-star" aria-hidden="true"></i> Mevcut Puanınız</span>
+                                        <strong id="sqmUserPointsDisplay">@Model.UserPoints Puan</strong>
+                                    </div>
+                                    @if (Model.UserPoints > 0)
+                                    {
+                                        <div class="form-check form-switch sqm-loyalty-switch">
+                                            <input class="form-check-input" type="checkbox" id="sqmUsePointsCheckbox" name="UsePoints" value="true">
+                                            <label class="form-check-label" for="sqmUsePointsCheckbox">
+                                                Puanlarımı indirim olarak kullan (@Model.UserPoints.ToString("N0") ₺)
+                                            </label>
+                                        </div>
+                                        <input type="hidden" id="sqmRawUserPoints" value="@Model.UserPoints" />
+                                    }
+                                </div>
+                                <div class="sqm-summary-row sqm-discount-row d-none" id="sqmDiscountRow">
+                                    <div class="name text-danger">Puan İndirimi</div>
+                                    <div class="line-price text-danger" id="sqmSummaryDiscount">-0,00 ₺</div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="sqm-loyalty-cta">
+                                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path?tableId=@Model.TableId">Giriş yaparak</a> her siparişten puan kazanabilirsiniz!
+                                </div>
+                            }
+
+                            <div class="sqm-summary-total">
+                                <span>Toplam</span>
+                                <span class="amount" id="sqmSummaryTotal">0,00 ₺</span>
+                            </div>
+
+                            <button type="submit" class="sqm-place-order-btn" id="sqmPlaceOrderBtn" disabled>
+                                Sipariş Et
+                            </button>
                         </div>
-
-                        <div class="sqm-summary-divider"></div>
-
-                        <div class="sqm-summary-total">
-                            <span>Toplam</span>
-                            <span class="amount" id="sqmSummaryTotal">0,00 ₺</span>
-                        </div>
-
-                        <button type="submit" class="sqm-place-order-btn" id="sqmPlaceOrderBtn" disabled>
-                            Sipariş Et
-                        </button>
                     </div>
                 </div>
             </div>
@@ -498,8 +596,37 @@
                     summaryList.appendChild(row);
                 });
 
-                summaryTotal.textContent = formatPrice(total);
+                const checkbox = document.getElementById('sqmUsePointsCheckbox');
+                const discountRow = document.getElementById('sqmDiscountRow');
+                const discountDisplay = document.getElementById('sqmSummaryDiscount');
+
+                let discount = 0;
+
+                if (checkbox && checkbox.checked) {
+                    const rawPoints = parseFloat(document.getElementById('sqmRawUserPoints').value) || 0;
+                    // İndirim, sepet toplamını aşamaz
+                    discount = Math.min(rawPoints, total);
+
+                    if (discount > 0) {
+                        discountRow.classList.remove('d-none');
+                        discountDisplay.textContent = '-' + formatPrice(discount);
+                    } else {
+                        discountRow.classList.add('d-none');
+                    }
+                } else if (discountRow) {
+                    discountRow.classList.add('d-none');
+                }
+
+                // Net ödenecek tutar
+                const finalTotal = total - discount;
+
+                summaryTotal.textContent = formatPrice(finalTotal);
                 placeOrderBtn.disabled = entries.length === 0;
+            }
+
+            const pointsCheckbox = document.getElementById('sqmUsePointsCheckbox');
+            if (pointsCheckbox) {
+                pointsCheckbox.addEventListener('change', renderSummary);
             }
 
             function syncHiddenInputs() {

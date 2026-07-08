@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Project.Business.Abstract
+@using Project.Core.Entities
+@inject UserManager<AppUser> UserManager
+@inject Project.Business.Abstract.IRestaurantService RestaurantService
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
@@ -100,22 +105,32 @@
         }
 
         .sqm-nav-cta {
-            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
-            color: var(--sqm-bg) !important;
-            font-weight: 600;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem !important;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4rem;
-        }
+    background: linear-gradient(135deg, var(--sqm-gold), #b8895a) !important;
+    color: var(--sqm-bg) !important;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.2rem !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    box-shadow: 0 4px 12px rgba(212, 165, 116, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease !important;
+}
 
-        .sqm-nav-cta:hover {
-            opacity: 0.92;
-            color: var(--sqm-bg) !important;
-        }
+.sqm-nav-cta:hover,
+.sqm-nav-cta:focus {
+    background: linear-gradient(135deg, var(--sqm-gold), #b8895a) !important; /* Arka plan rengini korur */
+    color: var(--sqm-bg) !important; /* Yazı rengini korur */
+    opacity: 0.95;
+    transform: translateY(-1px); /* Hafifçe yukarı zıplama efekti */
+    box-shadow: 0 6px 16px rgba(212, 165, 116, 0.3); /* Parlama efekti */
+}
 
+.sqm-nav-cta:hover i {
+    transform: translateX(2px);
+    transition: transform 0.2s ease;
+}
         .navbar-toggler {
             border-color: var(--sqm-border);
             padding: 0.4rem 0.55rem;
@@ -320,12 +335,25 @@
                                 </a>
                             </li>
 
-                            <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-none d-lg-inline-flex align-items-center gap-2">
+                        <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-none d-lg-inline-flex align-items-center gap-2">
     <span class="sqm-user-chip">
         <i class="fa-solid fa-circle-user"></i>
         Merhaba, @User.Identity.Name
+        
         <span class="sqm-role-badge">
-            @(User.IsInRole("Admin") ? "Yönetici" : User.IsInRole("Owner") ? "Restoran Sahibi" : "Müşteri")
+            @{
+                var currentUser = await UserManager.FindByNameAsync(User.Identity.Name!);
+                if (currentUser is not null)
+                {
+                    if (await UserManager.IsInRoleAsync(currentUser, "Admin")) { <text>Yönetici</text> }
+                    else if (await UserManager.IsInRoleAsync(currentUser, "Owner")) { <text>Restoran Sahibi</text> }
+                    else { <text>Müşteri</text> }
+                }
+                else
+                {
+                    <text>Misafir</text>
+                }
+            }
         </span>
     </span>
 
@@ -337,11 +365,24 @@
     }
     else if (User.IsInRole("Owner"))
     {
-        <a class="btn sqm-nav-cta btn-sm" asp-area="" asp-controller="Owner" asp-action="Dashboard">
-            <i class="fa-solid fa-gauge"></i> Panelim
-        </a>
+        // 🔥 ÇÖZÜM: Bağımlılığı doğrudan UserManager üzerinden çözüyoruz ve asenkron çağrıyı dışarı alıyoruz.
+        // Zaten yukarıda currentUser'ı çektik, id'sini de doğrudan int'e cast ederek alabiliriz.
+        if (currentUser is not null)
+        {
+            // İster doğrudan servis enjekte et, ister her Owner'ın zaten tek restoranı olduğu için
+            // eğer "IRestaurantService" layout'un en üstünde enjekte edildiyse ( @inject IRestaurantService RestaurantService ) kullan:
+            // (Eğer yukarıya eklemediysen en üst satırlara: @inject Project.Business.Abstract.IRestaurantService RestaurantService eklemelisin)
+            
+            var userRestaurant = await RestaurantService.GetByOwnerIdAsync(currentUser.Id);
+            if (userRestaurant is not null)
+            {
+                <a class="btn sqm-nav-cta btn-sm" asp-area="" asp-controller="Owner" asp-action="Manage" asp-route-id="@userRestaurant.Id">
+                    <i class="fa-solid fa-gauge"></i> Panelim
+                </a>
+            }
+        }
     }
-</li>  
+</li> 
                             <li class="nav-item ms-lg-2 mt-1 mt-lg-0">
                                 <form class="sqm-logout-form" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
                                     <button type="submit" class="sqm-logout-btn w-100 justify-content-center">

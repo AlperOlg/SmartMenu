@@ -4,11 +4,11 @@ using Project.DataAccess.Abstract;
 
 namespace Project.DataAccess.Concrete;
 
-public class EfRestaurantRepository : IRestaurantRepository
+public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurantRepository
 {
     private readonly SmartMenuDbContext _context;
 
-    public EfRestaurantRepository(SmartMenuDbContext context)
+    public EfRestaurantRepository(SmartMenuDbContext context) : base(context)
     {
         _context = context;
     }
@@ -51,6 +51,36 @@ public class EfRestaurantRepository : IRestaurantRepository
     public async Task AddAsync(Restaurant restaurant)
     {
         await _context.Restaurants.AddAsync(restaurant);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int restaurantId)
+    {
+        // 🔥 HARD DELETE YERİNE SOFT DELETE LOJİĞİ:
+        var restaurant = await _context.Restaurants
+            .IgnoreQueryFilters()
+            .Include(r => r.Tables)
+            .FirstOrDefaultAsync(r => r.Id == restaurantId);
+
+        if (restaurant is null)
+            return;
+
+        // 1. Restoranı silindi olarak işaretle
+        restaurant.IsDeleted = true;
+
+        // 2. Masaların bağını kopar veya masaları boşa çıkar
+        if (restaurant.Tables != null)
+        {
+            foreach (var table in restaurant.Tables)
+            {
+                table.IsOccupied = false; // Masa kilitli kalmasın
+            }
+        }
+
+        // NOT: Kategorileri, siparişleri (Orders) ve yemekleri (MenuItems) veri tabanından SİLMİYORUZ. 
+        // Böylece RAG algoritmaların geçmiş sipariş verilerini analiz etmeye devam edebilir.
+
+        _context.Restaurants.Update(restaurant);
         await _context.SaveChangesAsync();
     }
 }

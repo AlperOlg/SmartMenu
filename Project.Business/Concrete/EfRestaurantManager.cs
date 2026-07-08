@@ -6,12 +6,12 @@ using Project.DataAccess.Abstract;
 
 namespace Project.Business.Concrete;
 
-public class EfRestaurantManager : IRestaurantService
+public class EfRestaurantManager : GenericManager<Restaurant>, IRestaurantService
 {
     private readonly IRestaurantRepository _restaurantRepository;
     private readonly UserManager<AppUser> _userManager;
 
-    public EfRestaurantManager(IRestaurantRepository restaurantRepository, UserManager<AppUser> userManager)
+    public EfRestaurantManager(IRestaurantRepository restaurantRepository, UserManager<AppUser> userManager) : base(restaurantRepository)
     {
         _restaurantRepository = restaurantRepository;
         _userManager = userManager;
@@ -68,5 +68,35 @@ public class EfRestaurantManager : IRestaurantService
         }
 
         return restaurant;
+    }
+
+    public async Task<bool> DeleteRestaurantAsync(int ownerId, int restaurantId)
+    {
+        var restaurant = await _restaurantRepository.GetByOwnerIdAsync(ownerId);
+        if (restaurant is null || restaurant.Id != restaurantId)
+        {
+            return false;
+        }
+
+        // AppUser.RestaurantId FK'si restorana bağlı; silmeden önce bağı koparıyoruz.
+        var user = await _userManager.FindByIdAsync(ownerId.ToString());
+        if (user is not null)
+        {
+            user.RestaurantId = null;
+            await _userManager.UpdateAsync(user);
+
+            if (await _userManager.IsInRoleAsync(user, "Owner"))
+            {
+                await _userManager.RemoveFromRoleAsync(user, "Owner");
+            }
+
+            if (!await _userManager.IsInRoleAsync(user, "Customer"))
+            {
+                await _userManager.AddToRoleAsync(user, "Customer");
+            }
+        }
+
+        await _restaurantRepository.DeleteAsync(restaurantId);
+        return true;
     }
 }
