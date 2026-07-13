@@ -19,7 +19,7 @@ public class EfRestaurantManager : GenericManager<Restaurant>, IRestaurantServic
 
     public async Task<IEnumerable<RestaurantListDto>> GetActiveRestaurantsAsync()
     {
-        var restaurants = await _restaurantRepository.GetActiveWithStatsAsync();
+        var restaurants = await _restaurantRepository.GetActiveAsync();
 
         return restaurants.Select(r => new RestaurantListDto
         {

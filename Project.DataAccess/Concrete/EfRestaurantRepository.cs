@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Project.Core.Entities;
 using Project.DataAccess.Abstract;
@@ -56,7 +57,6 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
 
     public async Task DeleteAsync(int restaurantId)
     {
-        // 🔥 HARD DELETE YERİNE SOFT DELETE LOJİĞİ:
         var restaurant = await _context.Restaurants
             .IgnoreQueryFilters()
             .Include(r => r.Tables)
@@ -65,22 +65,30 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
         if (restaurant is null)
             return;
 
-        // 1. Restoranı silindi olarak işaretle
         restaurant.IsDeleted = true;
 
-        // 2. Masaların bağını kopar veya masaları boşa çıkar
         if (restaurant.Tables != null)
         {
             foreach (var table in restaurant.Tables)
             {
-                table.IsOccupied = false; // Masa kilitli kalmasın
+                table.IsOccupied = false;
             }
         }
 
-        // NOT: Kategorileri, siparişleri (Orders) ve yemekleri (MenuItems) veri tabanından SİLMİYORUZ. 
-        // Böylece RAG algoritmaların geçmiş sipariş verilerini analiz etmeye devam edebilir.
+        // NOT: Kategorileri, siparişleri ve yemekleri veri tabanından SİLMİYORUZ. 
+        // Böylece RAG algoritmaları geçmiş sipariş verilerini analiz etmeye devam edebilir.
 
         _context.Restaurants.Update(restaurant);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Restaurant>> GetActiveAsync(Expression<Func<Restaurant, bool>>? filter = null)
+    {
+        IQueryable<Restaurant> query = _context.Restaurants.Where(r => r.IsDeleted == false);
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+        return await query.ToListAsync();
     }
 }

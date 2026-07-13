@@ -118,7 +118,6 @@ public class CustomerController : Controller
         var restaurant = await _restaurantService.GetRestaurantWithDetailsAsync(table.RestaurantId);
         if (restaurant is null) return NotFound();
 
-        // 🔥 Kullanıcının puanını sorgulama lojiği
         int userPoints = 0;
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -137,7 +136,7 @@ public class CustomerController : Controller
             TableNumber = table.TableNumber,
             RestaurantId = restaurant.Id,
             RestaurantName = restaurant.Name,
-            UserPoints = userPoints, // 🔥 Puanı modele aktardık
+            UserPoints = userPoints,
             Categories = restaurant.Categories
         .Select(c => new MenuCategoryViewModel
         {
@@ -192,16 +191,13 @@ public class CustomerController : Controller
             return RedirectToAction("Detail", new { id = dto.RestaurantId });
         }
 
-        // 1. Siparişi Business katmanında oluşturuyoruz
         var order = await _orderService.CreateOrderAsync(dto);
 
-        // 2. 🔥 Kazanılan Puanı Hesaplama ve Güncelleme Lojiği
         if (order is not null)
         {
             // Örnek: Sipariş tutarının %10'u kadar puan kazanılır.
             order.PointsEarned = (int)(order.TotalAmount * 0.10m);
 
-            // Değişikliği veri tabanına yansıtması için OrderService üzerindeki Update metodunu çağırıyoruz
             await _orderService.UpdateAsync(order);
         }
 
