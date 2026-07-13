@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.SemanticKernel;
 using Project.Business.Abstract;
 using Project.Business.Concrete;
 using Project.DataAccess;
@@ -43,6 +44,19 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
 builder.Services.AddDbContext<SmartMenuDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Semantic Kernel + Ollama (yerel AI)
+#pragma warning disable SKEXP0070
+builder.Services.AddTransient<Kernel>(_ =>
+{
+    var kernelBuilder = Kernel.CreateBuilder();
+    kernelBuilder.AddOllamaChatCompletion(
+        modelId: "llama3",
+        endpoint: new Uri("http://localhost:11434"));
+    return kernelBuilder.Build();
+});
+#pragma warning restore SKEXP0070
+
+builder.Services.AddScoped<IAiService, SemanticKernelAiService>();
 
 var app = builder.Build();
 

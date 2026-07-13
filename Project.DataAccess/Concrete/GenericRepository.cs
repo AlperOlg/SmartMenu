@@ -17,6 +17,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public async Task<T?> GetAsync(int id, bool useTracking = true)
     {
+
         return useTracking ?
             await _dbSet.FindAsync(id) :
             await _dbSet.AsNoTracking().FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);

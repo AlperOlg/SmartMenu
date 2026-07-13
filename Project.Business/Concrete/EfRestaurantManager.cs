@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
 using Project.Business.Abstract;
 using Project.Business.Dtos;
@@ -17,9 +18,9 @@ public class EfRestaurantManager : GenericManager<Restaurant>, IRestaurantServic
         _userManager = userManager;
     }
 
-    public async Task<IEnumerable<RestaurantListDto>> GetActiveRestaurantsAsync()
+    public async Task<IEnumerable<RestaurantListDto>> GetActiveRestaurantsAsync(Expression<Func<Restaurant, bool>>? filter = null)
     {
-        var restaurants = await _restaurantRepository.GetActiveAsync();
+        var restaurants = await _restaurantRepository.GetActiveAsync(filter);
 
         return restaurants.Select(r => new RestaurantListDto
         {
@@ -31,11 +32,11 @@ public class EfRestaurantManager : GenericManager<Restaurant>, IRestaurantServic
         });
     }
 
-    public Task<Restaurant?> GetRestaurantWithDetailsAsync(int id)
-        => _restaurantRepository.GetWithDetailsAsync(id);
+    public async Task<Restaurant?> GetRestaurantWithDetailsAsync(int id, bool justActive = true)
+        => await _restaurantRepository.GetWithDetailsAsync(id, justActive);
 
-    public Task<Restaurant?> GetByOwnerIdAsync(int ownerId)
-        => _restaurantRepository.GetByOwnerIdAsync(ownerId);
+    public async Task<Restaurant?> GetByOwnerIdAsync(int ownerId)
+        => await _restaurantRepository.GetByOwnerIdAsync(ownerId);
 
     public async Task<Restaurant> CreateRestaurantAsync(int ownerId, CreateRestaurantDto dto)
     {
@@ -99,4 +100,7 @@ public class EfRestaurantManager : GenericManager<Restaurant>, IRestaurantServic
         await _restaurantRepository.DeleteAsync(restaurantId);
         return true;
     }
+
+    public async Task<IEnumerable<Restaurant>> GetAllRestaurantsWithDetailsAsync(Expression<Func<Restaurant, bool>>? filter = null, bool justActive = true)
+        => await _restaurantRepository.GetAllWithDetailsAsync(filter, justActive);
 }

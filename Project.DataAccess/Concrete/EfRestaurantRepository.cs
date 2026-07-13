@@ -26,20 +26,22 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
             .ToListAsync();
     }
 
-    public async Task<Restaurant?> GetWithDetailsAsync(int id)
+    public async Task<Restaurant?> GetWithDetailsAsync(int id, bool justActive = true)
     {
         var today = DateTime.Today;
         var tomorrow = today.AddDays(1);
+        IQueryable<Restaurant> query = _context.Restaurants.AsNoTracking();
 
-        return await _context.Restaurants
-            .AsNoTracking()
-            .IgnoreQueryFilters()
+        if (justActive)
+        {
+            query = query.Where(r => r.IsDeleted == false);
+        }
+        return await query.IgnoreQueryFilters()
             .Include(r => r.Categories.OrderBy(c => c.Name))
             .Include(r => r.MenuItems)
                 .ThenInclude(m => m.Category)
             .Include(r => r.Tables.OrderBy(t => t.TableNumber))
-            .Include(r => r.Orders.Where(o => o.OrderDate >= today && o.OrderDate < tomorrow))
-            .FirstOrDefaultAsync(r => r.Id == id);
+            .Include(r => r.Orders.Where(o => o.OrderDate >= today && o.OrderDate < tomorrow)).FirstOrDefaultAsync();
     }
 
     public async Task<Restaurant?> GetByOwnerIdAsync(int ownerId)
@@ -84,11 +86,37 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
 
     public async Task<IEnumerable<Restaurant>> GetActiveAsync(Expression<Func<Restaurant, bool>>? filter = null)
     {
-        IQueryable<Restaurant> query = _context.Restaurants.Where(r => r.IsDeleted == false);
+        IQueryable<Restaurant> query = _context.Restaurants
+        .Include(r => r.Categories)
+        .Include(r => r.MenuItems)
+        .Include(r => r.Tables)
+        .Where(r => r.IsDeleted == false);
         if (filter != null)
         {
             query = query.Where(filter);
         }
+        return await query.ToListAsync();
+    }
+
+    public async Task<IEnumerable<Restaurant>> GetAllWithDetailsAsync(Expression<Func<Restaurant, bool>>? filter = null, bool justActive = true)
+    {
+        IQueryable<Restaurant> query = _context.Restaurants
+        .Include(r => r.Tables)             // Masaları sorguya dahil et
+        .Include(r => r.Categories)         // Restoranın kategorilerini dahil et
+        .Include(r => r.MenuItems)          // Menü ürünlerini dahil et
+            .ThenInclude(m => m.Category)   // Ürünlerin kendi içindeki kategori nesnesini de doldur
+        .AsNoTracking();
+
+        if (justActive)
+        {
+            query = query.Where(r => r.IsDeleted == false);
+        }
+
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+
         return await query.ToListAsync();
     }
 }
