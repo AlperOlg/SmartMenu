@@ -28,20 +28,20 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
 
     public async Task<Restaurant?> GetWithDetailsAsync(int id, bool justActive = true)
     {
-        var today = DateTime.Today;
-        var tomorrow = today.AddDays(1);
-        IQueryable<Restaurant> query = _context.Restaurants.AsNoTracking();
+        IQueryable<Restaurant> query = _context.Restaurants
+            .Include(r => r.Tables)
+            .Include(r => r.Categories)
+            .Include(r => r.MenuItems)
+                .ThenInclude(m => m.Category)
+            .AsSplitQuery()
+            .AsNoTracking();
 
         if (justActive)
         {
             query = query.Where(r => r.IsDeleted == false);
         }
-        return await query.IgnoreQueryFilters()
-            .Include(r => r.Categories.OrderBy(c => c.Name))
-            .Include(r => r.MenuItems)
-                .ThenInclude(m => m.Category)
-            .Include(r => r.Tables.OrderBy(t => t.TableNumber))
-            .Include(r => r.Orders.Where(o => o.OrderDate >= today && o.OrderDate < tomorrow)).FirstOrDefaultAsync();
+
+        return await query.FirstOrDefaultAsync(r => r.Id == id);
     }
 
     public async Task<Restaurant?> GetByOwnerIdAsync(int ownerId)
@@ -101,11 +101,12 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
     public async Task<IEnumerable<Restaurant>> GetAllWithDetailsAsync(Expression<Func<Restaurant, bool>>? filter = null, bool justActive = true)
     {
         IQueryable<Restaurant> query = _context.Restaurants
-        .Include(r => r.Tables)             // Masaları sorguya dahil et
-        .Include(r => r.Categories)         // Restoranın kategorilerini dahil et
-        .Include(r => r.MenuItems)          // Menü ürünlerini dahil et
-            .ThenInclude(m => m.Category)   // Ürünlerin kendi içindeki kategori nesnesini de doldur
-        .AsNoTracking();
+            .Include(r => r.Tables)
+            .Include(r => r.Categories)
+            .Include(r => r.MenuItems)
+                .ThenInclude(m => m.Category)
+            .AsSplitQuery()
+            .AsNoTracking();
 
         if (justActive)
         {
