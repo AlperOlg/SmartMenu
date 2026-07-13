@@ -6,8 +6,8 @@
     .ai-page {
         padding: 2rem 0 3rem;
         background:
-            radial-gradient(ellipse 70% 50% at 10% 0%, rgba(99, 102, 241, 0.12), transparent 55%),
-            radial-gradient(ellipse 50% 40% at 90% 20%, rgba(212, 165, 116, 0.1), transparent 50%);
+            radial-gradient(ellipse 70% 50% at 10% 0%, var(--sqm-gold-soft, rgba(212, 165, 116, 0.14)), transparent 55%),
+            radial-gradient(ellipse 50% 40% at 90% 20%, rgba(212, 165, 116, 0.08), transparent 50%);
     }
 
     .ai-intro-card,
@@ -30,11 +30,11 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6 50%, #d4a574);
-        color: #fff;
+        background: linear-gradient(135deg, var(--sqm-gold, #d4a574), #b8895a);
+        color: var(--sqm-bg, #121214);
         font-size: 1.25rem;
         margin-bottom: 1rem;
-        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+        box-shadow: 0 8px 24px rgba(212, 165, 116, 0.3);
     }
 
     .ai-intro-card h1 {
@@ -120,8 +120,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #6366f1, #d4a574);
-        color: #121214;
+        background: linear-gradient(135deg, var(--sqm-gold, #d4a574), #b8895a);
+        color: var(--sqm-bg, #121214);
     }
 
     .ai-chat-header h2 {
@@ -195,8 +195,8 @@
     }
 
     .ai-msg--user .ai-msg-avatar {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
-        color: #fff;
+        background: linear-gradient(135deg, var(--sqm-gold, #d4a574), #b8895a);
+        color: var(--sqm-bg, #121214);
     }
 
     .ai-msg--bot .ai-msg-avatar {
@@ -215,10 +215,10 @@
     }
 
     .ai-msg--user .ai-bubble {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-        color: #fff;
+        background: linear-gradient(135deg, var(--sqm-gold, #d4a574) 0%, #b8895a 100%);
+        color: var(--sqm-bg, #121214);
         border-bottom-right-radius: 0.3rem;
-        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+        box-shadow: 0 8px 20px rgba(212, 165, 116, 0.3);
     }
 
     .ai-msg--bot .ai-bubble {
@@ -229,9 +229,9 @@
     }
 
     .ai-msg--error .ai-bubble {
-        background: rgba(239, 68, 68, 0.12);
-        border-color: rgba(239, 68, 68, 0.3);
-        color: #fecaca;
+        background: rgba(229, 115, 115, 0.12);
+        border-color: rgba(229, 115, 115, 0.3);
+        color: #f0a9a9;
     }
 
     .ai-typing {
@@ -285,8 +285,8 @@
 
     .ai-composer .form-control:focus {
         background: rgba(245, 240, 232, 0.07);
-        border-color: rgba(124, 58, 237, 0.55);
-        box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.15);
+        border-color: var(--sqm-gold, #d4a574);
+        box-shadow: 0 0 0 0.2rem var(--sqm-gold-soft, rgba(212, 165, 116, 0.15));
         color: var(--sqm-cream, #f5f0e8);
     }
 
@@ -296,19 +296,19 @@
         padding: 0.7rem 1.25rem;
         font-weight: 600;
         white-space: nowrap;
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
-        color: #fff;
+        background: linear-gradient(135deg, var(--sqm-gold, #d4a574), #b8895a);
+        color: var(--sqm-bg, #121214);
         display: inline-flex;
         align-items: center;
         gap: 0.45rem;
         transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
-        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.3);
+        box-shadow: 0 6px 18px rgba(212, 165, 116, 0.3);
     }
 
     .ai-send-btn:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 8px 22px rgba(79, 70, 229, 0.4);
-        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(212, 165, 116, 0.4);
+        color: var(--sqm-bg, #121214);
     }
 
     .ai-send-btn:disabled {
