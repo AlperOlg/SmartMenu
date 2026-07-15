@@ -23,8 +23,9 @@ Bootstrap
   
   <br>
   
- <img width="2559" height="1296" alt="image" src="https://github.com/user-attachments/assets/fc5a4933-2b7a-447a-9db5-7435d9b6b864" />
-<img width="2549" height="1315" alt="Ekran görüntüsü 2026-07-15 175327" src="https://github.com/user-attachments/assets/22658106-99cc-4339-bebc-e5f16aa034eb" />
+<img width="2559" height="1296" alt="image" src="https://github.com/user-attachments/assets/fc5a4933-2b7a-447a-9db5-7435d9b6b864" />
+<img width="930" height="675" alt="image" src="https://github.com/user-attachments/assets/049eb37b-b379-4f3a-ae5f-4a6e8c230d0c" />
+<img width="1265" height="534" alt="image" src="https://github.com/user-attachments/assets/a59e252c-55d9-4d13-9fc4-295495cf906f" />
 
   
   <br><br>
