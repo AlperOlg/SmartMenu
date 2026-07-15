@@ -158,6 +158,39 @@
             font-size: 0.8rem;
         }
 
+        .sqm-fav-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 999px;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.55);
+            color: var(--sqm-cream-muted);
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .sqm-fav-btn:hover {
+            color: #e05252;
+            border-color: rgba(224, 82, 82, 0.4);
+            background: rgba(224, 82, 82, 0.1);
+            transform: scale(1.05);
+        }
+
+        .sqm-fav-btn.is-active {
+            color: #e05252;
+            border-color: rgba(224, 82, 82, 0.45);
+            background: rgba(224, 82, 82, 0.12);
+        }
+
+        .sqm-fav-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
         .sqm-detail-meta {
             display: flex;
             flex-wrap: wrap;
@@ -563,6 +596,14 @@
                         <i class="fa-solid fa-star" aria-hidden="true"></i>
                         İncelemeler
                     </a>
+                    <button type="button"
+                            class="sqm-fav-btn @(Model.IsFavorite ? "is-active" : "")"
+                            data-restaurant-id="@Model.Id"
+                            data-favorite="@(Model.IsFavorite ? "true" : "false")"
+                            aria-label="@(Model.IsFavorite ? "Favorilerden çıkar" : "Favorilere ekle")"
+                            onclick="window.sqmToggleFavorite(this);">
+                        <i class="@(Model.IsFavorite ? "fa-solid text-danger" : "fa-regular") fa-heart" aria-hidden="true"></i>
+                    </button>
                 </div>
                 <div class="sqm-detail-meta">
                     <span><i class="fa-solid fa-layer-group" aria-hidden="true"></i> @Model.CategoryCount
@@ -761,4 +802,5 @@
                     });
                 })();
             </script>
+            <partial name="_FavoriteToggleScript" />
         }

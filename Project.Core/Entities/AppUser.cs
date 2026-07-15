@@ -8,4 +8,5 @@ public class AppUser : IdentityUser<int>
     public int? RestaurantId { get; set; }
     public Restaurant? Restaurant { get; set; }
     public ICollection<RestaurantLoyalty> Royalties { get; set; } = new List<RestaurantLoyalty>();
+    public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
 }

@@ -20,6 +20,8 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
     public DbSet<MenuItemIngredient> MenuItemIngredients { get; set; } = null!;
     public DbSet<RestaurantLoyalty> RestaurantLoyalties { get; set; } = null!;
     public DbSet<Review> Reviews { get; set; }
+    public DbSet<Favorite> Favorites { get; set; }
+    public DbSet<ReviewLike> ReviewLikes { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -108,9 +110,52 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<Review>()
-    .HasOne(r => r.Restaurant)
-    .WithMany(rest => rest.Reviews)
-    .HasForeignKey(r => r.RestaurantId)
-    .OnDelete(DeleteBehavior.Cascade);
+               .HasOne(r => r.Restaurant)
+               .WithMany(rest => rest.Reviews)
+               .HasForeignKey(r => r.RestaurantId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Review>()
+               .HasOne(r => r.AppUser)
+               .WithMany()
+               .HasForeignKey(r => r.AppUserId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Review>()
+               .HasOne(r => r.ParentReview)
+               .WithMany(r => r.Replies)
+               .HasForeignKey(r => r.ParentReviewId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Favorite>()
+               .HasOne(f => f.Restaurant)
+               .WithMany(r => r.Favorites)
+               .HasForeignKey(f => f.RestaurantId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Favorite>()
+               .HasOne(f => f.AppUser)
+               .WithMany(u => u.Favorites)
+               .HasForeignKey(f => f.AppUserId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+        // Review -> ReviewLike (bire-çok)
+        builder.Entity<ReviewLike>()
+               .HasOne(rl => rl.Review)
+               .WithMany(r => r.ReviewLikes)
+               .HasForeignKey(rl => rl.ReviewId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+        // AppUser -> ReviewLike: Restrict — AppUser→Review→ReviewLike ile çoklu cascade yolunu önler
+        builder.Entity<ReviewLike>()
+               .HasOne(rl => rl.AppUser)
+               .WithMany()
+               .HasForeignKey(rl => rl.AppUserId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+        // Aynı kullanıcı aynı yorumu yalnızca bir kez beğenebilir
+        builder.Entity<ReviewLike>()
+               .HasIndex(rl => new { rl.AppUserId, rl.ReviewId })
+               .IsUnique();
     }
 }

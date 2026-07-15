@@ -9,4 +9,5 @@ public class RestaurantListDto
     public int TableCount { get; set; }
     public double AverageRating { get; set; }
     public int ReviewCount { get; set; }
+    public bool IsFavorite { get; set; }
 }

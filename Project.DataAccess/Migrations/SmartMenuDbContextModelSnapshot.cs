@@ -283,6 +283,32 @@ namespace Project.DataAccess.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("Project.Core.Entities.Favorite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RestaurantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppUserId");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.ToTable("Favorites");
+                });
+
             modelBuilder.Entity("Project.Core.Entities.Ingredient", b =>
                 {
                     b.Property<int>("Id")
@@ -487,6 +513,9 @@ namespace Project.DataAccess.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("ParentReviewId")
+                        .HasColumnType("int");
+
                     b.Property<double>("Rating")
                         .HasColumnType("float");
 
@@ -497,9 +526,35 @@ namespace Project.DataAccess.Migrations
 
                     b.HasIndex("AppUserId");
 
+                    b.HasIndex("ParentReviewId");
+
                     b.HasIndex("RestaurantId");
 
                     b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("Project.Core.Entities.ReviewLike", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId");
+
+                    b.HasIndex("AppUserId", "ReviewId")
+                        .IsUnique();
+
+                    b.ToTable("ReviewLikes");
                 });
 
             modelBuilder.Entity("Project.Core.Entities.Table", b =>
@@ -620,6 +675,25 @@ namespace Project.DataAccess.Migrations
                     b.Navigation("Restaurant");
                 });
 
+            modelBuilder.Entity("Project.Core.Entities.Favorite", b =>
+                {
+                    b.HasOne("Project.Core.Entities.AppUser", "AppUser")
+                        .WithMany("Favorites")
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Project.Core.Entities.Restaurant", "Restaurant")
+                        .WithMany("Favorites")
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppUser");
+
+                    b.Navigation("Restaurant");
+                });
+
             modelBuilder.Entity("Project.Core.Entities.MenuItem", b =>
                 {
                     b.HasOne("Project.Core.Entities.Category", "Category")
@@ -710,6 +784,11 @@ namespace Project.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Project.Core.Entities.Review", "ParentReview")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentReviewId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Project.Core.Entities.Restaurant", "Restaurant")
                         .WithMany("Reviews")
                         .HasForeignKey("RestaurantId")
@@ -718,7 +797,20 @@ namespace Project.DataAccess.Migrations
 
                     b.Navigation("AppUser");
 
+                    b.Navigation("ParentReview");
+
                     b.Navigation("Restaurant");
+                });
+
+            modelBuilder.Entity("Project.Core.Entities.ReviewLike", b =>
+                {
+                    b.HasOne("Project.Core.Entities.Review", "Review")
+                        .WithMany("ReviewLikes")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Review");
                 });
 
             modelBuilder.Entity("Project.Core.Entities.Table", b =>
@@ -734,6 +826,8 @@ namespace Project.DataAccess.Migrations
 
             modelBuilder.Entity("Project.Core.Entities.AppUser", b =>
                 {
+                    b.Navigation("Favorites");
+
                     b.Navigation("Royalties");
                 });
 
@@ -761,6 +855,8 @@ namespace Project.DataAccess.Migrations
                 {
                     b.Navigation("Categories");
 
+                    b.Navigation("Favorites");
+
                     b.Navigation("MenuItems");
 
                     b.Navigation("Orders");
@@ -770,6 +866,13 @@ namespace Project.DataAccess.Migrations
                     b.Navigation("Reviews");
 
                     b.Navigation("Tables");
+                });
+
+            modelBuilder.Entity("Project.Core.Entities.Review", b =>
+                {
+                    b.Navigation("Replies");
+
+                    b.Navigation("ReviewLikes");
                 });
 #pragma warning restore 612, 618
         }

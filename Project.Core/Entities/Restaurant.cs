@@ -33,15 +33,29 @@ public class Restaurant
     public ICollection<RestaurantLoyalty> RestaurantRoyalties { get; set; } = new List<RestaurantLoyalty>();
 
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
+
+    /// <summary>
+    /// Ortalamaya giren ana yorumlar: yanıt değil, puanlı ve restoran sahibi yazmamış.
+    /// </summary>
+    [NotMapped]
+    public IEnumerable<Review> RatedParentReviews =>
+        Reviews?
+            .Where(r => r.ParentReviewId == null && r.Rating > 0 && r.AppUserId != OwnerId)
+        ?? Enumerable.Empty<Review>();
 
     public double AverageRating
     {
         get
         {
-            if (Reviews == null || !Reviews.Any())
+            var rated = RatedParentReviews.ToList();
+            if (rated.Count == 0)
                 return 0.0;
 
-            return Math.Round(Reviews.Average(r => r.Rating), 1);
+            return Math.Round(rated.Average(r => r.Rating), 1);
         }
     }
+
+    [NotMapped]
+    public int RatedReviewCount => RatedParentReviews.Count();
 }

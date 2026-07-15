@@ -14,26 +14,130 @@ public class CustomerController : Controller
     private readonly IOrderService _orderService;
     private readonly IGenericService<RestaurantLoyalty> _loyaltyRepository;
     private readonly IGenericService<Review> _reviewService;
+    private readonly IGenericService<Favorite> _favoriteService;
+    private readonly IGenericService<ReviewLike> _reviewLikeService;
+
+
 
     public CustomerController(
         IRestaurantService restaurantService,
         ITableService tableService,
         IOrderService orderService,
         IGenericService<RestaurantLoyalty> loyaltyRepository,
-        IGenericService<Review> reviewService)
+        IGenericService<Review> reviewService,
+        IGenericService<Favorite> favoriteService,
+        IGenericService<ReviewLike> reviewLikeService)
     {
         _restaurantService = restaurantService;
         _tableService = tableService;
         _orderService = orderService;
         _loyaltyRepository = loyaltyRepository;
         _reviewService = reviewService;
+        _favoriteService = favoriteService;
+        _reviewLikeService = reviewLikeService;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var restaurants = await _restaurantService.GetActiveRestaurantsAsync();
+        var restaurants = (await _restaurantService.GetActiveRestaurantsAsync()).ToList();
+        await ApplyFavoriteFlagsAsync(restaurants);
         return View(restaurants);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Favorites()
+    {
+        if (User.Identity?.IsAuthenticated != true
+            || !int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var favoriteIds = (await _favoriteService.GetAllAsync(f => f.AppUserId == userId, useTracking: false))
+            .Select(f => f.RestaurantId)
+            .ToHashSet();
+
+        var restaurants = (await _restaurantService.GetActiveRestaurantsAsync())
+            .Where(r => favoriteIds.Contains(r.Id))
+            .Select(r =>
+            {
+                r.IsFavorite = true;
+                return r;
+            })
+            .OrderBy(r => r.Name)
+            .ToList();
+
+        return View(restaurants);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleFavorite(int restaurantId)
+    {
+        if (User.Identity?.IsAuthenticated != true
+            || !int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
+            return Json(new
+            {
+                success = false,
+                loginRequired = true,
+                message = "Favoriye eklemek için giriş yapmalısınız."
+            });
+        }
+
+        var restaurant = await _restaurantService.GetRestaurantWithDetailsAsync(restaurantId);
+        if (restaurant is null)
+        {
+            return Json(new { success = false, message = "Restoran bulunamadı." });
+        }
+
+        var existing = (await _favoriteService.GetAllAsync(
+                f => f.AppUserId == userId && f.RestaurantId == restaurantId))
+            .FirstOrDefault();
+
+        if (existing is not null)
+        {
+            await _favoriteService.DeleteAsync(existing);
+            return Json(new
+            {
+                success = true,
+                isFavorite = false,
+                message = "Restoran favorilerden çıkarıldı."
+            });
+        }
+
+        await _favoriteService.AddAsync(new Favorite
+        {
+            AppUserId = userId,
+            RestaurantId = restaurantId,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        return Json(new
+        {
+            success = true,
+            isFavorite = true,
+            message = "Restoran favorilere eklendi."
+        });
+    }
+
+    private async Task ApplyFavoriteFlagsAsync(IEnumerable<RestaurantListDto> restaurants)
+    {
+        if (User.Identity?.IsAuthenticated != true
+            || !int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
+            return;
+        }
+
+        var favoriteIds = (await _favoriteService.GetAllAsync(f => f.AppUserId == userId, useTracking: false))
+            .Select(f => f.RestaurantId)
+            .ToHashSet();
+
+        foreach (var restaurant in restaurants)
+        {
+            restaurant.IsFavorite = favoriteIds.Contains(restaurant.Id);
+        }
     }
 
     [HttpGet]
@@ -57,7 +161,8 @@ public class CustomerController : Controller
             Name = restaurant.Name,
             CanManageRestaurant = canManage, // View tarafında "Düzenle" butonunu göstermek için kullanacağız
             AverageRating = restaurant.AverageRating,
-            ReviewCount = restaurant.Reviews?.Count ?? 0,
+            ReviewCount = restaurant.RatedReviewCount,
+            IsFavorite = false,
             Categories = restaurant.Categories
                 .Select(c => new MenuCategoryViewModel
                 {
@@ -85,6 +190,15 @@ public class CustomerController : Controller
                 })
                 .ToList()
         };
+
+        if (User.Identity?.IsAuthenticated == true
+            && int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var favoriteUserId))
+        {
+            model.IsFavorite = (await _favoriteService.GetAllAsync(
+                    f => f.AppUserId == favoriteUserId && f.RestaurantId == restaurant.Id,
+                    useTracking: false))
+                .Any();
+        }
 
         if (canManage)
         {
@@ -119,16 +233,133 @@ public class CustomerController : Controller
         var restaurant = await _restaurantService.GetRestaurantWithDetailsAsync(id);
         if (restaurant is null) return NotFound();
 
+        int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId);
+        var isOwner = userId > 0 && restaurant.OwnerId == userId;
+
+        var reviews = restaurant.Reviews?.OrderByDescending(r => r.CreatedAt).ToList() ?? new List<Review>();
+        await AttachReviewLikesAsync(reviews);
+
         var viewModel = new RestaurantReviewViewModel
         {
             RestaurantId = restaurant.Id,
             RestaurantName = restaurant.Name,
-            Reviews = restaurant.Reviews?.OrderByDescending(r => r.CreatedAt).ToList() ?? new List<Review>()
+            RestaurantOwnerId = restaurant.OwnerId,
+            IsRestaurantOwner = isOwner,
+            CanReply = true,
+            Reviews = reviews
         };
 
         return View(viewModel);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReplyToReview(int parentReviewId, string comment)
+    {
+        if (User.Identity?.IsAuthenticated != true
+            || !int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        comment = (comment ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(comment) || comment.Length > 500)
+        {
+            TempData["Error"] = "Yanıt 1–500 karakter arasında olmalıdır.";
+            var fallbackParent = await _reviewService.GetAsync(parentReviewId, useTracking: false);
+            return RedirectToAction(nameof(Reviews), new { id = fallbackParent?.RestaurantId });
+        }
+
+        var parent = await _reviewService.GetAsync(parentReviewId, useTracking: false);
+        if (parent is null || parent.ParentReviewId is not null)
+        {
+            return NotFound();
+        }
+
+        var restaurant = await _restaurantService.GetRestaurantWithDetailsAsync(parent.RestaurantId);
+        if (restaurant is null)
+        {
+            return NotFound();
+        }
+
+        var isOwner = restaurant.OwnerId == userId;
+
+        var reply = new Review
+        {
+            ParentReviewId = parentReviewId,
+            RestaurantId = parent.RestaurantId,
+            Comment = comment,
+            AppUserId = userId,
+            Rating = 0, // Yanıtlar (özellikle sahip yanıtları) ortalamayı etkilemez
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // İstenen davranış: restoran sahibi yanıtında Rating kesin 0
+        if (isOwner)
+        {
+            reply.Rating = 0;
+        }
+
+        await _reviewService.AddAsync(reply);
+        TempData["Success"] = isOwner
+            ? "Yanıtınız (Restoran Sahibi) eklendi."
+            : "Yanıtınız eklendi.";
+
+        return RedirectToAction(nameof(Reviews), new { id = parent.RestaurantId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> LikeReview(int reviewId)
+    {
+        try
+        {
+            if (User.Identity?.IsAuthenticated != true
+                || !int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentUserId))
+            {
+                return Json(new
+                {
+                    success = false,
+                    loginRequired = true,
+                    message = "Lütfen önce giriş yapın."
+                });
+            }
+
+            // Tracking açık: DeleteAsync için entity DbContext tarafından izlenmeli
+            var existingLikes = await _reviewLikeService.GetAllAsync(
+                rl => rl.AppUserId == currentUserId && rl.ReviewId == reviewId);
+            var existingLike = existingLikes?.FirstOrDefault();
+
+            bool isLikedNow;
+
+            if (existingLike is not null)
+            {
+                await _reviewLikeService.DeleteAsync(existingLike);
+                isLikedNow = false;
+            }
+            else
+            {
+                await _reviewLikeService.AddAsync(new ReviewLike
+                {
+                    AppUserId = currentUserId,
+                    ReviewId = reviewId
+                });
+                isLikedNow = true;
+            }
+
+            // Güncel beğeni sayısı: ReviewLike üzerinden doğrudan sayım
+            var totalLikesList = await _reviewLikeService.GetAllAsync(
+                rl => rl.ReviewId == reviewId,
+                useTracking: false);
+            int totalLikes = totalLikesList?.Count() ?? 0;
+
+            return Json(new { success = true, isLiked = isLikedNow, likeCount = totalLikes });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Reviews(RestaurantReviewViewModel model)
@@ -141,6 +372,9 @@ public class CustomerController : Controller
         // Display-only alanlar POST'ta gelmez; eski hataları temizle.
         ModelState.Remove(nameof(RestaurantReviewViewModel.RestaurantName));
         ModelState.Remove(nameof(RestaurantReviewViewModel.Reviews));
+        ModelState.Remove(nameof(RestaurantReviewViewModel.RestaurantOwnerId));
+        ModelState.Remove(nameof(RestaurantReviewViewModel.IsRestaurantOwner));
+        ModelState.Remove(nameof(RestaurantReviewViewModel.CanReply));
 
         // tr-TR kültüründe "4.5" bağlanamayabilir; invariant parse ile düzelt.
         if (Request.Form.TryGetValue(nameof(RestaurantReviewViewModel.Rating), out var ratingRaw)
@@ -163,6 +397,12 @@ public class CustomerController : Controller
             return RedirectToAction("Login", "Account");
         }
 
+        var restaurant = await _restaurantService.GetRestaurantWithDetailsAsync(model.RestaurantId);
+        if (restaurant is null)
+        {
+            return NotFound();
+        }
+
         // Yarım puanlara yuvarla (0.5 adımları)
         var normalizedRating = Math.Round(model.Rating!.Value * 2, MidpointRounding.AwayFromZero) / 2.0;
         if (normalizedRating < 0.5 || normalizedRating > 5.0)
@@ -171,12 +411,14 @@ public class CustomerController : Controller
             return await ReloadReviewsViewAsync(model);
         }
 
+        // Restoran sahibi ana incelemesi ortalamada OwnerId filtresiyle dışlanır.
         var review = new Review
         {
             RestaurantId = model.RestaurantId,
             Rating = normalizedRating,
             Comment = model.Comment,
             AppUserId = userId,
+            ParentReviewId = null,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -192,9 +434,43 @@ public class CustomerController : Controller
             return NotFound();
         }
 
+        int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId);
         model.RestaurantName = restaurant.Name;
-        model.Reviews = restaurant.Reviews?.OrderByDescending(r => r.CreatedAt).ToList() ?? new List<Review>();
+        model.RestaurantOwnerId = restaurant.OwnerId;
+        model.IsRestaurantOwner = userId > 0 && restaurant.OwnerId == userId;
+        model.CanReply = User.Identity?.IsAuthenticated == true;
+
+        var reviews = restaurant.Reviews?.OrderByDescending(r => r.CreatedAt).ToList() ?? new List<Review>();
+        await AttachReviewLikesAsync(reviews);
+        model.Reviews = reviews;
+
         return View(model);
+    }
+
+    /// <summary>
+    /// Restaurant detay sorgusu ReviewLikes Include etmediği için,
+    /// yorumlara beğenileri ayrıca yükleyip bağlar.
+    /// </summary>
+    private async Task AttachReviewLikesAsync(List<Review> reviews)
+    {
+        if (reviews.Count == 0) return;
+
+        var reviewIds = reviews.Select(r => r.Id).ToList();
+        var likes = (await _reviewLikeService.GetAllAsync(
+                rl => reviewIds.Contains(rl.ReviewId),
+                useTracking: false))
+            ?.ToList() ?? new List<ReviewLike>();
+
+        var likesByReviewId = likes
+            .GroupBy(rl => rl.ReviewId)
+            .ToDictionary(g => g.Key, g => (ICollection<ReviewLike>)g.ToList());
+
+        foreach (var review in reviews)
+        {
+            review.ReviewLikes = likesByReviewId.TryGetValue(review.Id, out var reviewLikes)
+                ? reviewLikes
+                : new List<ReviewLike>();
+        }
     }
 
     [HttpGet]
@@ -312,4 +588,5 @@ public class CustomerController : Controller
 
         return View(order);
     }
+
 }

@@ -1,10 +1,15 @@
 @model Project.Web.Models.RestaurantReviewViewModel
 @using System.Globalization
+@using System.Security.Claims
 @{
     ViewData["Title"] = $"{Model.RestaurantName} — İncelemeler";
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
-    var existingReviews = Model.Reviews?.OrderByDescending(r => r.CreatedAt).ToList()
-        ?? new List<Project.Core.Entities.Review>();
+    int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentUserId);
+    var allReviews = Model.Reviews ?? new List<Project.Core.Entities.Review>();
+    var parentReviews = allReviews
+        .Where(r => r.ParentReviewId == null)
+        .OrderByDescending(r => r.CreatedAt)
+        .ToList();
     var initialRating = Model.Rating is > 0
         ? Model.Rating.Value.ToString("0.0", CultureInfo.InvariantCulture)
         : string.Empty;
@@ -341,6 +346,37 @@
             margin-bottom: 0.55rem;
         }
 
+        .sqm-review-author {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.45rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.88rem;
+            color: var(--sqm-cream);
+            font-weight: 600;
+        }
+
+        .sqm-role-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            padding: 0.28rem 0.55rem;
+            border-radius: 2rem;
+        }
+
+        .sqm-role-badge.owner {
+            color: #1a1816;
+            background: linear-gradient(135deg, #f0a060, #e07040);
+            border: 1px solid rgba(224, 112, 64, 0.5);
+        }
+
+        .sqm-role-badge.customer {
+            color: #dceeff;
+            background: rgba(72, 140, 200, 0.25);
+            border: 1px solid rgba(100, 160, 210, 0.45);
+        }
+
         .sqm-review-stars {
             display: inline-flex;
             gap: 0.15rem;
@@ -364,10 +400,147 @@
             line-height: 1.55;
         }
 
+        .sqm-review-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .like-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 0.55rem;
+            border: 1px solid var(--sqm-border);
+            background: transparent;
+            color: var(--sqm-cream-muted);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .like-btn:hover {
+            color: #6ea8fe;
+            border-color: rgba(110, 168, 254, 0.45);
+            background: rgba(110, 168, 254, 0.1);
+        }
+
+        .like-btn.is-liked {
+            color: #6ea8fe;
+            border-color: rgba(110, 168, 254, 0.5);
+            background: rgba(110, 168, 254, 0.12);
+        }
+
+        .like-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .like-count {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sqm-reply-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 0;
+            padding: 0.3rem 0.7rem;
+            border-radius: 0.55rem;
+            border: 1px solid var(--sqm-border);
+            background: transparent;
+            color: var(--sqm-cream-muted);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .sqm-reply-btn:hover {
+            color: var(--sqm-gold);
+            border-color: rgba(212, 165, 116, 0.45);
+            background: rgba(212, 165, 116, 0.08);
+        }
+
+        .sqm-reply-form {
+            display: none;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed var(--sqm-border);
+        }
+
+        .sqm-reply-form.is-open {
+            display: block;
+        }
+
+        .sqm-reply-form .sqm-textarea {
+            min-height: 88px;
+            margin-bottom: 0.65rem;
+        }
+
+        .sqm-reply-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .sqm-btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.45rem 0.9rem;
+            border-radius: 0.65rem;
+            border: 1px solid var(--sqm-border);
+            background: transparent;
+            color: var(--sqm-cream-muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .sqm-replies {
+            margin-top: 0.85rem;
+            padding-left: 1.15rem;
+            border-left: 2px solid rgba(212, 165, 116, 0.25);
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .sqm-reply-item {
+            padding: 0.85rem 1rem;
+            border-radius: 0.8rem;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.55);
+        }
+
         .sqm-muted {
             color: var(--sqm-cream-muted);
             font-size: 0.9rem;
             margin: 0;
+        }
+
+        .sqm-alert-flash {
+            padding: 0.85rem 1rem;
+            border-radius: 0.85rem;
+            margin-bottom: 1rem;
+            font-size: 0.88rem;
+        }
+
+        .sqm-alert-flash.ok {
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            background: rgba(52, 211, 153, 0.1);
+            color: #6ee7b7;
+        }
+
+        .sqm-alert-flash.err {
+            border: 1px solid rgba(229, 115, 115, 0.35);
+            background: rgba(229, 115, 115, 0.1);
+            color: #e57373;
         }
     </style>
 }
@@ -393,7 +566,7 @@
                     </span>
                     <span>
                         <i class="fa-solid fa-comments" aria-hidden="true"></i>
-                        @existingReviews.Count inceleme
+                        @Model.RatedReviewCount inceleme
                     </span>
                 </div>
             </div>
@@ -474,45 +647,188 @@
                 Mevcut İncelemeler
             </h2>
 
+            @if (TempData["Success"] is string successMsg)
+            {
+                <div class="sqm-alert-flash ok">@successMsg</div>
+            }
+            @if (TempData["Error"] is string errorMsg)
+            {
+                <div class="sqm-alert-flash err">@errorMsg</div>
+            }
+
             @if (!isAuthenticated)
             {
                 <p class="sqm-muted">İncelemeleri görmek için giriş yapın.</p>
             }
-            else if (!existingReviews.Any())
+            else if (!parentReviews.Any())
             {
                 <p class="sqm-muted">Bu restoran için henüz inceleme yok. İlk yorumu siz yazın.</p>
             }
             else
             {
                 <div class="sqm-review-list">
-                    @foreach (var review in existingReviews)
+                    @foreach (var review in parentReviews)
                     {
+                        var isOwnerReview = review.AppUserId == Model.RestaurantOwnerId;
+                        var authorName = string.IsNullOrWhiteSpace(review.AppUser?.FullName)
+                            ? (review.AppUser?.UserName ?? "Kullanıcı")
+                            : review.AppUser!.FullName;
+                        var reviewLikeCount = review.ReviewLikes?.Count ?? 0;
+                        var reviewLiked = review.ReviewLikes?.Any(rl => rl.AppUserId == currentUserId) ?? false;
+                        var replies = allReviews
+                            .Where(r => r.ParentReviewId == review.Id)
+                            .OrderBy(r => r.CreatedAt)
+                            .ToList();
+
                         <article class="sqm-review-item">
+                            <div class="sqm-review-author">
+                                <span>@authorName</span>
+                                @if (isOwnerReview)
+                                {
+                                    <span class="badge sqm-role-badge owner">Restoran Sahibi</span>
+                                }
+                                else
+                                {
+                                    <span class="badge sqm-role-badge customer">Müşteri</span>
+                                }
+                            </div>
+
                             <div class="sqm-review-item-top">
-                                <span class="sqm-review-stars" aria-label="@review.Rating.ToString("0.0") yıldız">
-                                    @{
-                                        var fullStars = (int)Math.Floor(review.Rating);
-                                        var hasHalf = review.Rating - fullStars >= 0.5;
-                                    }
-                                    @for (var s = 1; s <= 5; s++)
-                                    {
-                                        if (s <= fullStars)
-                                        {
-                                            <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                @if (review.Rating > 0)
+                                {
+                                    <span class="sqm-review-stars" aria-label="@review.Rating.ToString("0.0") yıldız">
+                                        @{
+                                            var fullStars = (int)Math.Floor(review.Rating);
+                                            var hasHalf = review.Rating - fullStars >= 0.5;
                                         }
-                                        else if (s == fullStars + 1 && hasHalf)
+                                        @for (var s = 1; s <= 5; s++)
                                         {
-                                            <i class="fa-solid fa-star-half-stroke" aria-hidden="true"></i>
+                                            if (s <= fullStars)
+                                            {
+                                                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                            }
+                                            else if (s == fullStars + 1 && hasHalf)
+                                            {
+                                                <i class="fa-solid fa-star-half-stroke" aria-hidden="true"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa-solid fa-star is-empty" aria-hidden="true"></i>
+                                            }
                                         }
-                                        else
-                                        {
-                                            <i class="fa-solid fa-star is-empty" aria-hidden="true"></i>
-                                        }
-                                    }
-                                </span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="sqm-review-date">Yanıt / puan yok</span>
+                                }
                                 <span class="sqm-review-date">@review.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
                             </div>
                             <p class="sqm-review-comment">@review.Comment</p>
+
+                            <div class="sqm-review-actions">
+                                <button type="button"
+                                        class="like-btn@(reviewLiked ? " is-liked" : "")"
+                                        data-review-id="@review.Id"
+                                        data-liked="@(reviewLiked ? "true" : "false")"
+                                        aria-label="Yorumu beğen">
+                                    @if (reviewLiked)
+                                    {
+                                        <i class="fa-solid fa-thumbs-up text-primary" aria-hidden="true"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-regular fa-thumbs-up" aria-hidden="true"></i>
+                                    }
+                                    <span>Beğen</span>
+                                    <span class="like-count">@reviewLikeCount</span>
+                                </button>
+
+                                @if (Model.CanReply)
+                                {
+                                    <button type="button"
+                                            class="sqm-reply-btn"
+                                            data-reply-toggle="@review.Id"
+                                            aria-expanded="false">
+                                        <i class="fa-solid fa-reply" aria-hidden="true"></i>
+                                        Yanıtla
+                                    </button>
+                                }
+                            </div>
+
+                            @if (Model.CanReply)
+                            {
+                                <div class="sqm-reply-form" id="reply-form-@review.Id">
+                                    <form asp-controller="Customer" asp-action="ReplyToReview" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="parentReviewId" value="@review.Id" />
+                                        <textarea class="sqm-textarea"
+                                                  name="comment"
+                                                  maxlength="500"
+                                                  rows="3"
+                                                  required
+                                                  placeholder="@(Model.IsRestaurantOwner ? "Restoran sahibi olarak yanıt yazın..." : "Yanıtınızı yazın...")"></textarea>
+                                        <div class="sqm-reply-actions">
+                                            <button type="submit" class="sqm-btn-primary" style="padding:0.45rem 0.95rem; font-size:0.82rem;">
+                                                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                                                Gönder
+                                            </button>
+                                            <button type="button" class="sqm-btn-ghost" data-reply-cancel="@review.Id">İptal</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            }
+
+                            @if (replies.Any())
+                            {
+                                <div class="sqm-replies">
+                                    @foreach (var reply in replies)
+                                    {
+                                        var replyIsOwner = reply.AppUserId == Model.RestaurantOwnerId;
+                                        var replyAuthor = string.IsNullOrWhiteSpace(reply.AppUser?.FullName)
+                                            ? (reply.AppUser?.UserName ?? "Kullanıcı")
+                                            : reply.AppUser!.FullName;
+                                        var replyLikeCount = reply.ReviewLikes?.Count ?? 0;
+                                        var replyLiked = reply.ReviewLikes?.Any(rl => rl.AppUserId == currentUserId) ?? false;
+
+                                        <article class="sqm-reply-item">
+                                            <div class="sqm-review-author">
+                                                <span>@replyAuthor</span>
+                                                @if (replyIsOwner)
+                                                {
+                                                    <span class="badge sqm-role-badge owner">Restoran Sahibi</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge sqm-role-badge customer">Müşteri</span>
+                                                }
+                                            </div>
+                                            <div class="sqm-review-item-top">
+                                                <span class="sqm-review-date">@reply.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                                            </div>
+                                            <p class="sqm-review-comment">@reply.Comment</p>
+                                            <div class="sqm-review-actions">
+                                                <button type="button"
+                                                        class="like-btn@(replyLiked ? " is-liked" : "")"
+                                                        data-review-id="@reply.Id"
+                                                        data-liked="@(replyLiked ? "true" : "false")"
+                                                        aria-label="Yanıtı beğen">
+                                                    @if (replyLiked)
+                                                    {
+                                                        <i class="fa-solid fa-thumbs-up text-primary" aria-hidden="true"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fa-regular fa-thumbs-up" aria-hidden="true"></i>
+                                                    }
+                                                    <span>Beğen</span>
+                                                    <span class="like-count">@replyLikeCount</span>
+                                                </button>
+                                            </div>
+                                        </article>
+                                    }
+                                </div>
+                            }
                         </article>
                     }
                 </div>
@@ -537,42 +853,142 @@
             var ratingInput = document.getElementById('Rating');
             var ratingHint = document.getElementById('selectedRatingText');
             var picker = document.getElementById('starPicker');
-            if (!ratingInput || !picker) return;
+            if (ratingInput && picker) {
+                function paint(rating) {
+                    picker.querySelectorAll('.sqm-star-unit').forEach(function (unit) {
+                        var star = Number(unit.getAttribute('data-star'));
+                        var fg = unit.querySelector('.star-fg');
+                        if (!fg) return;
 
-            function paint(rating) {
-                picker.querySelectorAll('.sqm-star-unit').forEach(function (unit) {
-                    var star = Number(unit.getAttribute('data-star'));
-                    var fg = unit.querySelector('.star-fg');
-                    if (!fg) return;
+                        var fill = 0;
+                        if (rating >= star) fill = 100;
+                        else if (rating >= star - 0.5) fill = 50;
+                        fg.style.width = fill + '%';
+                    });
 
-                    var fill = 0;
-                    if (rating >= star) fill = 100;
-                    else if (rating >= star - 0.5) fill = 50;
-                    fg.style.width = fill + '%';
+                    if (ratingHint) {
+                        ratingHint.textContent = rating > 0 ? rating.toFixed(1) : '—';
+                    }
+                }
+
+                picker.querySelectorAll('button[data-value]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var value = Number(btn.getAttribute('data-value'));
+                        ratingInput.value = value.toFixed(1);
+                        paint(value);
+                    });
+
+                    btn.addEventListener('mouseenter', function () {
+                        paint(Number(btn.getAttribute('data-value')));
+                    });
                 });
 
-                if (ratingHint) {
-                    ratingHint.textContent = rating > 0 ? rating.toFixed(1) : '—';
+                picker.addEventListener('mouseleave', function () {
+                    paint(Number(ratingInput.value) || 0);
+                });
+
+                paint(Number(ratingInput.value) || 0);
+            }
+
+            document.querySelectorAll('[data-reply-toggle]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var id = btn.getAttribute('data-reply-toggle');
+                    var form = document.getElementById('reply-form-' + id);
+                    if (!form) return;
+                    var open = form.classList.toggle('is-open');
+                    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    if (open) {
+                        var ta = form.querySelector('textarea');
+                        if (ta) ta.focus();
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-reply-cancel]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var id = btn.getAttribute('data-reply-cancel');
+                    var form = document.getElementById('reply-form-' + id);
+                    var toggle = document.querySelector('[data-reply-toggle="' + id + '"]');
+                    if (form) form.classList.remove('is-open');
+                    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+                });
+            });
+        })();
+    </script>
+    <form id="sqm-like-af" class="d-none" method="post">
+        @Html.AntiForgeryToken()
+    </form>
+    <script>
+        (function () {
+            var likeUrl = '@Url.Action("LikeReview", "Customer")';
+            var loginUrl = '@Url.Action("Login", "Account")';
+            var tokenInput = document.querySelector('#sqm-like-af input[name="__RequestVerificationToken"]');
+
+            function applyLikeUi(btn, isLiked, likeCount) {
+                var icon = btn.querySelector('i');
+                var countEl = btn.querySelector('.like-count');
+
+                btn.setAttribute('data-liked', isLiked ? 'true' : 'false');
+                btn.classList.toggle('is-liked', !!isLiked);
+
+                if (icon) {
+                    if (isLiked) {
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid', 'text-primary');
+                    } else {
+                        icon.classList.remove('fa-solid', 'text-primary');
+                        icon.classList.add('fa-regular');
+                    }
+                }
+
+                if (countEl && typeof likeCount === 'number') {
+                    countEl.textContent = String(likeCount);
                 }
             }
 
-            picker.querySelectorAll('button[data-value]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var value = Number(btn.getAttribute('data-value'));
-                    ratingInput.value = value.toFixed(1);
-                    paint(value);
-                });
+            document.addEventListener('click', async function (e) {
+                var btn = e.target.closest('.like-btn');
+                if (!btn || btn.disabled) return;
 
-                btn.addEventListener('mouseenter', function () {
-                    paint(Number(btn.getAttribute('data-value')));
-                });
+                e.preventDefault();
+
+                var reviewId = btn.getAttribute('data-review-id');
+                if (!reviewId || !tokenInput) return;
+
+                btn.disabled = true;
+                try {
+                    var body = new URLSearchParams();
+                    body.set('reviewId', reviewId);
+                    body.set('__RequestVerificationToken', tokenInput.value);
+
+                    var response = await fetch(likeUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': tokenInput.value
+                        },
+                        body: body.toString(),
+                        credentials: 'same-origin'
+                    });
+
+                    var data = await response.json();
+                    if (data.loginRequired) {
+                        window.location.href = loginUrl;
+                        return;
+                    }
+
+                    if (!data.success) {
+                        console.warn(data.message || 'Beğeni işlemi başarısız.');
+                        return;
+                    }
+
+                    applyLikeUi(btn, !!data.isLiked, data.likeCount);
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    btn.disabled = false;
+                }
             });
-
-            picker.addEventListener('mouseleave', function () {
-                paint(Number(ratingInput.value) || 0);
-            });
-
-            paint(Number(ratingInput.value) || 0);
         })();
     </script>
 }

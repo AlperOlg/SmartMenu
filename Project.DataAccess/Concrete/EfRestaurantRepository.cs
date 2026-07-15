@@ -35,6 +35,7 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
             .Include(r => r.MenuItems)
                 .ThenInclude(m => m.Category)
             .Include(r => r.Reviews)
+                .ThenInclude(rv => rv.AppUser)
             .AsSplitQuery()
             .AsNoTracking();
 

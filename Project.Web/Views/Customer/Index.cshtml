@@ -67,6 +67,71 @@
             transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
         }
 
+        .sqm-fav-btn {
+            position: absolute;
+            top: 0.85rem;
+            right: 0.85rem;
+            z-index: 2;
+            width: 2.35rem;
+            height: 2.35rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.72);
+            color: var(--sqm-cream-muted);
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+        }
+
+        .sqm-fav-btn:hover {
+            color: #e05252;
+            border-color: rgba(224, 82, 82, 0.4);
+            background: rgba(224, 82, 82, 0.1);
+            transform: scale(1.06);
+        }
+
+        .sqm-fav-btn.is-active {
+            color: #e05252;
+            border-color: rgba(224, 82, 82, 0.45);
+            background: rgba(224, 82, 82, 0.12);
+        }
+
+        .sqm-fav-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .sqm-list-head-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .sqm-list-fav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.5rem 0.95rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(224, 82, 82, 0.3);
+            background: rgba(224, 82, 82, 0.08);
+            color: #e05252;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .sqm-list-fav-link:hover {
+            background: rgba(224, 82, 82, 0.14);
+            border-color: rgba(224, 82, 82, 0.5);
+            color: #e05252;
+        }
+
         .sqm-card::after {
             content: "";
             position: absolute;
@@ -93,6 +158,7 @@
             align-items: center;
             gap: 1rem;
             margin-bottom: 1.25rem;
+            padding-right: 2.5rem;
         }
 
         .sqm-card-avatar {
@@ -249,9 +315,20 @@
 
     <div class="container sqm-list-content">
         <div class="sqm-list-head">
-            <p class="sqm-list-label">Keşfet</p>
-            <h1 class="sqm-list-title">Restoranlar</h1>
-            <p class="sqm-list-subtitle">Dijital menüsünü keşfetmek için bir restoran seçin.</p>
+            <div class="sqm-list-head-row">
+                <div>
+                    <p class="sqm-list-label">Keşfet</p>
+                    <h1 class="sqm-list-title">Restoranlar</h1>
+                    <p class="sqm-list-subtitle">Dijital menüsünü keşfetmek için bir restoran seçin.</p>
+                </div>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a class="sqm-list-fav-link" asp-controller="Customer" asp-action="Favorites">
+                        <i class="fa-solid fa-heart" aria-hidden="true"></i>
+                        Favorilerim
+                    </a>
+                }
+            </div>
         </div>
 
         @if (!Model.Any())
@@ -273,6 +350,14 @@
 
                     <div class="col-12 col-sm-6 col-lg-4">
                         <a class="sqm-card" asp-controller="Customer" asp-action="Detail" asp-route-id="@restaurant.Id">
+                            <button type="button"
+                                    class="sqm-fav-btn @(restaurant.IsFavorite ? "is-active" : "")"
+                                    data-restaurant-id="@restaurant.Id"
+                                    data-favorite="@(restaurant.IsFavorite ? "true" : "false")"
+                                    aria-label="@(restaurant.IsFavorite ? "Favorilerden çıkar" : "Favorilere ekle")"
+                                    onclick="event.preventDefault(); event.stopPropagation(); window.sqmToggleFavorite(this);">
+                                <i class="@(restaurant.IsFavorite ? "fa-solid" : "fa-regular") fa-heart" aria-hidden="true"></i>
+                            </button>
                             <div class="sqm-card-head">
                                 <span class="sqm-card-avatar">
                                     @(string.IsNullOrWhiteSpace(restaurant.Name) ? "?" : restaurant.Name.Trim().Substring(0, 1).ToUpper())
@@ -321,3 +406,7 @@
         }
     </div>
 </section>
+
+@section Scripts {
+    <partial name="_FavoriteToggleScript" />
+}
