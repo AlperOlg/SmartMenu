@@ -14,5 +14,17 @@ Razor Pages (ASP.NET Core MVC),
 AJAX, 
 FontAwesome,
 Bootstrap
-<img width="2559" height="1296" alt="image" src="https://github.com/user-attachments/assets/fc5a4933-2b7a-447a-9db5-7435d9b6b864" />
+
+<div align="center">
+  <br>
+  <h1>SmartMenu AI System</h1>
+  <p><i>Akıllı Restoran ve İnceleme Platformu</i></p>
+  
+  <br>
+  
+ <img width="2559" height="1296" alt="image" src="https://github.com/user-attachments/assets/fc5a4933-2b7a-447a-9db5-7435d9b6b864" />
 <img width="2549" height="1315" alt="Ekran görüntüsü 2026-07-15 175327" src="https://github.com/user-attachments/assets/22658106-99cc-4339-bebc-e5f16aa034eb" />
+
+  
+  <br><br>
+</div>
