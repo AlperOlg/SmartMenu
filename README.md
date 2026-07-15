@@ -1,19 +1,19 @@
 SmartMenu AI & Review System
 Bu proje, bir üniversite eğitimi ve Microsoft Yaz Kampı için geliştirilmiş, N-Layer Architecture prensiplerine uygun, yüksek performanslı ve akıllı bir restoran/eğitim platformudur. Sistem, kullanıcı etkileşimlerini; yorumlar, beğeniler vs. AI destekli bir içerik sistemiyle harmanlar.
 
-Teknik Yığın (Tech Stack)
-Backend: 
-ASP.NET Core 8.0, C#
-ORM: Entity Framework Core
-Veritabanı: MSSQL (Relational Schema)
-AI Entegrasyonu: Semantic Kernel (RAG ve Prompt Management)
-QR Kodlar: QRCoder 
+<h1>Teknik Yığın (Tech Stack)</h1>
+<h3>Backend:</h3> 
+<p>ASP.NET Core 8.0, C#</p>
+<p>ORM: Entity Framework Core</p>
+<p>Veritabanı: MSSQL (Relational Schema)</p>
+<p>AI Entegrasyonu: Semantic Kernel (RAG ve Prompt Management)</p>
+<p>QR Kodlar: QRCoder </p>
 
-Frontend: 
-Razor Pages (ASP.NET Core MVC), 
-AJAX, 
-FontAwesome,
-Bootstrap
+<h3>Frontend:</h3> 
+<p>Razor Pages (ASP.NET Core MVC),</p>
+<p>AJAX, </p>
+<p>FontAwesome,</p>
+<p>Bootstrap</p>
 
 <div align="center">
   <br>
