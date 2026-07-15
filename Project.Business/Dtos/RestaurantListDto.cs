@@ -7,4 +7,6 @@ public class RestaurantListDto
     public int CategoryCount { get; set; }
     public int MenuItemCount { get; set; }
     public int TableCount { get; set; }
+    public double AverageRating { get; set; }
+    public int ReviewCount { get; set; }
 }

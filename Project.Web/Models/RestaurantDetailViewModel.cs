@@ -5,6 +5,8 @@ public class RestaurantDetailViewModel
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public bool CanManageRestaurant { get; set; }
+    public double AverageRating { get; set; }
+    public int ReviewCount { get; set; }
     public List<MenuCategoryViewModel> Categories { get; set; } = new();
     public List<TableStatusViewModel> Tables { get; set; } = new();
     public List<OwnerOrderViewModel> OwnerOrders { get; set; } = new();

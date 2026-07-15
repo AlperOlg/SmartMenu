@@ -118,6 +118,48 @@
             line-height: 1.25;
         }
 
+        .sqm-card-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.35rem;
+            padding: 0.28rem 0.65rem;
+            border-radius: 2rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            background: rgba(18, 18, 20, 0.45);
+            border: 1px solid var(--sqm-border);
+            line-height: 1;
+        }
+
+        .sqm-card-rating i {
+            font-size: 0.72rem;
+        }
+
+        .sqm-rating-gold {
+            color: #FFD700;
+            border-color: rgba(255, 215, 0, 0.28);
+            background: rgba(255, 215, 0, 0.08);
+        }
+
+        .sqm-rating-teal {
+            color: #0dcaf0;
+            border-color: rgba(13, 202, 240, 0.28);
+            background: rgba(13, 202, 240, 0.08);
+        }
+
+        .sqm-rating-softred {
+            color: #e05252;
+            border-color: rgba(224, 82, 82, 0.28);
+            background: rgba(224, 82, 82, 0.08);
+        }
+
+        .sqm-rating-muted {
+            color: #6c757d;
+            border-color: rgba(108, 117, 125, 0.28);
+            background: rgba(108, 117, 125, 0.08);
+        }
+
         .sqm-card-badge {
             display: inline-flex;
             align-items: center;
@@ -224,6 +266,11 @@
             <div class="row g-4">
                 @foreach (var restaurant in Model)
                 {
+                    var ratingClass = restaurant.AverageRating >= 4.0 ? "sqm-rating-gold"
+                        : restaurant.AverageRating >= 3.0 ? "sqm-rating-teal"
+                        : restaurant.AverageRating > 0 ? "sqm-rating-softred"
+                        : "sqm-rating-muted";
+
                     <div class="col-12 col-sm-6 col-lg-4">
                         <a class="sqm-card" asp-controller="Customer" asp-action="Detail" asp-route-id="@restaurant.Id">
                             <div class="sqm-card-head">
@@ -235,6 +282,17 @@
                                     <span class="sqm-card-badge">
                                         <span class="dot" aria-hidden="true"></span> Aktif
                                     </span>
+                                    <div class="sqm-card-rating @ratingClass">
+                                        <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                        @if (restaurant.AverageRating <= 0 || restaurant.ReviewCount == 0)
+                                        {
+                                            <span>Henüz puanlanmadı</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@restaurant.AverageRating.ToString("0.0") / 5</span>
+                                        }
+                                    </div>
                                 </div>
                             </div>
 

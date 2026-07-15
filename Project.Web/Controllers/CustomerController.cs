@@ -13,17 +13,20 @@ public class CustomerController : Controller
     private readonly ITableService _tableService;
     private readonly IOrderService _orderService;
     private readonly IGenericService<RestaurantLoyalty> _loyaltyRepository;
+    private readonly IGenericService<Review> _reviewService;
 
     public CustomerController(
         IRestaurantService restaurantService,
         ITableService tableService,
         IOrderService orderService,
-        IGenericService<RestaurantLoyalty> loyaltyRepository)
+        IGenericService<RestaurantLoyalty> loyaltyRepository,
+        IGenericService<Review> reviewService)
     {
         _restaurantService = restaurantService;
         _tableService = tableService;
         _orderService = orderService;
         _loyaltyRepository = loyaltyRepository;
+        _reviewService = reviewService;
     }
 
     [HttpGet]
@@ -53,6 +56,8 @@ public class CustomerController : Controller
             Id = restaurant.Id,
             Name = restaurant.Name,
             CanManageRestaurant = canManage, // View tarafında "Düzenle" butonunu göstermek için kullanacağız
+            AverageRating = restaurant.AverageRating,
+            ReviewCount = restaurant.Reviews?.Count ?? 0,
             Categories = restaurant.Categories
                 .Select(c => new MenuCategoryViewModel
                 {
@@ -100,6 +105,95 @@ public class CustomerController : Controller
                 }).ToList()
             }).ToList();
         }
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Reviews(int id)
+    {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var restaurant = await _restaurantService.GetRestaurantWithDetailsAsync(id);
+        if (restaurant is null) return NotFound();
+
+        var viewModel = new RestaurantReviewViewModel
+        {
+            RestaurantId = restaurant.Id,
+            RestaurantName = restaurant.Name,
+            Reviews = restaurant.Reviews?.OrderByDescending(r => r.CreatedAt).ToList() ?? new List<Review>()
+        };
+
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reviews(RestaurantReviewViewModel model)
+    {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        // Display-only alanlar POST'ta gelmez; eski hataları temizle.
+        ModelState.Remove(nameof(RestaurantReviewViewModel.RestaurantName));
+        ModelState.Remove(nameof(RestaurantReviewViewModel.Reviews));
+
+        // tr-TR kültüründe "4.5" bağlanamayabilir; invariant parse ile düzelt.
+        if (Request.Form.TryGetValue(nameof(RestaurantReviewViewModel.Rating), out var ratingRaw)
+            && double.TryParse(ratingRaw.ToString(), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var parsedRating))
+        {
+            model.Rating = parsedRating;
+            ModelState.Remove(nameof(RestaurantReviewViewModel.Rating));
+            TryValidateModel(model);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return await ReloadReviewsViewAsync(model);
+        }
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        // Yarım puanlara yuvarla (0.5 adımları)
+        var normalizedRating = Math.Round(model.Rating!.Value * 2, MidpointRounding.AwayFromZero) / 2.0;
+        if (normalizedRating < 0.5 || normalizedRating > 5.0)
+        {
+            ModelState.AddModelError(nameof(model.Rating), "Puan 0.5 ile 5 arasında olmalıdır.");
+            return await ReloadReviewsViewAsync(model);
+        }
+
+        var review = new Review
+        {
+            RestaurantId = model.RestaurantId,
+            Rating = normalizedRating,
+            Comment = model.Comment,
+            AppUserId = userId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _reviewService.AddAsync(review);
+        return RedirectToAction("Detail", new { id = model.RestaurantId });
+    }
+
+    private async Task<IActionResult> ReloadReviewsViewAsync(RestaurantReviewViewModel model)
+    {
+        var restaurant = await _restaurantService.GetRestaurantWithDetailsAsync(model.RestaurantId);
+        if (restaurant is null)
+        {
+            return NotFound();
+        }
+
+        model.RestaurantName = restaurant.Name;
+        model.Reviews = restaurant.Reviews?.OrderByDescending(r => r.CreatedAt).ToList() ?? new List<Review>();
         return View(model);
     }
 

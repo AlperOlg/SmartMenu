@@ -28,7 +28,9 @@ public class EfRestaurantManager : GenericManager<Restaurant>, IRestaurantServic
             Name = r.Name,
             CategoryCount = r.Categories.Count,
             MenuItemCount = r.MenuItems.Count,
-            TableCount = r.Tables.Count
+            TableCount = r.Tables.Count,
+            AverageRating = r.AverageRating,
+            ReviewCount = r.Reviews?.Count ?? 0
         });
     }
 

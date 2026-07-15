@@ -1,0 +1,578 @@
+@model Project.Web.Models.RestaurantReviewViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = $"{Model.RestaurantName} — İncelemeler";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var existingReviews = Model.Reviews?.OrderByDescending(r => r.CreatedAt).ToList()
+        ?? new List<Project.Core.Entities.Review>();
+    var initialRating = Model.Rating is > 0
+        ? Model.Rating.Value.ToString("0.0", CultureInfo.InvariantCulture)
+        : string.Empty;
+}
+
+@section Styles {
+    <style>
+        .sqm-detail {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 2.5rem 0 4rem;
+        }
+
+        .sqm-detail-bg {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-detail-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sqm-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--sqm-cream-muted);
+            text-decoration: none;
+            margin-bottom: 1.25rem;
+            transition: color 0.2s ease;
+        }
+
+        .sqm-back:hover {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-detail-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 1.75rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            box-shadow: var(--sqm-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .sqm-detail-avatar {
+            flex-shrink: 0;
+            width: 4rem;
+            height: 4rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sqm-bg);
+            font-size: 1.7rem;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(212, 165, 116, 0.28);
+        }
+
+        .sqm-detail-title {
+            font-size: clamp(1.5rem, 4vw, 2.1rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0;
+        }
+
+        .sqm-detail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            margin-top: 0.5rem;
+            color: var(--sqm-cream-muted);
+            font-size: 0.85rem;
+        }
+
+        .sqm-detail-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .sqm-detail-meta i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-panel {
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            box-shadow: var(--sqm-shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .sqm-panel-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sqm-panel-title i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-auth-alert.alert {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.15rem 1.35rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(212, 165, 116, 0.4);
+            background: rgba(212, 165, 116, 0.12);
+            color: var(--sqm-cream);
+            margin-bottom: 1.5rem;
+        }
+
+        .sqm-auth-alert.alert p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-auth-alert.alert strong {
+            color: var(--sqm-cream);
+        }
+
+        .sqm-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.75rem;
+            border: 1px solid transparent;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--sqm-bg) !important;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.15);
+            cursor: pointer;
+        }
+
+        .sqm-btn-primary:hover {
+            color: var(--sqm-bg) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(212, 165, 116, 0.25);
+            opacity: 0.9;
+        }
+
+        .sqm-field {
+            margin-bottom: 1.35rem;
+        }
+
+        .sqm-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--sqm-cream-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .sqm-textarea {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border-radius: 0.85rem;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.55);
+            color: var(--sqm-cream);
+            font-size: 0.92rem;
+            min-height: 140px;
+            resize: vertical;
+            line-height: 1.55;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sqm-textarea::placeholder {
+            color: rgba(200, 192, 180, 0.45);
+        }
+
+        .sqm-textarea:focus {
+            outline: none;
+            border-color: var(--sqm-gold);
+            box-shadow: 0 0 0 3px var(--sqm-gold-soft);
+        }
+
+        .sqm-char-hint {
+            margin-top: 0.45rem;
+            font-size: 0.75rem;
+            color: var(--sqm-cream-muted);
+            text-align: right;
+        }
+
+        .sqm-rating-hint {
+            margin-top: 0.55rem;
+            font-size: 0.8rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-rating-hint strong {
+            color: var(--sqm-gold);
+        }
+
+        /* Her yıldız: sol yarı = n-0.5, sağ yarı = n */
+        .sqm-star-picker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .sqm-star-unit {
+            position: relative;
+            width: 2rem;
+            height: 2rem;
+            flex-shrink: 0;
+        }
+
+        .sqm-star-unit .star-bg,
+        .sqm-star-unit .star-fg {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .sqm-star-unit .star-bg {
+            color: rgba(200, 192, 180, 0.28);
+        }
+
+        .sqm-star-unit .star-fg {
+            color: var(--sqm-gold);
+            overflow: hidden;
+            width: 0%;
+        }
+
+        .sqm-star-unit .star-fg i {
+            width: 2rem;
+            text-align: center;
+        }
+
+        .sqm-star-unit button {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 50%;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .sqm-star-unit button.half-left {
+            left: 0;
+        }
+
+        .sqm-star-unit button.half-right {
+            right: 0;
+        }
+
+        .sqm-star-unit:hover {
+            transform: translateY(-1px);
+        }
+
+        .sqm-validation {
+            display: block;
+            color: #e57373;
+            font-size: 0.82rem;
+            margin-top: 0.4rem;
+        }
+
+        .sqm-validation-summary {
+            padding: 0.85rem 1rem;
+            border-radius: 0.85rem;
+            border: 1px solid rgba(229, 115, 115, 0.35);
+            background: rgba(229, 115, 115, 0.1);
+            color: #e57373;
+            font-size: 0.88rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .sqm-validation-summary ul {
+            margin: 0;
+            padding-left: 1.1rem;
+        }
+
+        .sqm-validation-summary.validation-summary-valid {
+            display: none;
+        }
+
+        .sqm-review-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .sqm-review-item {
+            padding: 1rem 1.15rem;
+            border-radius: 0.95rem;
+            border: 1px solid var(--sqm-border);
+            background: rgba(18, 18, 20, 0.4);
+        }
+
+        .sqm-review-item-top {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .sqm-review-stars {
+            display: inline-flex;
+            gap: 0.15rem;
+            color: var(--sqm-gold);
+            font-size: 0.9rem;
+        }
+
+        .sqm-review-stars i.is-empty {
+            opacity: 0.28;
+        }
+
+        .sqm-review-date {
+            font-size: 0.75rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-review-comment {
+            margin: 0;
+            color: var(--sqm-cream);
+            font-size: 0.92rem;
+            line-height: 1.55;
+        }
+
+        .sqm-muted {
+            color: var(--sqm-cream-muted);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+    </style>
+}
+
+<section class="sqm-detail">
+    <div class="sqm-detail-bg"></div>
+
+    <div class="container sqm-detail-content">
+        <a class="sqm-back" asp-controller="Customer" asp-action="Detail" asp-route-id="@Model.RestaurantId">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Restorana dön
+        </a>
+
+        <div class="sqm-detail-header">
+            <span class="sqm-detail-avatar">
+                @(string.IsNullOrWhiteSpace(Model.RestaurantName) ? "?" : Model.RestaurantName.Trim().Substring(0, 1).ToUpper())
+            </span>
+            <div>
+                <h1 class="sqm-detail-title">@(Model.RestaurantName ?? "Restoran")</h1>
+                <div class="sqm-detail-meta">
+                    <span>
+                        <i class="fa-solid fa-star" aria-hidden="true"></i>
+                        @(Model.AverageRating > 0 ? Model.AverageRating.ToString("0.0") : "Henüz puan yok")
+                    </span>
+                    <span>
+                        <i class="fa-solid fa-comments" aria-hidden="true"></i>
+                        @existingReviews.Count inceleme
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        @if (!isAuthenticated)
+        {
+            <div class="alert sqm-auth-alert" role="alert">
+                <p>
+                    <strong>Giriş gerekli.</strong>
+                    Bu sayfayı görüntülemek ve yorum yapabilmek için giriş yapmalısınız.
+                </p>
+                <a class="sqm-btn-primary" asp-controller="Account" asp-action="Login">
+                    <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                    Giriş Yap
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="sqm-panel">
+                <h2 class="sqm-panel-title">
+                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                    İnceleme Yaz
+                </h2>
+
+                <div asp-validation-summary="ModelOnly" class="sqm-validation-summary"></div>
+
+                <form asp-controller="Customer" asp-action="Reviews" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="RestaurantId" />
+
+                    <div class="sqm-field">
+                        <span class="sqm-label">Puanınız</span>
+                        <input type="hidden" name="Rating" id="Rating" value="@initialRating" />
+                        <div class="sqm-star-picker" id="starPicker" role="radiogroup" aria-label="0.5 ile 5 arası puan">
+                            @for (var i = 1; i <= 5; i++)
+                            {
+                                var halfValue = (i - 0.5).ToString("0.0", CultureInfo.InvariantCulture);
+                                var fullValue = i.ToString("0.0", CultureInfo.InvariantCulture);
+                                <span class="sqm-star-unit" data-star="@i">
+                                    <button type="button" class="half-left" data-value="@halfValue" aria-label="@halfValue yıldız" title="@halfValue yıldız"></button>
+                                    <button type="button" class="half-right" data-value="@fullValue" aria-label="@fullValue yıldız" title="@fullValue yıldız"></button>
+                                    <span class="star-bg"><i class="fa-solid fa-star" aria-hidden="true"></i></span>
+                                    <span class="star-fg"><i class="fa-solid fa-star" aria-hidden="true"></i></span>
+                                </span>
+                            }
+                        </div>
+                        <p class="sqm-rating-hint">
+                            Yıldızın soluna tıklayınca yarım, sağına tıklayınca tam puan.
+                            Seçilen: <strong id="selectedRatingText">@(Model.Rating is > 0 ? Model.Rating.Value.ToString("0.0") : "—")</strong>
+                        </p>
+                        <span asp-validation-for="Rating" class="sqm-validation"></span>
+                    </div>
+
+                    <div class="sqm-field">
+                        <label class="sqm-label" asp-for="Comment">Yorumunuz</label>
+                        <textarea asp-for="Comment"
+                                  class="sqm-textarea"
+                                  maxlength="500"
+                                  rows="5"
+                                  placeholder="Deneyiminizi kısaca paylaşın..."></textarea>
+                        <div class="sqm-char-hint"><span id="commentCount">@(Model.Comment?.Length ?? 0)</span>/500</div>
+                        <span asp-validation-for="Comment" class="sqm-validation"></span>
+                    </div>
+
+                    <button type="submit" class="sqm-btn-primary">
+                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                        İncelemeyi Gönder
+                    </button>
+                </form>
+            </div>
+        }
+
+        <div class="sqm-panel">
+            <h2 class="sqm-panel-title">
+                <i class="fa-solid fa-stars" aria-hidden="true"></i>
+                Mevcut İncelemeler
+            </h2>
+
+            @if (!isAuthenticated)
+            {
+                <p class="sqm-muted">İncelemeleri görmek için giriş yapın.</p>
+            }
+            else if (!existingReviews.Any())
+            {
+                <p class="sqm-muted">Bu restoran için henüz inceleme yok. İlk yorumu siz yazın.</p>
+            }
+            else
+            {
+                <div class="sqm-review-list">
+                    @foreach (var review in existingReviews)
+                    {
+                        <article class="sqm-review-item">
+                            <div class="sqm-review-item-top">
+                                <span class="sqm-review-stars" aria-label="@review.Rating.ToString("0.0") yıldız">
+                                    @{
+                                        var fullStars = (int)Math.Floor(review.Rating);
+                                        var hasHalf = review.Rating - fullStars >= 0.5;
+                                    }
+                                    @for (var s = 1; s <= 5; s++)
+                                    {
+                                        if (s <= fullStars)
+                                        {
+                                            <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                        }
+                                        else if (s == fullStars + 1 && hasHalf)
+                                        {
+                                            <i class="fa-solid fa-star-half-stroke" aria-hidden="true"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-solid fa-star is-empty" aria-hidden="true"></i>
+                                        }
+                                    }
+                                </span>
+                                <span class="sqm-review-date">@review.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                            </div>
+                            <p class="sqm-review-comment">@review.Comment</p>
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            var textarea = document.getElementById('Comment');
+            var counter = document.getElementById('commentCount');
+            if (textarea && counter) {
+                var updateCount = function () {
+                    counter.textContent = String(textarea.value.length);
+                };
+                textarea.addEventListener('input', updateCount);
+                updateCount();
+            }
+
+            var ratingInput = document.getElementById('Rating');
+            var ratingHint = document.getElementById('selectedRatingText');
+            var picker = document.getElementById('starPicker');
+            if (!ratingInput || !picker) return;
+
+            function paint(rating) {
+                picker.querySelectorAll('.sqm-star-unit').forEach(function (unit) {
+                    var star = Number(unit.getAttribute('data-star'));
+                    var fg = unit.querySelector('.star-fg');
+                    if (!fg) return;
+
+                    var fill = 0;
+                    if (rating >= star) fill = 100;
+                    else if (rating >= star - 0.5) fill = 50;
+                    fg.style.width = fill + '%';
+                });
+
+                if (ratingHint) {
+                    ratingHint.textContent = rating > 0 ? rating.toFixed(1) : '—';
+                }
+            }
+
+            picker.querySelectorAll('button[data-value]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var value = Number(btn.getAttribute('data-value'));
+                    ratingInput.value = value.toFixed(1);
+                    paint(value);
+                });
+
+                btn.addEventListener('mouseenter', function () {
+                    paint(Number(btn.getAttribute('data-value')));
+                });
+            });
+
+            picker.addEventListener('mouseleave', function () {
+                paint(Number(ratingInput.value) || 0);
+            });
+
+            paint(Number(ratingInput.value) || 0);
+        })();
+    </script>
+}

@@ -31,4 +31,17 @@ public class Restaurant
     public int AvailableTableCount => Tables?.Count(t => !t.IsOccupied) ?? 0;
     public decimal LoyaltyRewardRate { get; set; } = 0.05m; // Varsayılan olarak %5 puan verir.
     public ICollection<RestaurantLoyalty> RestaurantRoyalties { get; set; } = new List<RestaurantLoyalty>();
+
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
+
+    public double AverageRating
+    {
+        get
+        {
+            if (Reviews == null || !Reviews.Any())
+                return 0.0;
+
+            return Math.Round(Reviews.Average(r => r.Rating), 1);
+        }
+    }
 }

@@ -19,6 +19,7 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
     public DbSet<Ingredient> Ingredients { get; set; } = null!;
     public DbSet<MenuItemIngredient> MenuItemIngredients { get; set; } = null!;
     public DbSet<RestaurantLoyalty> RestaurantLoyalties { get; set; } = null!;
+    public DbSet<Review> Reviews { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -105,5 +106,11 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
             .WithMany(r => r.RestaurantRoyalties)
             .HasForeignKey(rl => rl.RestaurantId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Review>()
+    .HasOne(r => r.Restaurant)
+    .WithMany(rest => rest.Reviews)
+    .HasForeignKey(r => r.RestaurantId)
+    .OnDelete(DeleteBehavior.Cascade);
     }
 }
