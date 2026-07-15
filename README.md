@@ -19,7 +19,7 @@ Bootstrap
   <br>
   <h1>SmartMenu AI System</h1>
   <h3><i>Akıllı Restoran ve İnceleme Platformu</i></h3>
-  <h3><Resimler:/h3>
+  <h3>Resimler:</h3>
   
   <br>
   
