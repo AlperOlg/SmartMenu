@@ -1,0 +1,344 @@
+@model IEnumerable<Project.Business.Dtos.RestaurantListDto>
+@{
+    ViewData["Title"] = "Favori Restoranlar";
+}
+
+@section Styles {
+    <style>
+        .sqm-list {
+            position: relative;
+            min-height: calc(100vh - 72px);
+            padding: 3rem 0 4rem;
+            overflow: hidden;
+        }
+
+        .sqm-list-bg {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 50% at 50% -10%, rgba(212, 165, 116, 0.15), transparent),
+                linear-gradient(180deg, #121214 0%, #1a1816 100%);
+            z-index: 0;
+        }
+
+        .sqm-list-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sqm-list-head {
+            margin-bottom: 2.5rem;
+        }
+
+        .sqm-list-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--sqm-gold);
+            margin-bottom: 0.4rem;
+        }
+
+        .sqm-list-title {
+            font-size: clamp(1.75rem, 5vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0;
+        }
+
+        .sqm-list-subtitle {
+            color: var(--sqm-cream-muted);
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .sqm-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--sqm-cream-muted);
+            text-decoration: none;
+            margin-bottom: 1.25rem;
+            transition: color 0.2s ease;
+        }
+
+        .sqm-back:hover {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background: linear-gradient(145deg, #252528, #1c1c1f);
+            border: 1px solid var(--sqm-border);
+            text-decoration: none;
+            overflow: hidden;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .sqm-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(212, 165, 116, 0.35);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .sqm-fav-btn {
+            position: absolute;
+            top: 0.85rem;
+            right: 0.85rem;
+            z-index: 2;
+            width: 2.35rem;
+            height: 2.35rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 1px solid rgba(224, 82, 82, 0.45);
+            background: rgba(224, 82, 82, 0.12);
+            color: #e05252;
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+        }
+
+        .sqm-fav-btn:hover {
+            transform: scale(1.06);
+        }
+
+        .sqm-fav-btn:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .sqm-card-head {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding-right: 2.5rem;
+        }
+
+        .sqm-card-avatar {
+            flex-shrink: 0;
+            width: 3.25rem;
+            height: 3.25rem;
+            border-radius: 0.875rem;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sqm-bg);
+            font-size: 1.35rem;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(212, 165, 116, 0.28);
+        }
+
+        .sqm-card-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            margin: 0 0 0.25rem;
+            line-height: 1.25;
+        }
+
+        .sqm-card-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.35rem;
+            padding: 0.28rem 0.65rem;
+            border-radius: 2rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            background: rgba(18, 18, 20, 0.45);
+            border: 1px solid var(--sqm-border);
+            line-height: 1;
+        }
+
+        .sqm-card-rating i {
+            font-size: 0.72rem;
+        }
+
+        .sqm-rating-gold {
+            color: #FFD700;
+            border-color: rgba(255, 215, 0, 0.28);
+            background: rgba(255, 215, 0, 0.08);
+        }
+
+        .sqm-rating-teal {
+            color: #0dcaf0;
+            border-color: rgba(13, 202, 240, 0.28);
+            background: rgba(13, 202, 240, 0.08);
+        }
+
+        .sqm-rating-softred {
+            color: #e05252;
+            border-color: rgba(224, 82, 82, 0.28);
+            background: rgba(224, 82, 82, 0.08);
+        }
+
+        .sqm-rating-muted {
+            color: #6c757d;
+            border-color: rgba(108, 117, 125, 0.28);
+            background: rgba(108, 117, 125, 0.08);
+        }
+
+        .sqm-card-stats {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--sqm-border);
+        }
+
+        .sqm-card-stat {
+            text-align: center;
+        }
+
+        .sqm-card-stat strong {
+            display: block;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            line-height: 1.1;
+        }
+
+        .sqm-card-stat span {
+            font-size: 0.72rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-card-cta {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 1.25rem;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--sqm-gold);
+        }
+
+        .sqm-empty {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 4rem 1rem;
+            border-radius: 1rem;
+            background: var(--sqm-surface);
+            border: 1px dashed var(--sqm-border);
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-empty i {
+            font-size: 2.5rem;
+            color: #e05252;
+            margin-bottom: 1rem;
+        }
+    </style>
+}
+
+<section class="sqm-list">
+    <div class="sqm-list-bg"></div>
+
+    <div class="container sqm-list-content">
+        <a class="sqm-back" asp-controller="Customer" asp-action="Index">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Restoranlara dön
+        </a>
+
+        <div class="sqm-list-head">
+            <p class="sqm-list-label">Koleksiyon</p>
+            <h1 class="sqm-list-title">Favori Restoranlar</h1>
+            <p class="sqm-list-subtitle">Beğendiğiniz restoranları buradan hızlıca açabilirsiniz.</p>
+        </div>
+
+        <div id="sqm-fav-empty" class="sqm-empty @(Model.Any() ? "d-none" : "")">
+            <i class="fa-regular fa-heart" aria-hidden="true"></i>
+            <p class="mb-2">Henüz favori restoranınız yok.</p>
+            <a class="sqm-back" asp-controller="Customer" asp-action="Index" style="margin:0; justify-content:center;">
+                Restoranları keşfet
+            </a>
+        </div>
+
+        @if (Model.Any())
+        {
+            <div class="row g-4" id="sqm-fav-grid">
+                @foreach (var restaurant in Model)
+                {
+                    var ratingClass = restaurant.AverageRating >= 4.0 ? "sqm-rating-gold"
+                        : restaurant.AverageRating >= 3.0 ? "sqm-rating-teal"
+                        : restaurant.AverageRating > 0 ? "sqm-rating-softred"
+                        : "sqm-rating-muted";
+
+                    <div class="col-12 col-sm-6 col-lg-4" data-favorite-card>
+                        <a class="sqm-card" asp-controller="Customer" asp-action="Detail" asp-route-id="@restaurant.Id">
+                            <button type="button"
+                                    class="sqm-fav-btn is-active"
+                                    data-restaurant-id="@restaurant.Id"
+                                    data-favorite="true"
+                                    data-remove-on-unfavorite="true"
+                                    aria-label="Favorilerden çıkar"
+                                    onclick="event.preventDefault(); event.stopPropagation(); window.sqmToggleFavorite(this);">
+                                <i class="fa-solid fa-heart text-danger" aria-hidden="true"></i>
+                            </button>
+                            <div class="sqm-card-head">
+                                <span class="sqm-card-avatar">
+                                    @(string.IsNullOrWhiteSpace(restaurant.Name) ? "?" : restaurant.Name.Trim().Substring(0, 1).ToUpper())
+                                </span>
+                                <div>
+                                    <h2 class="sqm-card-name">@restaurant.Name</h2>
+                                    <div class="sqm-card-rating @ratingClass">
+                                        <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                        @if (restaurant.AverageRating <= 0 || restaurant.ReviewCount == 0)
+                                        {
+                                            <span>Henüz puanlanmadı</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@restaurant.AverageRating.ToString("0.0") / 5</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sqm-card-stats">
+                                <div class="sqm-card-stat">
+                                    <strong>@restaurant.CategoryCount</strong>
+                                    <span>Kategori</span>
+                                </div>
+                                <div class="sqm-card-stat">
+                                    <strong>@restaurant.MenuItemCount</strong>
+                                    <span>Ürün</span>
+                                </div>
+                                <div class="sqm-card-stat">
+                                    <strong>@restaurant.TableCount</strong>
+                                    <span>Masa</span>
+                                </div>
+                            </div>
+
+                            <span class="sqm-card-cta">
+                                Menüyü Gör <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                            </span>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_FavoriteToggleScript" />
+}

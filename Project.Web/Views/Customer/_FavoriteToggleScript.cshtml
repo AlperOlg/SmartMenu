@@ -1,0 +1,71 @@
+@{
+    var toggleUrl = Url.Action("ToggleFavorite", "Customer");
+    var loginUrl = Url.Action("Login", "Account");
+}
+<form id="sqm-fav-af" class="d-none" method="post">
+    @Html.AntiForgeryToken()
+</form>
+<script>
+    window.sqmToggleFavorite = async function (btn) {
+        if (!btn || btn.disabled) return;
+
+        var restaurantId = btn.getAttribute('data-restaurant-id');
+        var tokenInput = document.querySelector('#sqm-fav-af input[name="__RequestVerificationToken"]');
+        if (!restaurantId || !tokenInput) return;
+
+        btn.disabled = true;
+        try {
+            var body = new URLSearchParams();
+            body.set('restaurantId', restaurantId);
+            body.set('__RequestVerificationToken', tokenInput.value);
+
+            var response = await fetch('@toggleUrl', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': tokenInput.value
+                },
+                body: body.toString(),
+                credentials: 'same-origin'
+            });
+
+            var data = await response.json();
+            if (data.loginRequired) {
+                window.location.href = '@loginUrl';
+                return;
+            }
+
+            if (!data.success) {
+                console.warn(data.message || 'Favori işlemi başarısız.');
+                return;
+            }
+
+            var icon = btn.querySelector('i');
+            var isFavorite = !!data.isFavorite;
+            btn.setAttribute('data-favorite', isFavorite ? 'true' : 'false');
+            btn.classList.toggle('is-active', isFavorite);
+            btn.setAttribute('aria-label', isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle');
+
+            if (icon) {
+                icon.classList.toggle('fa-solid', isFavorite);
+                icon.classList.toggle('fa-regular', !isFavorite);
+                icon.classList.toggle('text-danger', isFavorite);
+            }
+
+            if (btn.getAttribute('data-remove-on-unfavorite') === 'true' && !isFavorite) {
+                var card = btn.closest('[data-favorite-card]');
+                if (card) {
+                    card.remove();
+                    if (!document.querySelector('[data-favorite-card]')) {
+                        var empty = document.getElementById('sqm-fav-empty');
+                        if (empty) empty.classList.remove('d-none');
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+        }
+    };
+</script>
