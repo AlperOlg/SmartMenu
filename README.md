@@ -1,6 +1,10 @@
 SmartMenu AI & Review System
 Bu proje, bir üniversite eğitimi ve Microsoft Yaz Kampı için geliştirilmiş, N-Layer Architecture prensiplerine uygun, yüksek performanslı ve akıllı bir restoran/eğitim platformudur. Sistem, kullanıcı etkileşimlerini; yorumlar, beğeniler vs. AI destekli bir içerik sistemiyle harmanlar.
-
+<style>
+  h1{
+    color:#d4a574
+  }
+</style>
 <h1>Teknik Yığın (Tech Stack)</h1>
 <h3>Backend:</h3>
 <ul>
