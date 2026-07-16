@@ -14,8 +14,8 @@ Bu proje, bir üniversite eğitimi ve Microsoft Yaz Kampı için geliştirilmiş
 </ul>
 <h3>Frontend:</h3>
 <ul>
-  <li>Razor Pages (ASP.NET Core MVC),<li>
-  <li>AJAX, </li>
+  <li>Razor Pages (ASP.NET Core MVC),</li>
+  <li>AJAX,</li>
   <li>FontAwesome,</li>
   <li>Bootstrap</li>
 </ul>
