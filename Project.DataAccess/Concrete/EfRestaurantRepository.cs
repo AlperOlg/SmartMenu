@@ -24,6 +24,7 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
             .Include(r => r.Tables)
             .OrderBy(r => r.Name)
             .Include(r => r.Reviews)
+            .Include(r => r.Favorites)
             .ToListAsync();
     }
 
@@ -36,6 +37,9 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
                 .ThenInclude(m => m.Category)
             .Include(r => r.Reviews)
                 .ThenInclude(rv => rv.AppUser)
+            .Include(r => r.Reviews)
+                .ThenInclude(rv => rv.ReviewLikes)
+            .Include(r => r.Favorites)
             .AsSplitQuery()
             .AsNoTracking();
 
@@ -110,6 +114,10 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
             .Include(r => r.MenuItems)
                 .ThenInclude(m => m.Category)
             .Include(r => r.Reviews)
+                .ThenInclude(rv => rv.AppUser)
+            .Include(r => r.Reviews)
+                .ThenInclude(rv => rv.ReviewLikes)
+            .Include(r => r.Favorites)
             .AsSplitQuery()
             .AsNoTracking();
 

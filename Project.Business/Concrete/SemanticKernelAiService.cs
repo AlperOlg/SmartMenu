@@ -31,7 +31,7 @@ public class SemanticKernelAiService : IAiService
 
         var userLoyalties = await _restaurantLoyaltyService.GetAllAsync(x => x.AppUserId == currentUserId, useTracking: false);
 
-        var systemContext = BuildAdvancedSystemContext(restaurants, menuItems, userLoyalties);
+        var systemContext = BuildAdvancedSystemContext(restaurants, menuItems, userLoyalties, currentUserId);
 
         const int maxSystemContextLength = 6000;
         if (systemContext.Length > maxSystemContextLength)
@@ -57,7 +57,9 @@ public class SemanticKernelAiService : IAiService
     3. Eğer müşteri kalabalık bir grup için rezervasyon veya masa durumu sorarsa, restoranların toplam masa sayısına ve doluluk oranına (IsOccupied durumlarına) bakarak mantıklı çıkarımlar yap.
     4. Cevaplarını her zaman KESİNLİKLE TÜRKÇE, samimi, yardımsever, net ve profesyonel bir dille yaz. 
     5. Eğer menüde vegan/gluten free gibi detaylar varsa, bunları akıllıca analiz edip müşteriye sun.
-
+    6. SİSTEM VERİLERİNİ OLDUĞU GİBİ KOPYALAMA: Sana sağlanan "GERÇEK ZAMANLI SİSTEM VERİLERİ" alanındaki teknik ibareleri (ID, Giriş Yapan Müşteri, IsOccupied vb.) doğrudan müşteriye söyleme. O verileri oku, anlamlandır ve sanki o restoranın şefiymişsin gibi doğal bir cümle yapısıyla müşteriye aktar.
+    7. ODAKLI CEVAP VER: Müşteri sadece "yorumları göster" dediyse, önce yorumları öne çıkar başka bir şeyi gösterme. eğer gerekliyse de tek bir cümle ile bahset.
+    
     [GERÇEK ZAMANLI SİSTEM VERİLERİ]
     {systemContext}
 
@@ -77,43 +79,44 @@ public class SemanticKernelAiService : IAiService
     private string BuildAdvancedSystemContext(
        IEnumerable<Restaurant> restaurants,
        IEnumerable<MenuItem> menuItems,
-       IEnumerable<RestaurantLoyalty> userLoyalties)
+       IEnumerable<RestaurantLoyalty> userLoyalties, int userId)
     {
         var sb = new StringBuilder();
 
         sb.AppendLine("=== AKTİF RESTORANLAR, MASALAR VE YORUM/PUAN DURUMU ===");
+
         foreach (var r in restaurants)
         {
             int totalTables = r.Tables?.Count ?? 0;
             int occupiedTables = r.Tables?.Count(t => t.IsOccupied) ?? 0;
+            bool isFavorite = r.Favorites.Any(f => f.AppUserId == userId);
+            string favoriteBadge = isFavorite ? "Giriş Yapan Müşterinin Favorilerinden" : "";
             int availableTables = totalTables - occupiedTables;
-
             var loyalty = userLoyalties.FirstOrDefault(l => l.RestaurantId == r.Id);
             decimal loyaltyPoints = loyalty?.TotalPoints ?? 0;
 
-            double averageRating = r.Reviews != null && r.Reviews.Any()
-                ? Math.Round(r.Reviews.Average(rev => rev.Rating), 1)
-                : 0.0;
+            double averageRating = r.AverageRating;
             int reviewCount = r.Reviews?.Count ?? 0;
 
-            sb.AppendLine($"- Restoran: {r.Name} (ID: {r.Id})");
+            sb.AppendLine($"- Restoran: {r.Name} (ID: {r.Id}) {favoriteBadge}");
             sb.AppendLine($"  * Puan Durumu: {averageRating}/5 Yıldız ({reviewCount} adet değerlendirme yapılmış).");
             sb.AppendLine($"  * Masa Durumu: Toplam {totalTables} masa var. {occupiedTables} tanesi DOLU, {availableTables} tanesi BOŞ.");
             sb.AppendLine($"  * Giriş Yapan Müşterinin Bu Restorandaki Sadakat Puanı: {loyaltyPoints} Puan ({loyaltyPoints} TL indirim hakkı var).");
 
-            // Context bloating önlemi: tüm yorumlar yerine yalnızca en yeni 3 yorum
-            var recentReviews = (r.Reviews ?? Enumerable.Empty<Review>())
-                .OrderByDescending(rev => rev.CreatedAt)
-                .ThenByDescending(rev => rev.Id)
+            // Context bloating önlemi: tüm yorumlar yerine yalnızca 3 yorum
+            var topLikedReviews = (r.Reviews ?? Enumerable.Empty<Review>())
+                .OrderByDescending(rev => rev.LikeCount)
+                .ThenByDescending(rev => rev.Rating)
                 .Take(3)
                 .ToList();
 
-            if (recentReviews.Count > 0)
+            if (topLikedReviews.Count > 0)
             {
-                sb.AppendLine("  * Son Yorumlar (en yeni 3, beğeni bilgisiyle):");
-                foreach (var rev in recentReviews)
+                sb.AppendLine("  * En çok beğeni alan 3 yorum :");
+                foreach (var rev in topLikedReviews)
                 {
-                    sb.AppendLine($"    > ({rev.Rating}/5, {rev.LikeCount} beğeni) {rev.Comment}");
+                    string userName = rev.AppUser?.UserName ?? "Anonim";
+                    sb.AppendLine($"    > Müşteri:{userName} ({rev.Rating}/5, {rev.LikeCount} beğeni) {rev.Comment}");
                 }
             }
 
