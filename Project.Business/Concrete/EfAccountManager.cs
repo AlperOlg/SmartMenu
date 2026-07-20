@@ -59,4 +59,36 @@ public class EfAccountManager : IAccountService
             ? ServiceResult<AppUser>.Ok(user)
             : ServiceResult<AppUser>.Fail("Kullanıcı bulunamadı.");
     }
+
+    public async Task<ServiceResult> UpdateSettingsAsync(int userId, string email, string currentPassword, string newPassword)
+    {
+        var user = await _accountRepository.GetUserByIdAsync(userId);
+        if (user is null)
+        {
+            return ServiceResult.Fail("Kullanıcı bulunamadı.");
+        }
+
+        var passwordResult = await _accountRepository.ChangePasswordAsync(user, currentPassword, newPassword);
+        if (!passwordResult.Succeeded)
+        {
+            return ServiceResult.Fail(
+                "Şifre güncellenemedi.",
+                passwordResult.Errors.Select(e => e.Description));
+        }
+
+        var normalizedNew = email.Trim();
+        if (!string.Equals(user.Email, normalizedNew, StringComparison.OrdinalIgnoreCase))
+        {
+            var emailResult = await _accountRepository.UpdateEmailAsync(user, normalizedNew);
+            if (!emailResult.Succeeded)
+            {
+                return ServiceResult.Fail(
+                    "Şifre güncellendi ancak e-posta güncellenemedi.",
+                    emailResult.Errors.Select(e => e.Description));
+            }
+        }
+
+        return ServiceResult.Ok("Hesap ayarlarınız güncellendi.");
+    }
 }
+

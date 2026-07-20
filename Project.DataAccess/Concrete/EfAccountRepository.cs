@@ -4,12 +4,12 @@ using Project.DataAccess.Abstract;
 
 namespace Project.DataAccess.Concrete;
 
-public class EfAccountRepository : IAccountRepository
+public class EfAccountRepository : GenericRepository<AppUser>, IAccountRepository
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly SignInManager<AppUser> _signInManager;
 
-    public EfAccountRepository(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, SmartMenuDbContext context)
+    public EfAccountRepository(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, SmartMenuDbContext context) : base(context)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -34,4 +34,17 @@ public class EfAccountRepository : IAccountRepository
     {
         return await _userManager.FindByIdAsync(id.ToString());
     }
+
+    public async Task<IdentityResult> ChangePasswordAsync(AppUser user, string currentPassword, string newPassword)
+    {
+        return await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+    }
+
+    public async Task<IdentityResult> UpdateEmailAsync(AppUser user, string newEmail)
+    {
+        user.Email = newEmail;
+        user.NormalizedEmail = _userManager.NormalizeEmail(newEmail);
+        return await _userManager.UpdateAsync(user);
+    }
 }
+

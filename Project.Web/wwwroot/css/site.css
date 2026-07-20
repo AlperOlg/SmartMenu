@@ -89,3 +89,111 @@ body {
 .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* ==========================================================================
+   5. HESAP AYARLARI SAYFASI
+   ========================================================================== */
+.sqm-auth-card--settings {
+  max-width: 28rem;
+}
+
+.sqm-settings-masked {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--sqm-border);
+  background: rgba(18, 18, 20, 0.45);
+  color: var(--sqm-cream-muted);
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.sqm-settings-masked i {
+  color: var(--sqm-gold);
+}
+
+.sqm-settings-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: var(--sqm-cream-muted);
+  opacity: 0.85;
+}
+
+.sqm-settings-divider {
+  height: 1px;
+  margin: 0.35rem 0 1rem;
+  background: var(--sqm-border);
+}
+
+.sqm-settings-section-title {
+  margin: 0 0 0.85rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--sqm-gold);
+  letter-spacing: 0.01em;
+}
+
+.sqm-settings-alert {
+  margin-bottom: 1rem;
+  border-radius: 0.65rem;
+  font-size: 0.88rem;
+}
+
+.sqm-2fa-card {
+  padding: 0.95rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--sqm-border);
+  background: rgba(18, 18, 20, 0.4);
+}
+
+.sqm-2fa-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--sqm-cream);
+  margin-bottom: 0.35rem;
+}
+
+.sqm-2fa-title i {
+  color: var(--sqm-gold);
+}
+
+.sqm-2fa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(212, 165, 116, 0.45);
+  background: var(--sqm-gold-soft);
+  color: var(--sqm-gold);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sqm-2fa-btn:hover {
+  background: rgba(212, 165, 116, 0.28);
+  color: var(--sqm-cream);
+  border-color: var(--sqm-gold);
+}
+
+.sqm-2fa-modal {
+  background: #1c1c1f;
+  color: var(--sqm-cream);
+  border: 1px solid var(--sqm-border);
+  border-radius: 1rem;
+}
+
+.sqm-2fa-modal .modal-title {
+  color: var(--sqm-cream);
+  font-weight: 650;
+}
+
+

@@ -1,0 +1,152 @@
+@model Verify2FAViewModel
+@{
+    ViewData["Title"] = "İki Adımlı Doğrulama";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        .sqm-2fa-verify-wrap {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 28rem;
+        }
+
+        .sqm-2fa-verify-card {
+            border: 1px solid var(--sqm-border);
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, rgba(37, 37, 40, 0.92), rgba(28, 28, 31, 0.95));
+            box-shadow: var(--sqm-shadow);
+            color: var(--sqm-cream);
+            overflow: hidden;
+        }
+
+        .sqm-2fa-verify-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--sqm-border);
+            padding: 1.5rem 1.75rem 1rem;
+        }
+
+        .sqm-2fa-verify-card .card-body {
+            padding: 1.25rem 1.75rem 1.75rem;
+        }
+
+        .sqm-2fa-verify-card .card-title {
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--sqm-cream);
+            margin: 0;
+        }
+
+        .sqm-2fa-verify-card .alert-info {
+            background: rgba(110, 168, 254, 0.12);
+            border: 1px solid rgba(110, 168, 254, 0.35);
+            color: #b8d4ff;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .sqm-2fa-verify-card .form-control {
+            background: rgba(18, 18, 20, 0.55);
+            border: 1px solid var(--sqm-border);
+            color: var(--sqm-cream);
+            border-radius: 0.65rem;
+            padding: 0.7rem 0.9rem;
+        }
+
+        .sqm-2fa-verify-card .form-control:focus {
+            background: rgba(18, 18, 20, 0.75);
+            border-color: rgba(212, 165, 116, 0.55);
+            color: var(--sqm-cream);
+            box-shadow: 0 0 0 0.2rem rgba(212, 165, 116, 0.2);
+        }
+
+        .sqm-2fa-verify-card .form-label {
+            color: var(--sqm-cream-muted);
+            font-weight: 500;
+            font-size: 0.88rem;
+        }
+
+        .sqm-2fa-verify-submit {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.65rem;
+            font-weight: 650;
+            background: linear-gradient(135deg, var(--sqm-gold), #b8895a);
+            color: #121214;
+        }
+
+        .sqm-2fa-verify-submit:hover {
+            filter: brightness(1.05);
+            color: #121214;
+        }
+    </style>
+}
+
+<section class="sqm-auth">
+    <div class="sqm-auth-bg"></div>
+    <div class="sqm-auth-grid"></div>
+
+    <div class="sqm-2fa-verify-wrap container d-flex justify-content-center">
+        <div class="card sqm-2fa-verify-card w-100">
+            <div class="card-header text-center">
+                <div class="sqm-auth-icon mx-auto mb-3">
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                </div>
+                <h1 class="card-title">İki Adımlı Doğrulama</h1>
+            </div>
+
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="sqm-auth-summary text-danger mb-3"></div>
+
+                <div class="alert alert-info" role="status">
+                    <i class="fa-solid fa-envelope-circle-check me-1" aria-hidden="true"></i>
+                    Lütfen <strong>@(string.IsNullOrWhiteSpace(Model.MaskedEmail) ? "e-posta" : Model.MaskedEmail)</strong>
+                    adresinize gönderilen 6 haneli doğrulama kodunu giriniz.
+                </div>
+
+                <form asp-controller="Account" asp-action="VerifyTwoFactorCode" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <input type="hidden" asp-for="RememberMe" />
+
+                    <div class="mb-3">
+                        <label asp-for="Code" class="form-label"></label>
+                        <input asp-for="Code"
+                               class="form-control"
+                               inputmode="numeric"
+                               autocomplete="one-time-code"
+                               maxlength="8"
+                               placeholder="6 haneli kod"
+                               autofocus />
+                        <span asp-validation-for="Code" class="text-danger small d-block mt-1"></span>
+                    </div>
+
+                    <button type="submit" class="btn sqm-2fa-verify-submit">
+                        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                        Doğrula ve Giriş Yap
+                    </button>
+                </form>
+
+                <p class="text-center mt-3 mb-0">
+                    <a asp-controller="Account" asp-action="Login" class="sqm-link">
+                        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>
+                        Giriş ekranına dön
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

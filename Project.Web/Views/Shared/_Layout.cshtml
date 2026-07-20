@@ -425,14 +425,8 @@
     }
     else if (User.IsInRole("Owner"))
     {
-        // 🔥 ÇÖZÜM: Bağımlılığı doğrudan UserManager üzerinden çözüyoruz ve asenkron çağrıyı dışarı alıyoruz.
-        // Zaten yukarıda currentUser'ı çektik, id'sini de doğrudan int'e cast ederek alabiliriz.
         if (currentUser is not null)
         {
-            // İster doğrudan servis enjekte et, ister her Owner'ın zaten tek restoranı olduğu için
-            // eğer "IRestaurantService" layout'un en üstünde enjekte edildiyse ( @inject IRestaurantService RestaurantService ) kullan:
-            // (Eğer yukarıya eklemediysen en üst satırlara: @inject Project.Business.Abstract.IRestaurantService RestaurantService eklemelisin)
-            
             var userRestaurant = await RestaurantService.GetByOwnerIdAsync(currentUser.Id);
             if (userRestaurant is not null)
             {
@@ -443,6 +437,11 @@
         }
     }
 </li> 
+                            <li class="nav-item ms-lg-2 mt-1 mt-lg-0">
+                                <a class="nav-link sqm-nav-link" asp-area="" asp-controller="Account" asp-action="AccountSettings">
+                                    <i class="fa-solid fa-gear"></i> Hesap Ayarları
+                                </a>
+                            </li>
                             <li class="nav-item ms-lg-2 mt-1 mt-lg-0">
                                 <form class="sqm-logout-form" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
                                     <button type="submit" class="sqm-logout-btn w-100 justify-content-center">

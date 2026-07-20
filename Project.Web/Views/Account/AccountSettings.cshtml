@@ -1,0 +1,348 @@
+@model AccountSettingsViewModel
+@{
+    ViewData["Title"] = "Hesap Ayarları";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+}
+
+<section class="sqm-auth">
+    <div class="sqm-auth-bg"></div>
+    <div class="sqm-auth-grid"></div>
+
+    <div class="sqm-auth-card sqm-auth-card--settings">
+        <div class="sqm-auth-icon">
+            <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        </div>
+
+        <h1 class="sqm-auth-title">Hesap Ayarları</h1>
+        <p class="sqm-auth-subtitle">E-posta adresinizi, şifrenizi ve 2FA ayarlarınızı yönetin.</p>
+
+        @if (TempData["Success"] is string successMessage)
+        {
+            <div class="alert alert-success sqm-settings-alert" role="status">@successMessage</div>
+        }
+        @if (TempData["Error"] is string errorMessage)
+        {
+            <div class="alert alert-danger sqm-settings-alert" role="alert">@errorMessage</div>
+        }
+
+        <div class="sqm-field">
+            <span class="sqm-label">Mevcut E-posta</span>
+            <div class="sqm-settings-masked" aria-live="polite">
+                <i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i>
+                <span>@Model.MaskedCurrentEmail</span>
+            </div>
+            <p class="sqm-settings-hint">Mevcut adresiniz gizlilik için maskelenmiştir.</p>
+        </div>
+
+        @* ——— E-posta formu (şifre validasyonundan bağımsız) ——— *@
+        <form asp-controller="Account" asp-action="UpdateEmail" method="post" novalidate id="sqm-email-form">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="sqm-auth-summary" data-valmsg-summary-for="email"></div>
+
+            <div class="sqm-field">
+                <label asp-for="Email" class="sqm-label">Yeni / Güncel E-posta</label>
+                <div class="sqm-input-wrap">
+                    <i class="fa-solid fa-envelope sqm-input-icon" aria-hidden="true"></i>
+                    <input asp-for="Email" type="email" class="sqm-input form-control" placeholder="ornek@eposta.com"
+                           autocomplete="email" autofocus />
+                </div>
+                <span asp-validation-for="Email" class="sqm-field-validation"></span>
+            </div>
+
+            <button type="submit" class="btn sqm-2fa-btn w-100 mb-3">
+                <i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i>
+                E-postayı Güncelle
+            </button>
+        </form>
+
+        <div class="sqm-2fa-panel container-fluid px-0 mb-3">
+            <div class="sqm-2fa-card d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
+                <div>
+                    <div class="sqm-2fa-title">
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                        E-posta ile 2 Faktörlü Doğrulama
+                    </div>
+                    <div class="sqm-2fa-status" id="sqm2faStatusText">
+                        @if (Model.IsTwoFactorEnabled)
+                        {
+                            <span class="badge text-bg-success">Etkin</span>
+                            <span class="sqm-settings-hint d-inline ms-1">Hesabınız 2FA ile korunuyor.</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-secondary">Kapalı</span>
+                            <span class="sqm-settings-hint d-inline ms-1">Ek güvenlik için etkinleştirin.</span>
+                        }
+                    </div>
+                </div>
+                <button type="button"
+                        class="btn sqm-2fa-btn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#sqm2faModal">
+                    <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                    2 Faktörlü Doğrulama Ayarları
+                </button>
+            </div>
+        </div>
+
+        <div class="sqm-settings-divider" role="separator"></div>
+        <p class="sqm-settings-section-title">Şifre Değiştir</p>
+
+        @* ——— Şifre formu (e-posta validasyonundan bağımsız) ——— *@
+        <form asp-controller="Account" asp-action="UpdatePassword" method="post" novalidate id="sqm-password-form">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="sqm-auth-summary"></div>
+            <input type="hidden" asp-for="IsTwoFactorEnabled" id="IsTwoFactorEnabled" />
+
+            <div class="sqm-field">
+                <label asp-for="CurrentPassword" class="sqm-label">Mevcut Şifre</label>
+                <div class="sqm-input-wrap">
+                    <i class="fa-solid fa-lock sqm-input-icon" aria-hidden="true"></i>
+                    <input asp-for="CurrentPassword" class="sqm-input form-control" placeholder="••••••••"
+                           autocomplete="current-password" />
+                </div>
+                <span asp-validation-for="CurrentPassword" class="sqm-field-validation"></span>
+            </div>
+
+            <div class="sqm-field">
+                <label asp-for="NewPassword" class="sqm-label">Yeni Şifre</label>
+                <div class="sqm-input-wrap">
+                    <i class="fa-solid fa-key sqm-input-icon" aria-hidden="true"></i>
+                    <input asp-for="NewPassword" class="sqm-input form-control" placeholder="••••••••"
+                           autocomplete="new-password" id="sqmNewPassword" />
+                    <button type="button" class="sqm-toggle-pass" id="sqmToggleNewPass" aria-label="Şifreyi göster">
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="NewPassword" class="sqm-field-validation"></span>
+            </div>
+
+            <div class="sqm-field">
+                <label asp-for="ConfirmPassword" class="sqm-label">Yeni Şifre Tekrar</label>
+                <div class="sqm-input-wrap">
+                    <i class="fa-solid fa-shield sqm-input-icon" aria-hidden="true"></i>
+                    <input asp-for="ConfirmPassword" class="sqm-input form-control" placeholder="••••••••"
+                           autocomplete="new-password" id="sqmConfirmPassword" />
+                    <button type="button" class="sqm-toggle-pass" id="sqmToggleConfirmPass" aria-label="Şifreyi göster">
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="ConfirmPassword" class="sqm-field-validation"></span>
+            </div>
+
+            <button type="submit" class="sqm-auth-submit">
+                <i class="fa-solid fa-key" aria-hidden="true"></i>
+                Şifreyi Güncelle
+            </button>
+        </form>
+    </div>
+</section>
+
+<!-- 2FA Modal -->
+<div class="modal fade" id="sqm2faModal" tabindex="-1" aria-labelledby="sqm2faModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sqm-2fa-modal">
+            <div class="modal-header border-0 pb-0">
+                <h2 class="modal-title fs-5" id="sqm2faModalLabel">
+                    <i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i>
+                    2 Faktörlü Doğrulama
+                </h2>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <div id="sqm2faFeedback" class="mb-3" role="status" aria-live="polite"></div>
+
+                <div id="sqm2faEnabledPanel" class="@(Model.IsTwoFactorEnabled ? "" : "d-none")">
+                    <div class="alert alert-success mb-3" role="alert">
+                        <i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>
+                        2 Faktörlü Doğrulama Zaten Etkin
+                    </div>
+                    <p class="sqm-settings-hint mb-3">
+                        Girişlerde e-posta doğrulama kodu istenir. İsterseniz 2FA’yı kapatabilirsiniz.
+                    </p>
+                    <button type="button" class="btn btn-outline-danger w-100" id="sqm2faDisableBtn">
+                        <i class="fa-solid fa-ban me-1" aria-hidden="true"></i>
+                        2FA’yı Devre Dışı Bırak
+                    </button>
+                </div>
+
+                <div id="sqm2faDisabledPanel" class="@(Model.IsTwoFactorEnabled ? "d-none" : "")">
+                    <p class="sqm-settings-hint mb-3">
+                        E-posta adresinize 6 haneli bir doğrulama kodu göndereceğiz. Kodu doğruladıktan sonra 2FA etkinleşir.
+                    </p>
+                    <button type="button" class="btn sqm-2fa-btn w-100 mb-3" id="sqm2faSendCodeBtn">
+                        <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>
+                        E-postama Doğrulama Kodu Gönder
+                    </button>
+
+                    <div id="sqm2faVerifyBlock" class="d-none">
+                        <label for="sqm2faCodeInput" class="sqm-label">Kodu Girin</label>
+                        <div class="sqm-input-wrap mb-2">
+                            <i class="fa-solid fa-hashtag sqm-input-icon" aria-hidden="true"></i>
+                            <input type="text"
+                                   id="sqm2faCodeInput"
+                                   class="sqm-input form-control"
+                                   inputmode="numeric"
+                                   autocomplete="one-time-code"
+                                   maxlength="8"
+                                   placeholder="6 haneli kod" />
+                        </div>
+                        <button type="button" class="btn btn-success w-100" id="sqm2faVerifyBtn">
+                            <i class="fa-solid fa-check me-1" aria-hidden="true"></i>
+                            Kodu Doğrula
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            function setupPasswordToggle(toggleId, inputId) {
+                var toggle = document.getElementById(toggleId);
+                var input = document.getElementById(inputId);
+                if (!toggle || !input) return;
+                toggle.addEventListener('click', function () {
+                    var isHidden = input.type === 'password';
+                    input.type = isHidden ? 'text' : 'password';
+                    toggle.querySelector('i').className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+                    toggle.setAttribute('aria-label', isHidden ? 'Şifreyi gizle' : 'Şifreyi göster');
+                });
+            }
+            setupPasswordToggle('sqmToggleNewPass', 'sqmNewPassword');
+            setupPasswordToggle('sqmToggleConfirmPass', 'sqmConfirmPassword');
+
+            var tokenInput = document.querySelector('#sqm-email-form input[name="__RequestVerificationToken"]')
+                || document.querySelector('#sqm-password-form input[name="__RequestVerificationToken"]');
+            var hidden2fa = document.getElementById('IsTwoFactorEnabled');
+            var feedback = document.getElementById('sqm2faFeedback');
+            var enabledPanel = document.getElementById('sqm2faEnabledPanel');
+            var disabledPanel = document.getElementById('sqm2faDisabledPanel');
+            var verifyBlock = document.getElementById('sqm2faVerifyBlock');
+            var statusText = document.getElementById('sqm2faStatusText');
+            var sendUrl = '@Url.Action("Send2FACode", "Account")';
+            var verifyUrl = '@Url.Action("Verify2FACode", "Account")';
+            var disableUrl = '@Url.Action("Disable2FA", "Account")';
+
+            function setFeedback(message, isError) {
+                if (!feedback) return;
+                if (!message) {
+                    feedback.innerHTML = '';
+                    return;
+                }
+                var cls = isError ? 'alert alert-danger' : 'alert alert-info';
+                feedback.innerHTML = '<div class="' + cls + ' mb-0 py-2">' + message + '</div>';
+            }
+
+            function setTwoFactorUi(enabled) {
+                if (hidden2fa) hidden2fa.value = enabled ? 'true' : 'false';
+                if (enabledPanel) enabledPanel.classList.toggle('d-none', !enabled);
+                if (disabledPanel) disabledPanel.classList.toggle('d-none', enabled);
+                if (verifyBlock && !enabled) verifyBlock.classList.add('d-none');
+                if (statusText) {
+                    statusText.innerHTML = enabled
+                        ? '<span class="badge text-bg-success">Etkin</span><span class="sqm-settings-hint d-inline ms-1">Hesabınız 2FA ile korunuyor.</span>'
+                        : '<span class="badge text-bg-secondary">Kapalı</span><span class="sqm-settings-hint d-inline ms-1">Ek güvenlik için etkinleştirin.</span>';
+                }
+            }
+
+            async function postJson(url, body) {
+                var params = new URLSearchParams(body || {});
+                if (tokenInput) params.set('__RequestVerificationToken', tokenInput.value);
+                var response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': tokenInput ? tokenInput.value : ''
+                    },
+                    body: params.toString(),
+                    credentials: 'same-origin'
+                });
+                return await response.json();
+            }
+
+            var sendBtn = document.getElementById('sqm2faSendCodeBtn');
+            if (sendBtn) {
+                sendBtn.addEventListener('click', async function () {
+                    sendBtn.disabled = true;
+                    setFeedback('Kod gönderiliyor…', false);
+                    try {
+                        var data = await postJson(sendUrl);
+                        if (!data.success) {
+                            setFeedback(data.message || 'Kod gönderilemedi.', true);
+                            return;
+                        }
+                        setFeedback(data.message || 'Kod gönderildi.', false);
+                        if (verifyBlock) verifyBlock.classList.remove('d-none');
+                        var codeInput = document.getElementById('sqm2faCodeInput');
+                        if (codeInput) codeInput.focus();
+                    } catch (err) {
+                        console.error(err);
+                        setFeedback('İstek sırasında bir hata oluştu.', true);
+                    } finally {
+                        sendBtn.disabled = false;
+                    }
+                });
+            }
+
+            var verifyBtn = document.getElementById('sqm2faVerifyBtn');
+            if (verifyBtn) {
+                verifyBtn.addEventListener('click', async function () {
+                    var codeInput = document.getElementById('sqm2faCodeInput');
+                    var code = codeInput ? codeInput.value.trim() : '';
+                    if (!code) {
+                        setFeedback('Lütfen doğrulama kodunu girin.', true);
+                        return;
+                    }
+                    verifyBtn.disabled = true;
+                    setFeedback('Kod doğrulanıyor…', false);
+                    try {
+                        var data = await postJson(verifyUrl, { code: code });
+                        if (!data.success) {
+                            setFeedback(data.message || 'Doğrulama başarısız.', true);
+                            return;
+                        }
+                        setFeedback(data.message || '2FA etkinleştirildi.', false);
+                        setTwoFactorUi(true);
+                    } catch (err) {
+                        console.error(err);
+                        setFeedback('İstek sırasında bir hata oluştu.', true);
+                    } finally {
+                        verifyBtn.disabled = false;
+                    }
+                });
+            }
+
+            var disableBtn = document.getElementById('sqm2faDisableBtn');
+            if (disableBtn) {
+                disableBtn.addEventListener('click', async function () {
+                    if (!window.confirm('2 faktörlü doğrulamayı kapatmak istediğinize emin misiniz?')) return;
+                    disableBtn.disabled = true;
+                    setFeedback('2FA kapatılıyor…', false);
+                    try {
+                        var data = await postJson(disableUrl);
+                        if (!data.success) {
+                            setFeedback(data.message || 'İşlem başarısız.', true);
+                            return;
+                        }
+                        setFeedback(data.message || '2FA kapatıldı.', false);
+                        setTwoFactorUi(false);
+                    } catch (err) {
+                        console.error(err);
+                        setFeedback('İstek sırasında bir hata oluştu.', true);
+                    } finally {
+                        disableBtn.disabled = false;
+                    }
+                });
+            }
+        })();
+    </script>
+}

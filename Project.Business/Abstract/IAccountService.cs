@@ -10,4 +10,6 @@ public interface IAccountService
     Task<ServiceResult> LoginAsync(UserLoginDto dto);
     Task<ServiceResult> LogoutAsync();
     Task<ServiceResult<AppUser>> GetUserByIdAsync(int id);
+    Task<ServiceResult> UpdateSettingsAsync(int userId, string email, string currentPassword, string newPassword);
 }
+

@@ -1,3 +1,6 @@
+// NOT: Eğer sorun çözülmezse Program.cs içerisine şunu ekleyin:
+// options.SignIn.RequireConfirmedAccount = false;
+// options.Tokens.ProviderMap[TokenOptions.DefaultEmailProvider] ayarlarının doğru yapıldığından emin olun.
 using Microsoft.EntityFrameworkCore;
 using Microsoft.SemanticKernel;
 using Project.Business.Abstract;
@@ -19,6 +22,7 @@ builder.Services.AddScoped(typeof(IGenericService<>), typeof(GenericManager<>));
 
 builder.Services.AddScoped<IAccountRepository, EfAccountRepository>();
 builder.Services.AddScoped<IAccountService, EfAccountManager>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 builder.Services.AddScoped<IRestaurantRepository, EfRestaurantRepository>();
 builder.Services.AddScoped<IRestaurantService, EfRestaurantManager>();
