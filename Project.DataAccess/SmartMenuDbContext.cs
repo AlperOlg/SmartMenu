@@ -22,6 +22,8 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
     public DbSet<Review> Reviews { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<ReviewLike> ReviewLikes { get; set; }
+    public DbSet<ChatSession> ChatSessions { get; set; } = null!;
+    public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -157,5 +159,19 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
         builder.Entity<ReviewLike>()
                .HasIndex(rl => new { rl.AppUserId, rl.ReviewId })
                .IsUnique();
+
+        // ChatSession -> AppUser: kullanıcı silinirse sohbetleri de silinsin
+        builder.Entity<ChatSession>()
+               .HasOne(cs => cs.AppUser)
+               .WithMany()
+               .HasForeignKey(cs => cs.AppUserId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+        // ChatMessage -> ChatSession: sohbet silinirse mesajları da silinsin
+        builder.Entity<ChatMessage>()
+               .HasOne(cm => cm.ChatSession)
+               .WithMany(cs => cs.Messages)
+               .HasForeignKey(cm => cm.ChatSessionId)
+               .OnDelete(DeleteBehavior.Cascade);
     }
 }

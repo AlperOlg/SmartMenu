@@ -1,0 +1,51 @@
+@model List<Project.Web.Models.ChatSessionViewModel>
+@{
+    var sessionCount = Model?.Count ?? 0;
+    var limitReached = sessionCount >= 5;
+}
+
+<div class="ai-sidebar-head">
+    <button type="button"
+            id="aiNewSessionBtn"
+            class="ai-new-session-btn @(limitReached ? "is-disabled" : "")"
+            onclick="AiChat.createSession()"
+            @(limitReached ? "disabled" : "")
+            title="@(limitReached ? "Maksimum 5 sohbet sınırına ulaştınız." : "Yeni sohbet başlat")">
+        <i class="fa-solid fa-plus"></i>
+        <span>Yeni Sohbet</span>
+    </button>
+    <div class="ai-session-counter">@sessionCount / 5</div>
+</div>
+
+@if (limitReached)
+{
+    <p class="ai-sidebar-hint">
+        <i class="fa-solid fa-circle-info"></i>
+        Maksimum 5 sohbet sınırına ulaştınız. Yeni sohbet açmak için birini silin.
+    </p>
+}
+
+<ul class="ai-session-list">
+    @if (sessionCount == 0)
+    {
+        <li class="ai-session-empty">Henüz sohbet yok.</li>
+    }
+    else
+    {
+        @foreach (var session in Model!)
+        {
+            <li class="ai-session-item"
+                data-session-id="@session.Id"
+                onclick="AiChat.selectSession(@session.Id)">
+                <span class="ai-session-icon"><i class="fa-regular fa-comment-dots"></i></span>
+                <span class="ai-session-title" title="@session.Title">@session.Title</span>
+                <button type="button"
+                        class="ai-session-delete"
+                        title="Sohbeti sil"
+                        onclick="event.stopPropagation(); AiChat.deleteSession(@session.Id);">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </li>
+        }
+    }
+</ul>

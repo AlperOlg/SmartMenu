@@ -33,6 +33,9 @@ builder.Services.AddScoped<ITableService, EfTableManager>();
 builder.Services.AddScoped<IOrderRepository, EfOrderRepository>();
 builder.Services.AddScoped<IOrderService, EfOrderManager>();
 
+builder.Services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
+builder.Services.AddScoped<IChatSessionService, ChatSessionManager>();
+
 builder.Services.AddScoped<IGenericRepository<MenuItem>, GenericRepository<MenuItem>>();
 builder.Services.AddHostedService<TableReleaseBackgroundService>();
 
