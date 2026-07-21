@@ -34,3 +34,10 @@ Bu proje, bir üniversite eğitimi ve Microsoft Yaz Kampı için geliştirilmiş
   
   <br><br>
 </div>
+<h1>TODO:</h1>
+<ul style="list-style-type:square">
+  <li>Ingredient/MenuIngredient sütunları veritabanı ve client side'da boş bırakılmayacak şekilde ayarlanacak</li>
+  <li>Admin ve Employee rolleri eklenecek ve işlevli hale getirelecek</li>
+  <li>Dil Seçenekleri eklenecek</li>
+  <li>Ses Efektleri eklenecek</li>
+</ul>
