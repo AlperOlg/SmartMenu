@@ -53,9 +53,12 @@ public class EfRestaurantRepository : GenericRepository<Restaurant>, IRestaurant
 
     public async Task<Restaurant?> GetByOwnerIdAsync(int ownerId)
     {
+        // Yalnızca AKTİF (soft-delete edilmemiş) restoranı döndür.
+        // Önceki hâli IgnoreQueryFilters() kullanıp IsDeleted filtresi uygulamadığı için,
+        // silinmiş bir restoran hâlâ dönüyor; bu da CreateRestaurant/Dashboard akışlarında
+        // kullanıcıyı silinmiş restoranın Manage sayfasına yönlendirip AccessDenied'a yol açıyordu.
         return await _context.Restaurants
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(r => r.OwnerId == ownerId);
+            .FirstOrDefaultAsync(r => r.OwnerId == ownerId && !r.IsDeleted);
     }
 
     public async Task AddAsync(Restaurant restaurant)

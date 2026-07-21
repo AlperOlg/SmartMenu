@@ -20,6 +20,7 @@ public class OwnerController : Controller
     private readonly IGenericService<MenuItem> _menuItemService;
     private readonly ITableService _tableService;
     private readonly IOrderService _orderService;
+    private readonly ILogger<OwnerController> _logger;
 
     public OwnerController(
         IRestaurantService restaurantService,
@@ -28,7 +29,8 @@ public class OwnerController : Controller
         IGenericService<Category> categoryService,
         IGenericService<MenuItem> menuItemService,
         ITableService tableService,
-        IOrderService orderService)
+        IOrderService orderService,
+        ILogger<OwnerController> logger)
     {
         _restaurantService = restaurantService;
         _userManager = userManager;
@@ -37,6 +39,7 @@ public class OwnerController : Controller
         _menuItemService = menuItemService;
         _tableService = tableService;
         _orderService = orderService;
+        _logger = logger;
     }
 
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -46,20 +49,6 @@ public class OwnerController : Controller
         var owned = await _restaurantService.GetByOwnerIdAsync(CurrentUserId);
         return owned is not null && owned.Id == restaurantId;
     }
-
-    private async Task<Restaurant?> EnsureOwnerAsync(int restaurantId)
-    {
-        var restaurant = await _restaurantService.GetRestaurantWithDetailsAsync(restaurantId);
-        if (restaurant is null || restaurant.OwnerId != CurrentUserId)
-            return null;
-
-        restaurant.Categories ??= new List<Category>();
-        restaurant.MenuItems ??= new List<MenuItem>();
-        restaurant.Tables ??= new List<Table>();
-
-        return restaurant;
-    }
-
 
     [HttpGet]
     public async Task<IActionResult> CreateRestaurant()
@@ -84,7 +73,10 @@ public class OwnerController : Controller
 
         try
         {
-            await _restaurantService.CreateRestaurantAsync(CurrentUserId, dto);
+            // Yeni oluşturulan restoranı doğrudan servisten alıyoruz (tekrar GetByOwnerIdAsync
+            // sorgusu atmıyoruz). Bu, soft-delete edilmiş eski bir kaydın yanlışlıkla
+            // seçilmesini önler ve doğru Id'ye yönlendirmeyi garanti eder.
+            var newRestaurant = await _restaurantService.CreateRestaurantAsync(CurrentUserId, dto);
 
             var user = await _userManager.FindByIdAsync(CurrentUserId.ToString());
             if (user is not null)
@@ -99,15 +91,52 @@ public class OwnerController : Controller
                     await _userManager.AddToRoleAsync(user, "Owner");
                 }
 
+                // Rol değişiklikleri (RemoveFromRoleAsync / AddToRoleAsync) kullanıcının
+                // SecurityStamp'ini otomatik güncellemez. Rol yükseltmesinde diğer aktif
+                // oturumları da geçersiz kılmak için stamp'i elle tazeliyoruz.
+                await _userManager.UpdateSecurityStampAsync(user);
+
+                // NEDEN RefreshSignInAsync DEĞİL:
+                // RefreshSignInAsync, mevcut cookie'yi yeniden authenticate edip ESKİ
+                // AuthenticationProperties'i (eski IssuedUtc dahil) yeniden kullanır.
+                // Stamp değişimi + SecurityStampValidator'ın yeniden doğrulama penceresiyle
+                // birleşince, yeniden yazılan cookie tutarsız kalabiliyor ve /Owner/Manage'e
+                // yapılan yönlendirmede "Owner" rolü cookie'ye işlenmemiş oluyor -> AccessDenied.
+                //
+                // ÇÖZÜM: Deterministik tam yeniden giriş. SignOut ile eski cookie temizlenir,
+                // SignInAsync ile sıfırdan; taze IssuedUtc + güncel SecurityStamp + DB'deki
+                // güncel roller (Owner) içeren yeni bir cookie üretilir.
+                // Not: SignInAsync 2FA'yı YENİDEN tetiklemez (2FA yalnızca login'deki
+                // PasswordSignInAsync'i kapsar) ve hesabın 2FA ayarını KAPATMAZ.
                 await _signInManager.SignOutAsync();
                 await _signInManager.SignInAsync(user, isPersistent: true);
+
+                var refreshedRoles = await _userManager.GetRolesAsync(user);
+                _logger.LogInformation(
+                    "Restoran oluşturuldu; kullanıcı {UserId} oturumu tazelendi. Güncel roller: {Roles}",
+                    user.Id, string.Join(", ", refreshedRoles));
             }
 
-            var newRestaurant = await _restaurantService.GetByOwnerIdAsync(CurrentUserId);
-            return Content($"<script>window.location.href='/Owner/Manage/{newRestaurant?.Id}';</script>", "text/html");
+            // Savunmacı kontrol: normalde CreateRestaurantAsync null dönmez (dönmezse exception atar),
+            // ama beklenmedik bir durumda kullanıcıyı yetki gerektiren Manage'e göndermek yerine
+            // güvenli bir sayfaya yönlendirip durumu logluyoruz.
+            if (newRestaurant is null)
+            {
+                _logger.LogError(
+                    "CreateRestaurantAsync kullanıcı {UserId} için null döndürdü; Manage'e yönlendirilemedi.",
+                    CurrentUserId);
+                return RedirectToAction("Index", "Home");
+            }
+
+            // JS (window.location) yönlendirmesi yerine temiz HTTP 302 Redirect kullanıyoruz.
+            // Böylece SignInAsync'in yazdığı Set-Cookie header'ı, tarayıcı yeni isteğe
+            // (Manage) geçmeden ÖNCE uygulanır. JS ile yönlendirmede Set-Cookie bazen
+            // navigasyondan sonra işlenip eski (Owner rolü olmayan) cookie gönderiliyordu.
+            return RedirectToAction("Manage", "Owner", new { id = newRestaurant.Id });
         }
         catch (InvalidOperationException ex)
         {
+            _logger.LogWarning(ex, "Kullanıcı {UserId} için restoran oluşturma başarısız oldu.", CurrentUserId);
             ModelState.AddModelError(string.Empty, ex.Message);
             return View(dto);
         }
@@ -118,9 +147,30 @@ public class OwnerController : Controller
     [HttpGet]
     public async Task<IActionResult> Manage(int id, string? tab = "categories")
     {
-        var restaurant = await EnsureOwnerAsync(id);
+        var restaurant = await _restaurantService.GetRestaurantWithDetailsAsync(id);
+
+        // Restoran bulunamadıysa (silinmiş / yanlış id) 404 döndür; bu bir yetki hatası değildir.
         if (restaurant is null)
+        {
+            _logger.LogWarning(
+                "Manage erişimi başarısız: {RestaurantId} numaralı restoran bulunamadı (kullanıcı {UserId}).",
+                id, CurrentUserId);
+            return NotFound();
+        }
+
+        // Sahiplik kontrolü: yalnızca restoranın OwnerId'si mevcut kullanıcıyla eşleşmeli.
+        // Owner rolü olsa dahi başkasının restoranını yönetmesine izin verilmez.
+        if (restaurant.OwnerId != CurrentUserId)
+        {
+            _logger.LogWarning(
+                "Erişim reddedildi: kullanıcı {UserId}, sahibi {OwnerId} olan {RestaurantId} numaralı restoranı yönetmeye çalıştı.",
+                CurrentUserId, restaurant.OwnerId, id);
             return Forbid();
+        }
+
+        restaurant.Categories ??= new List<Category>();
+        restaurant.MenuItems ??= new List<MenuItem>();
+        restaurant.Tables ??= new List<Table>();
 
         var model = new OwnerManageViewModel
         {
@@ -338,21 +388,22 @@ public class OwnerController : Controller
         if (!deleted)
             return NotFound();
 
-        // Restoranı olmayan kullanıcıyı tekrar Customer rolüne indir ve oturumu tazele.
+        // Rol düşürme (Owner -> Customer) ve SecurityStamp güncellemesi servis katmanında
+        // (DeleteRestaurantAsync) yalnızca kullanıcının başka aktif restoranı kalmadıysa yapıldı.
+        // Burada mevcut oturumun cookie/claim bilgilerini güncel DB durumuna göre tazeliyoruz.
         var user = await _userManager.FindByIdAsync(CurrentUserId.ToString());
         if (user is not null)
         {
-            if (await _userManager.IsInRoleAsync(user, "Owner"))
-                await _userManager.RemoveFromRoleAsync(user, "Owner");
+            await _signInManager.RefreshSignInAsync(user);
 
-            if (!await _userManager.IsInRoleAsync(user, "Customer"))
-                await _userManager.AddToRoleAsync(user, "Customer");
-
-            await _signInManager.SignOutAsync();
-            await _signInManager.SignInAsync(user, isPersistent: true);
+            var roles = await _userManager.GetRolesAsync(user);
+            _logger.LogInformation(
+                "Restoran {RestaurantId} silindi; kullanıcı {UserId} oturumu tazelendi. Güncel roller: {Roles}",
+                restaurantId, user.Id, string.Join(", ", roles));
         }
 
         TempData["RestaurantDeleted"] = "Restoranınız kalıcı olarak silindi.";
+        // Owner paneli yerine güvenli, yetki gerektirmeyen bir sayfaya yönlendir.
         return RedirectToAction("Index", "Home");
     }
 

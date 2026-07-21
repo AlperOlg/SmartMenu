@@ -81,25 +81,40 @@ public class EfRestaurantManager : GenericManager<Restaurant>, IRestaurantServic
             return false;
         }
 
-        // AppUser.RestaurantId FK'si restorana bağlı; silmeden önce bağı koparıyoruz.
+        // Soft delete (IsDeleted = true).
+        await _restaurantRepository.DeleteAsync(restaurantId);
+
         var user = await _userManager.FindByIdAsync(ownerId.ToString());
         if (user is not null)
         {
-            user.RestaurantId = null;
-            await _userManager.UpdateAsync(user);
-
-            if (await _userManager.IsInRoleAsync(user, "Owner"))
+            // AppUser.RestaurantId FK'si yalnızca silinen restorana işaret ediyorsa bağı kopar.
+            if (user.RestaurantId == restaurantId)
             {
-                await _userManager.RemoveFromRoleAsync(user, "Owner");
+                user.RestaurantId = null;
+                await _userManager.UpdateAsync(user);
             }
 
-            if (!await _userManager.IsInRoleAsync(user, "Customer"))
+            // Kullanıcının başka AKTİF restoranı kaldı mı? (GetByOwnerIdAsync artık IsDeleted==false filtreli)
+            // Yalnızca hiç aktif restoranı kalmadıysa Customer rolüne indiriyoruz.
+            var stillActive = await _restaurantRepository.GetByOwnerIdAsync(ownerId);
+            if (stillActive is null)
             {
-                await _userManager.AddToRoleAsync(user, "Customer");
+                if (await _userManager.IsInRoleAsync(user, "Owner"))
+                {
+                    await _userManager.RemoveFromRoleAsync(user, "Owner");
+                }
+
+                if (!await _userManager.IsInRoleAsync(user, "Customer"))
+                {
+                    await _userManager.AddToRoleAsync(user, "Customer");
+                }
+
+                // Rol değişikliğini kalıcı kıl ve diğer aktif oturumları geçersiz kıl.
+                // Cookie tazeleme (RefreshSignInAsync) Web katmanında yapılır.
+                await _userManager.UpdateSecurityStampAsync(user);
             }
         }
 
-        await _restaurantRepository.DeleteAsync(restaurantId);
         return true;
     }
 
