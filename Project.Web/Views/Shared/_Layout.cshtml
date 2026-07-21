@@ -59,7 +59,13 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--sqm-border);
-            padding-block: 0.75rem;
+            padding-block: 0.65rem;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Marka ve aksiyon alanlarının hep dikey ortalı kalması için */
+        .sqm-navbar > .container {
+            align-items: center;
         }
 
         .sqm-brand {
@@ -102,6 +108,70 @@
         .sqm-nav-link:focus {
             color: var(--sqm-cream) !important;
             background: var(--sqm-gold-soft);
+        }
+
+        /* Linkler üzerine gelindiğinde yumuşak alt-çizgi vurgusu (CTA hariç) */
+        .sqm-nav-link {
+            position: relative;
+        }
+
+        .sqm-nav-link:not(.sqm-nav-cta):not(.sqm-nav-outline)::after {
+            content: "";
+            position: absolute;
+            left: 0.85rem;
+            right: 0.85rem;
+            bottom: 0.32rem;
+            height: 2px;
+            border-radius: 2px;
+            background: var(--sqm-gold);
+            transform: scaleX(0);
+            transform-origin: left center;
+            opacity: 0;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        .sqm-nav-link:not(.sqm-nav-cta):not(.sqm-nav-outline):hover::after,
+        .sqm-nav-link:not(.sqm-nav-cta):not(.sqm-nav-outline):focus::after {
+            transform: scaleX(1);
+            opacity: 0.8;
+        }
+
+        /* "Hesap Ayarları" için "Çıkış Yap" ile aynı çerçeve (outline) görünümü */
+        .sqm-nav-outline {
+            border: 1px solid var(--sqm-border);
+        }
+
+        .sqm-nav-outline:hover,
+        .sqm-nav-outline:focus {
+            border-color: rgba(212, 165, 116, 0.5);
+        }
+
+        /* Mobil hızlı erişim alanı (giriş yapan kullanıcı için) */
+        .sqm-mobile-quick {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            max-width: 62%;
+            overflow: hidden;
+        }
+
+        .sqm-mobile-panel {
+            font-size: 0.75rem;
+            min-height: 30px;
+            padding: 0.25rem 0.6rem !important;
+            white-space: nowrap;
+        }
+
+        .sqm-mobile-user {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.75rem;
+            color: var(--sqm-cream-muted);
+            max-width: 130px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         .sqm-nav-cta {
@@ -222,9 +292,13 @@
         }
 
         .sqm-logout-btn:hover {
-            color: var(--sqm-cream);
-            border-color: rgba(212, 165, 116, 0.5);
-            background: var(--sqm-gold-soft);
+            color: #ffdada;
+            border-color: rgba(229, 115, 115, 0.6);
+            background: rgba(229, 115, 115, 0.15);
+        }
+
+        .sqm-logout-btn:hover i {
+            color: #f08a8a;
         }
 .sqm-role-badge {
     display: inline-flex;
@@ -294,21 +368,32 @@
             }
         }
 
-        @@media (max-width: 991.98px) {
+        @@media (max-width: 1199.98px) {
             .navbar-collapse {
                 background: var(--sqm-surface);
-                margin-inline: -1rem;
-                padding: 1rem;
-                border-radius: 0.75rem;
-                margin-top: 0.75rem;
+                margin-inline: 0;
+                padding: 0.85rem 1rem;
+                border-radius: 0.85rem;
+                margin-top: 0.85rem;
                 border: 1px solid var(--sqm-border);
                 box-shadow: var(--sqm-shadow);
             }
             .navbar-nav {
-                gap: 0.5rem;
+                gap: 0.35rem;
+                width: 100%;
+            }
+            /* Mobilde link ve aksiyonlar tam genişlikte, ferah dursun */
+            .navbar-collapse .sqm-nav-link {
+                padding: 0.7rem 0.9rem !important;
+            }
+            .navbar-collapse .sqm-nav-link:not(.sqm-nav-cta)::after {
+                display: none;
             }
             .sqm-logout-form {
                 margin-top: 0.25rem;
+            }
+            .navbar-toggler {
+                flex-shrink: 0;
             }
         }
     </style>
@@ -316,9 +401,9 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg sqm-navbar sticky-top">
+        <nav class="navbar navbar-expand-xl sqm-navbar sticky-top shadow-sm">
             <div class="container">
-                <a class="sqm-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                <a class="navbar-brand sqm-brand" asp-area="" asp-controller="Home" asp-action="Index">
                     <span class="sqm-brand-icon"><i class="fa-solid fa-qrcode"></i></span>
                     Smart QR Menu
                 </a>
@@ -326,18 +411,18 @@
                 @if (User.Identity is not null && User.Identity.IsAuthenticated)
                 {
                     string quickController = User.IsInRole("Admin") ? "Admin" : "Customer";
-    
-    <div class="d-flex align-items-center gap-2 d-lg-none ms-auto me-2" style="max-width: 60%; overflow: hidden;">
-        <a class="btn sqm-nav-cta btn-sm py-1 px-2 text-truncate" style="font-size: 0.75rem; min-height: 28px;" asp-area="" asp-controller="@quickController" asp-action="Index">
-            <i class="fa-solid fa-utensils"></i> Panel
-        </a>
-        <span class="text-truncate d-flex align-items-center gap-1" style="font-size: 0.75rem; color: var(--sqm-cream-muted); max-width: 100px;">
-            <i class="fa-solid fa-user text-warning"></i>@User.Identity.Name
-            <span class="sqm-role-badge sqm-role-badge-sm">
-                @(User.IsInRole("Admin") ? "Yönetici" : User.IsInRole("Owner") ? "Sahibi" : "Müşteri")
-            </span>
-        </span>
-    </div>
+
+                    <div class="sqm-mobile-quick d-xl-none ms-auto me-2">
+                        <a class="btn sqm-nav-cta btn-sm sqm-mobile-panel text-truncate" asp-area="" asp-controller="@quickController" asp-action="Index">
+                            <i class="fa-solid fa-utensils"></i> Panel
+                        </a>
+                        <span class="sqm-mobile-user text-truncate">
+                            <i class="fa-solid fa-user text-warning"></i>@User.Identity.Name
+                            <span class="sqm-role-badge sqm-role-badge-sm">
+                                @(User.IsInRole("Admin") ? "Yönetici" : User.IsInRole("Owner") ? "Sahibi" : "Müşteri")
+                            </span>
+                        </span>
+                    </div>
                 }
 
                 <button class="navbar-toggler @(User.Identity is not null && User.Identity.IsAuthenticated ? "" : "ms-auto")" type="button" data-bs-toggle="collapse"
@@ -347,7 +432,7 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="sqmNavbar">
-                    <ul class="navbar-nav mx-auto align-items-lg-center d-none d-lg-flex">
+                    <ul class="navbar-nav mx-auto align-items-xl-center d-none d-xl-flex gap-xl-1">
                         @if (User.Identity is not null && User.Identity.IsAuthenticated)
                         {
                             string centerController = User.IsInRole("Admin") ? "Admin" : "Customer";
@@ -360,7 +445,7 @@
                         }
                     </ul>
 
-                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+                    <ul class="navbar-nav ms-auto align-items-xl-center gap-xl-2">
                         <li class="nav-item">
                             <a class="nav-link sqm-nav-link" asp-area="" asp-controller="Home" asp-action="Index">
                                 <i class="fa-solid fa-house"></i> Ana Sayfa
@@ -380,13 +465,13 @@
                         @if (User.Identity is not null && User.Identity.IsAuthenticated)
                         {
                             string centerController = User.IsInRole("Admin") ? "Admin" : "Customer";
-                            <li class="nav-item d-lg-none">
+                            <li class="nav-item d-xl-none">
                                 <a class="nav-link sqm-nav-link" asp-area="" asp-controller="@centerController" asp-action="Index">
                                     <i class="fa-solid fa-utensils"></i> Restoranlar Paneli
                                 </a>
                             </li>
 
-                            <li class="nav-item ms-lg-2 d-flex align-items-center">
+                            <li class="nav-item ms-xl-2 d-flex align-items-center">
                                 <a class="sqm-ai-btn"
                                    asp-controller="Ai" asp-action="Index"
                                    title="Yapay Zeka Asistanı"
@@ -395,7 +480,7 @@
                                 </a>
                             </li>
 
-                        <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-none d-lg-inline-flex align-items-center gap-2">
+                        <li class="nav-item ms-xl-2 mt-2 mt-xl-0 d-none d-xl-inline-flex align-items-center gap-2">
     <span class="sqm-user-chip">
         <i class="fa-solid fa-circle-user"></i>
         Merhaba, @User.Identity.Name
@@ -437,12 +522,12 @@
         }
     }
 </li> 
-                            <li class="nav-item ms-lg-2 mt-1 mt-lg-0">
-                                <a class="nav-link sqm-nav-link" asp-area="" asp-controller="Account" asp-action="AccountSettings">
+                            <li class="nav-item ms-xl-2 mt-1 mt-xl-0">
+                                <a class="nav-link sqm-nav-link sqm-nav-outline" asp-area="" asp-controller="Account" asp-action="AccountSettings">
                                     <i class="fa-solid fa-gear"></i> Hesap Ayarları
                                 </a>
                             </li>
-                            <li class="nav-item ms-lg-2 mt-1 mt-lg-0">
+                            <li class="nav-item ms-xl-2 mt-1 mt-xl-0">
                                 <form class="sqm-logout-form" asp-area="" asp-controller="Account" asp-action="Logout" method="post">
                                     <button type="submit" class="sqm-logout-btn w-100 justify-content-center">
                                         <i class="fa-solid fa-right-from-bracket"></i> Çıkış Yap
@@ -452,7 +537,7 @@
                         }
                         else
                         {
-                            <li class="nav-item ms-lg-2 d-flex align-items-center">
+                            <li class="nav-item ms-xl-2 d-flex align-items-center">
                                 <a class="sqm-ai-btn sqm-ai-btn--guest"
                                    href="#"
                                    id="sqmAiGuestBtn"
@@ -462,12 +547,12 @@
                                    <i class="fa-solid fa-robot" aria-hidden="true"></i>
                                 </a>
                             </li>
-                            <li class="nav-item mt-1 mt-lg-0">
+                            <li class="nav-item mt-1 mt-xl-0">
                                 <a class="nav-link sqm-nav-link" asp-area="" asp-controller="Account" asp-action="Login">
                                     <i class="fa-solid fa-right-to-bracket"></i> Giriş Yap
                                 </a>
                             </li>
-                            <li class="nav-item ms-lg-2 mt-1 mt-lg-0">
+                            <li class="nav-item ms-xl-2 mt-1 mt-xl-0">
                                 <a class="nav-link sqm-nav-link sqm-nav-cta" asp-area="" asp-controller="Account" asp-action="Register">
                                     <i class="fa-solid fa-arrow-right"></i> Başlayalım
                                 </a>
