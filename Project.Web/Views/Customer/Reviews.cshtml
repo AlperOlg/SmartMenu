@@ -979,12 +979,15 @@
 
                     if (!data.success) {
                         console.warn(data.message || 'Beğeni işlemi başarısız.');
+                        if (window.SoundManager) window.SoundManager.play('error');
                         return;
                     }
 
+                    if (window.SoundManager) window.SoundManager.play('success');
                     applyLikeUi(btn, !!data.isLiked, data.likeCount);
                 } catch (err) {
                     console.error(err);
+                    if (window.SoundManager) window.SoundManager.play('error');
                 } finally {
                     btn.disabled = false;
                 }

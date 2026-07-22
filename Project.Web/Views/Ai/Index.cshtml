@@ -612,19 +612,28 @@
                 list.forEach(function (m) { appendMessage(m.role, m.content); });
             }
 
+            function playSound(name) {
+                if (window.SoundManager && typeof window.SoundManager.play === 'function') {
+                    window.SoundManager.play(name);
+                }
+            }
+
             async function createSession() {
                 try {
                     var data = await postForm(urls.create, {});
                     if (!data.success) {
+                        playSound('error');
                         alert(data.message || 'Yeni sohbet oluşturulamadı.');
                         return;
                     }
+                    playSound('success');
                     sidebar.innerHTML = data.sidebarHtml;
                     currentSessionId = data.sessionId;
                     markActive(currentSessionId);
                     welcome();
                     input.focus();
                 } catch (e) {
+                    playSound('error');
                     alert('Yeni sohbet oluşturulurken bir hata oluştu.');
                 }
             }
@@ -634,6 +643,7 @@
                 try {
                     var data = await postForm(urls.select, { sessionId: id });
                     if (!data.success) {
+                        playSound('error');
                         alert(data.message || 'Sohbet yüklenemedi.');
                         return;
                     }
@@ -641,6 +651,7 @@
                     markActive(currentSessionId);
                     renderHistory(data.messages);
                 } catch (e) {
+                    playSound('error');
                     alert('Sohbet yüklenirken bir hata oluştu.');
                 }
             }
@@ -650,9 +661,11 @@
                 try {
                     var data = await postForm(urls.delete, { sessionId: id });
                     if (!data.success) {
+                        playSound('error');
                         alert(data.message || 'Sohbet silinemedi.');
                         return;
                     }
+                    playSound('success2');
                     sidebar.innerHTML = data.sidebarHtml;
 
                     // Silinen sohbet açıksa, yeni geçerli sohbete geç.
@@ -670,6 +683,7 @@
                         markActive(currentSessionId);
                     }
                 } catch (e) {
+                    playSound('error');
                     alert('Sohbet silinirken bir hata oluştu.');
                 }
             }
@@ -688,6 +702,7 @@
                 if (!text) return;
 
                 appendMessage('user', text);
+                playSound('aiMessage');
                 input.value = '';
                 setBusy(true);
                 showTyping();
@@ -698,13 +713,16 @@
 
                     if (data && data.success) {
                         appendMessage('bot', data.response || 'Yanıt alınamadı.');
+                        playSound('aiMessage');
                         updateSidebarTitle(currentSessionId, data.title);
                     } else {
                         appendMessage('bot', (data && data.message) || 'Bir hata oluştu.', true);
+                        playSound('error');
                     }
                 } catch (e) {
                     hideTyping();
                     appendMessage('bot', 'Bağlantı hatası. Lütfen tekrar deneyin.', true);
+                    playSound('error');
                 } finally {
                     setBusy(false);
                     input.focus();

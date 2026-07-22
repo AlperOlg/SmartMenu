@@ -217,4 +217,17 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var form = document.querySelector('.sqm-create-card form[method="post"]');
+            if (!form) return;
+
+            // CreateRestaurant → Manage redirect: sesi hedef sayfada çal
+            form.addEventListener('submit', function () {
+                if (window.SoundManager && typeof window.SoundManager.playAfterRedirect === 'function') {
+                    window.SoundManager.playAfterRedirect('success1');
+                }
+            });
+        })();
+    </script>
 }

@@ -60,7 +60,8 @@
         </form>
 
         <div class="sqm-2fa-panel container-fluid px-0 mb-3">
-            <div class="sqm-2fa-card d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
+            <div
+                class="sqm-2fa-card d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
                 <div>
                     <div class="sqm-2fa-title">
                         <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
@@ -79,10 +80,7 @@
                         }
                     </div>
                 </div>
-                <button type="button"
-                        class="btn sqm-2fa-btn"
-                        data-bs-toggle="modal"
-                        data-bs-target="#sqm2faModal">
+                <button type="button" class="btn sqm-2fa-btn" data-bs-toggle="modal" data-bs-target="#sqm2faModal">
                     <i class="fa-solid fa-sliders" aria-hidden="true"></i>
                     2 Faktörlü Doğrulama Ayarları
                 </button>
@@ -151,7 +149,8 @@
                     <i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i>
                     2 Faktörlü Doğrulama
                 </h2>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Kapat"></button>
             </div>
             <div class="modal-body">
                 <div id="sqm2faFeedback" class="mb-3" role="status" aria-live="polite"></div>
@@ -172,7 +171,8 @@
 
                 <div id="sqm2faDisabledPanel" class="@(Model.IsTwoFactorEnabled ? "d-none" : "")">
                     <p class="sqm-settings-hint mb-3">
-                        E-posta adresinize 6 haneli bir doğrulama kodu göndereceğiz. Kodu doğruladıktan sonra 2FA etkinleşir.
+                        E-posta adresinize 6 haneli bir doğrulama kodu göndereceğiz. Kodu doğruladıktan sonra 2FA
+                        etkinleşir.
                     </p>
                     <button type="button" class="btn sqm-2fa-btn w-100 mb-3" id="sqm2faSendCodeBtn">
                         <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>
@@ -183,13 +183,8 @@
                         <label for="sqm2faCodeInput" class="sqm-label">Kodu Girin</label>
                         <div class="sqm-input-wrap mb-2">
                             <i class="fa-solid fa-hashtag sqm-input-icon" aria-hidden="true"></i>
-                            <input type="text"
-                                   id="sqm2faCodeInput"
-                                   class="sqm-input form-control"
-                                   inputmode="numeric"
-                                   autocomplete="one-time-code"
-                                   maxlength="8"
-                                   placeholder="6 haneli kod" />
+                            <input type="text" id="sqm2faCodeInput" class="sqm-input form-control" inputmode="numeric"
+                                   autocomplete="one-time-code" maxlength="8" placeholder="6 haneli kod" />
                         </div>
                         <button type="button" class="btn btn-success w-100" id="sqm2faVerifyBtn">
                             <i class="fa-solid fa-check me-1" aria-hidden="true"></i>
@@ -232,14 +227,27 @@
             var verifyUrl = '@Url.Action("Verify2FACode", "Account")';
             var disableUrl = '@Url.Action("Disable2FA", "Account")';
 
-            function setFeedback(message, isError) {
+            /**
+             * @@param {string} message
+             * @@param {'info'|'success'|'success1'|'success2'|'error'} [tone='info']
+             */
+            function setFeedback(message, tone) {
                 if (!feedback) return;
                 if (!message) {
                     feedback.innerHTML = '';
                     return;
                 }
-                var cls = isError ? 'alert alert-danger' : 'alert alert-info';
+                tone = tone || 'info';
+                var cls = tone === 'error'
+                    ? 'alert alert-danger'
+                    : (tone === 'success' || tone === 'success1' || tone === 'success2'
+                        ? 'alert alert-success'
+                        : 'alert alert-info');
                 feedback.innerHTML = '<div class="' + cls + ' mb-0 py-2">' + message + '</div>';
+                if ((tone === 'success' || tone === 'success1' || tone === 'success2' || tone === 'error') &&
+                    window.SoundManager && typeof window.SoundManager.play === 'function') {
+                    window.SoundManager.play(tone);
+                }
             }
 
             function setTwoFactorUi(enabled) {
@@ -273,20 +281,20 @@
             if (sendBtn) {
                 sendBtn.addEventListener('click', async function () {
                     sendBtn.disabled = true;
-                    setFeedback('Kod gönderiliyor…', false);
+                    setFeedback('Kod gönderiliyor…', 'info');
                     try {
                         var data = await postJson(sendUrl);
                         if (!data.success) {
-                            setFeedback(data.message || 'Kod gönderilemedi.', true);
+                            setFeedback(data.message || 'Kod gönderilemedi.', 'error');
                             return;
                         }
-                        setFeedback(data.message || 'Kod gönderildi.', false);
+                        setFeedback(data.message || 'Kod gönderildi.', 'success');
                         if (verifyBlock) verifyBlock.classList.remove('d-none');
                         var codeInput = document.getElementById('sqm2faCodeInput');
                         if (codeInput) codeInput.focus();
                     } catch (err) {
                         console.error(err);
-                        setFeedback('İstek sırasında bir hata oluştu.', true);
+                        setFeedback('İstek sırasında bir hata oluştu.', 'error');
                     } finally {
                         sendBtn.disabled = false;
                     }
@@ -299,22 +307,22 @@
                     var codeInput = document.getElementById('sqm2faCodeInput');
                     var code = codeInput ? codeInput.value.trim() : '';
                     if (!code) {
-                        setFeedback('Lütfen doğrulama kodunu girin.', true);
+                        setFeedback('Lütfen doğrulama kodunu girin.', 'error');
                         return;
                     }
                     verifyBtn.disabled = true;
-                    setFeedback('Kod doğrulanıyor…', false);
+                    setFeedback('Kod doğrulanıyor…', 'info');
                     try {
                         var data = await postJson(verifyUrl, { code: code });
                         if (!data.success) {
-                            setFeedback(data.message || 'Doğrulama başarısız.', true);
+                            setFeedback(data.message || 'Doğrulama başarısız.', 'error');
                             return;
                         }
-                        setFeedback(data.message || '2FA etkinleştirildi.', false);
+                        setFeedback(data.message || '2FA etkinleştirildi.', 'success1');
                         setTwoFactorUi(true);
                     } catch (err) {
                         console.error(err);
-                        setFeedback('İstek sırasında bir hata oluştu.', true);
+                        setFeedback('İstek sırasında bir hata oluştu.', 'error');
                     } finally {
                         verifyBtn.disabled = false;
                     }
@@ -326,18 +334,18 @@
                 disableBtn.addEventListener('click', async function () {
                     if (!window.confirm('2 faktörlü doğrulamayı kapatmak istediğinize emin misiniz?')) return;
                     disableBtn.disabled = true;
-                    setFeedback('2FA kapatılıyor…', false);
+                    setFeedback('2FA kapatılıyor…', 'info');
                     try {
                         var data = await postJson(disableUrl);
                         if (!data.success) {
-                            setFeedback(data.message || 'İşlem başarısız.', true);
+                            setFeedback(data.message || 'İşlem başarısız.', 'error');
                             return;
                         }
-                        setFeedback(data.message || '2FA kapatıldı.', false);
+                        setFeedback(data.message || '2FA kapatıldı.', 'success2');
                         setTwoFactorUi(false);
                     } catch (err) {
                         console.error(err);
-                        setFeedback('İstek sırasında bir hata oluştu.', true);
+                        setFeedback('İstek sırasında bir hata oluştu.', 'error');
                     } finally {
                         disableBtn.disabled = false;
                     }

@@ -37,8 +37,11 @@
 
             if (!data.success) {
                 console.warn(data.message || 'Favori işlemi başarısız.');
+                if (window.SoundManager) window.SoundManager.play('error');
                 return;
             }
+
+            if (window.SoundManager) window.SoundManager.play('success');
 
             var icon = btn.querySelector('i');
             var isFavorite = !!data.isFavorite;
@@ -64,6 +67,7 @@
             }
         } catch (err) {
             console.error(err);
+            if (window.SoundManager) window.SoundManager.play('error');
         } finally {
             btn.disabled = false;
         }

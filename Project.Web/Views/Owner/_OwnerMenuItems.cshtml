@@ -200,13 +200,17 @@
                     isValid = false;
                 }
 
-                // Eğer tek bir alan bile boşsa post etmeyi engelle
                 if (!isValid) {
                     e.preventDefault();
+                    SoundManager.play('error');
+                    return;
+                }
+
+                if (window.SoundManager && typeof window.SoundManager.playAfterRedirect === 'function') {
+                    window.SoundManager.playAfterRedirect('success1');
                 }
             });
 
-            // Kullanıcı inputlara veri girmeye başladığı an kırmızı uyarıları dinamik olarak kaldır
             nameInput.addEventListener('input', function () {
                 if (nameInput.value.trim()) {
                     nameInput.classList.remove('sqm-input-warning');
@@ -245,7 +249,14 @@
 
                 if (!isValid) {
                     e.preventDefault();
+                    SoundManager.play('error');
                     alert('Lütfen boş alanları doldurunuz. Açıklama ve fiyat alanları zorunludur.');
+                    return;
+                }
+
+                
+                if (window.SoundManager && typeof window.SoundManager.playAfterRedirect === 'function') {
+                    window.SoundManager.playAfterRedirect('success1');
                 }
             });
 

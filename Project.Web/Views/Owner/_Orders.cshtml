@@ -231,19 +231,29 @@
         (function () {
             const header = document.getElementById('sqmOrdersToggle');
             const body = document.getElementById('sqmOrdersBody');
-            if (!header || !body) return;
 
-            function toggle() {
-                const isOpen = body.classList.toggle('open');
-                header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (header && body) {
+                function toggle() {
+                    const isOpen = body.classList.toggle('open');
+                    header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                }
+
+                header.addEventListener('click', toggle);
+                header.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggle();
+                    }
+                });
             }
 
-            header.addEventListener('click', toggle);
-            header.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    toggle();
-                }
+            // Ödeme Alındı: form POST → redirect; sesi sonraki sayfada çal (kesilmesin)
+            document.querySelectorAll('form.sqm-order-form').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    if (window.SoundManager && typeof window.SoundManager.playAfterRedirect === 'function') {
+                        window.SoundManager.playAfterRedirect('orderSuccess');
+                    }
+                });
             });
         })();
     </script>

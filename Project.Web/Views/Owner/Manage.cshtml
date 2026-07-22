@@ -616,3 +616,34 @@
         </div>
     </div>
 </section>
+
+@section Scripts {
+    <script>
+        (function () {
+            function playAfterRedirect(name) {
+                if (window.SoundManager && typeof window.SoundManager.playAfterRedirect === 'function') {
+                    window.SoundManager.playAfterRedirect(name);
+                }
+            }
+
+            // Owner panel form POST'ları: ses redirect sonrası çalınır (kesilmez)
+            document.addEventListener('submit', function (e) {
+                var form = e.target;
+                if (!form || form.tagName !== 'FORM') return;
+
+                var action = (form.getAttribute('action') || '').toLowerCase();
+
+                if (/\/(deletecategory|deletetable|deletemenuitem|deleterestaurant)(\/|$|\?)/.test(action) ||
+                    /\/owner\/(deletecategory|deletetable|deletemenuitem|deleterestaurant)$/.test(action)) {
+                    playAfterRedirect('success2');
+                    return;
+                }
+
+                if (/\/(addcategory|addtable)(\/|$|\?)/.test(action) ||
+                    /\/owner\/(addcategory|addtable)$/.test(action)) {
+                    playAfterRedirect('success1');
+                }
+            }, true);
+        })();
+    </script>
+}

@@ -685,6 +685,14 @@
             });
 
             updateAll();
+
+            // Sipariş Et: form POST redirect — sesi sonraki sayfada çal (kesilmesin)
+            form.addEventListener('submit', function () {
+                if (placeOrderBtn && placeOrderBtn.disabled) return;
+                if (window.SoundManager && typeof window.SoundManager.playAfterRedirect === 'function') {
+                    window.SoundManager.playAfterRedirect('success1');
+                }
+            });
         })();
     </script>
 }
