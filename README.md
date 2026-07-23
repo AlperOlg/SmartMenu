@@ -37,9 +37,9 @@ Bu proje, bir üniversite eğitimi ve Microsoft Yaz Kampı için geliştirilmiş
 <h1>TODO:</h1>
 <ul style="list-style-type:square">
   <li>Yapay zekaya sohbet geçmişi eklenecek (✓) </li>
+  <li>Ses Efektleri eklenecek (✓) </li>
+  <li>Admin ve Employee rolleri eklenecek ve işlevli hale getirelecek  (✓) </li>
   <li>Ingredient/MenuIngredient sütunları veritabanı ve client side'da boş bırakılmayacak şekilde ayarlanacak</li>
-  <li>Admin ve Employee rolleri eklenecek ve işlevli hale getirelecek</li>
   <li>Sadece 2 Factor Authentication aktifleştirmiş kullanıcıların restoran oluşturmasına izin verilecek</li>
   <li>Dil Seçenekleri eklenecek</li>
-  <li>Ses Efektleri eklenecek</li>
 </ul>
