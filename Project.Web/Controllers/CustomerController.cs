@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Project.Business.Abstract;
 using Project.Business.Dtos;
@@ -16,8 +17,7 @@ public class CustomerController : Controller
     private readonly IGenericService<Review> _reviewService;
     private readonly IGenericService<Favorite> _favoriteService;
     private readonly IGenericService<ReviewLike> _reviewLikeService;
-
-
+    private readonly UserManager<AppUser> _userManager;
 
     public CustomerController(
         IRestaurantService restaurantService,
@@ -26,7 +26,8 @@ public class CustomerController : Controller
         IGenericService<RestaurantLoyalty> loyaltyRepository,
         IGenericService<Review> reviewService,
         IGenericService<Favorite> favoriteService,
-        IGenericService<ReviewLike> reviewLikeService)
+        IGenericService<ReviewLike> reviewLikeService,
+        UserManager<AppUser> userManager)
     {
         _restaurantService = restaurantService;
         _tableService = tableService;
@@ -35,6 +36,7 @@ public class CustomerController : Controller
         _reviewService = reviewService;
         _favoriteService = favoriteService;
         _reviewLikeService = reviewLikeService;
+        _userManager = userManager;
     }
 
     [HttpGet]
@@ -150,16 +152,23 @@ public class CustomerController : Controller
             return NotFound();
         }
 
-        var canManage = User.Identity?.IsAuthenticated == true
-            && User.IsInRole("Owner")
-            && int.TryParse(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier), out var userId)
-            && restaurant.OwnerId == userId;
+        var canViewOrders = false;
+        var canManageRestaurant = false;
+
+        if (User.Identity?.IsAuthenticated == true
+            && int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
+            var access = await ResolveRestaurantAccessAsync(userId, restaurant);
+            canViewOrders = access.CanViewOrders;
+            canManageRestaurant = access.CanManageRestaurant;
+        }
 
         var model = new RestaurantDetailViewModel
         {
             Id = restaurant.Id,
             Name = restaurant.Name,
-            CanManageRestaurant = canManage, // View tarafında "Düzenle" butonunu göstermek için kullanacağız
+            CanManageRestaurant = canManageRestaurant,
+            CanViewOrders = canViewOrders,
             AverageRating = restaurant.AverageRating,
             ReviewCount = restaurant.RatedReviewCount,
             IsFavorite = false,
@@ -200,7 +209,7 @@ public class CustomerController : Controller
                 .Any();
         }
 
-        if (canManage)
+        if (canViewOrders)
         {
             var activeOrders = await _orderService.GetActiveOrdersByRestaurantIdAsync(restaurant.Id);
             model.OwnerOrders = activeOrders.Select(o => new OwnerOrderViewModel
@@ -220,6 +229,36 @@ public class CustomerController : Controller
             }).ToList();
         }
         return View(model);
+    }
+
+    /// <summary>
+    /// Restoran erişimi: Admin, asıl sahip (OwnerId / RestaurantId) veya AccessRestaurantId ile atanmış çalışan.
+    /// Level 1 → sipariş; Level 2 / Owner / Admin → sipariş + yönetim paneli.
+    /// </summary>
+    private async Task<(bool CanViewOrders, bool CanManageRestaurant)> ResolveRestaurantAccessAsync(
+        int userId,
+        Restaurant restaurant)
+    {
+        if (User.IsInRole("Admin"))
+            return (true, true);
+
+        var isActualOwner = restaurant.OwnerId == userId;
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user is not null && user.RestaurantId == restaurant.Id)
+            isActualOwner = true;
+
+        if (isActualOwner)
+            return (true, true);
+
+        var isAssignedEmployee = user is not null
+            && user.AccessRestaurantId == restaurant.Id
+            && user.AccessLevel.HasValue;
+
+        if (!isAssignedEmployee)
+            return (false, false);
+
+        var canManage = user!.AccessLevel == EmployeeAccessLevel.FullAccess;
+        return (true, canManage);
     }
 
     [HttpGet]

@@ -419,7 +419,43 @@
                         <span class="sqm-mobile-user text-truncate">
                             <i class="fa-solid fa-user text-warning"></i>@User.Identity.Name
                             <span class="sqm-role-badge sqm-role-badge-sm">
-                                @(User.IsInRole("Admin") ? "Yönetici" : User.IsInRole("Owner") ? "Sahibi" : "Müşteri")
+                                @{
+                                    var mobileUser = await UserManager.FindByNameAsync(User.Identity.Name!);
+                                    if (mobileUser is not null)
+                                    {
+                                        if (await UserManager.IsInRoleAsync(mobileUser, "Admin"))
+                                        {
+                                            <text>Yönetici</text>
+                                        }
+                                        else if (await UserManager.IsInRoleAsync(mobileUser, "Owner"))
+                                        {
+                                            if (mobileUser.AccessLevel.HasValue || mobileUser.AccessRestaurantId.HasValue)
+                                            {
+                                                var mobileLevel = (int)(mobileUser.AccessLevel ?? EmployeeAccessLevel.OrderViewer);
+                                                <text>Restoran Sahibi · Çalışan (Seviye @mobileLevel)</text>
+                                            }
+                                            else
+                                            {
+                                                <text>Sahibi</text>
+                                            }
+                                        }
+                                        else if (await UserManager.IsInRoleAsync(mobileUser, "Employee")
+                                                 || mobileUser.AccessLevel.HasValue
+                                                 || mobileUser.AccessRestaurantId.HasValue)
+                                        {
+                                            var mobileEmpLevel = (int)(mobileUser.AccessLevel ?? EmployeeAccessLevel.OrderViewer);
+                                            <text>Çalışan (Seviye @mobileEmpLevel)</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Müşteri</text>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <text>Müşteri</text>
+                                    }
+                                }
                             </span>
                         </span>
                     </div>
@@ -432,7 +468,7 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="sqmNavbar">
-                    <ul class="navbar-nav mx-auto align-items-xl-center d-none d-xl-flex gap-xl-1">
+                    <ul class="navbar-nav mx-auto align-items-xl-center d-none d-xl-flex gap-xl-1  me-3">
                         @if (User.Identity is not null && User.Identity.IsAuthenticated)
                         {
                             string centerController = User.IsInRole("Admin") ? "Admin" : "Customer";
@@ -445,7 +481,7 @@
                         }
                     </ul>
 
-                    <ul class="navbar-nav ms-auto align-items-xl-center gap-xl-2">
+                    <ul class="navbar-nav ms-auto align-items-xl-center gap-xl-2 ms-2" >
                         <li class="nav-item">
                             <a class="nav-link sqm-nav-link" asp-area="" asp-controller="Home" asp-action="Index">
                                 <i class="fa-solid fa-house"></i> Ana Sayfa
@@ -490,9 +526,34 @@
                 var currentUser = await UserManager.FindByNameAsync(User.Identity.Name!);
                 if (currentUser is not null)
                 {
-                    if (await UserManager.IsInRoleAsync(currentUser, "Admin")) { <text>Yönetici</text> }
-                    else if (await UserManager.IsInRoleAsync(currentUser, "Owner")) { <text>Restoran Sahibi</text> }
-                    else { <text>Müşteri</text> }
+                    if (await UserManager.IsInRoleAsync(currentUser, "Admin"))
+                    {
+                        <text>Yönetici</text>
+                    }
+                    else if (await UserManager.IsInRoleAsync(currentUser, "Owner"))
+                    {
+                        // Owner ana unvanı korunur; başka restoranda AccessLevel atanmışsa çalışan rozeti de eklenir.
+                        if (currentUser.AccessLevel.HasValue || currentUser.AccessRestaurantId.HasValue)
+                        {
+                            var ownerEmpLevel = (int)(currentUser.AccessLevel ?? EmployeeAccessLevel.OrderViewer);
+                            <text>Restoran Sahibi · Çalışan (Seviye @ownerEmpLevel)</text>
+                        }
+                        else
+                        {
+                            <text>Restoran Sahibi</text>
+                        }
+                    }
+                    else if (await UserManager.IsInRoleAsync(currentUser, "Employee")
+                             || currentUser.AccessLevel.HasValue
+                             || currentUser.AccessRestaurantId.HasValue)
+                    {
+                        var empLevel = (int)(currentUser.AccessLevel ?? EmployeeAccessLevel.OrderViewer);
+                        <text>Çalışan (Seviye @empLevel)</text>
+                    }
+                    else
+                    {
+                        <text>Müşteri</text>
+                    }
                 }
                 else
                 {

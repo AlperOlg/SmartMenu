@@ -515,6 +515,163 @@
                 grid-column: 1 / -1;
             }
         }
+
+        .sqm-auth-feedback {
+            margin-bottom: 1rem;
+        }
+
+        .sqm-auth-section {
+            margin-bottom: 1.75rem;
+        }
+
+        .sqm-auth-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .sqm-auth-section-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--sqm-cream);
+            margin: 0 0 1rem;
+        }
+
+        .sqm-auth-assign {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
+            padding: 1.15rem;
+            border-radius: 1rem;
+            background: rgba(18, 18, 20, 0.45);
+            border: 1px dashed rgba(212, 165, 116, 0.25);
+        }
+
+        @@media (min-width: 768px) {
+            .sqm-auth-assign {
+                grid-template-columns: 1.4fr 1fr auto;
+                align-items: start;
+            }
+        }
+
+        .sqm-auth-search-wrap {
+            position: relative;
+        }
+
+        .sqm-auth-search-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .sqm-auth-search-row .sqm-input {
+            flex: 1;
+        }
+
+        .sqm-auth-hint {
+            margin: 0.45rem 0 0;
+            font-size: 0.75rem;
+            color: rgba(200, 192, 180, 0.55);
+            line-height: 1.35;
+        }
+
+        .sqm-auth-selected {
+            margin: 0.55rem 0 0;
+            font-size: 0.82rem;
+            color: var(--sqm-gold);
+        }
+
+        .sqm-auth-selected strong {
+            color: var(--sqm-cream);
+        }
+
+        .sqm-auth-results {
+            list-style: none;
+            margin: 0.35rem 0 0;
+            padding: 0.35rem;
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            max-height: 220px;
+            overflow-y: auto;
+            border-radius: 0.75rem;
+            background: #1c1c1f;
+            border: 1px solid var(--sqm-border);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        }
+
+        .sqm-auth-result-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            padding: 0.65rem 0.75rem;
+            border-radius: 0.55rem;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .sqm-auth-result-item:hover {
+            background: rgba(212, 165, 116, 0.1);
+        }
+
+        .sqm-auth-result-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--sqm-cream);
+        }
+
+        .sqm-auth-result-meta,
+        .sqm-auth-result-empty {
+            font-size: 0.75rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-auth-result-empty {
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .sqm-auth-emp-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            min-width: 140px;
+            flex: 1;
+        }
+
+        .sqm-auth-emp-name {
+            font-weight: 700;
+            color: var(--sqm-cream);
+            font-size: 0.92rem;
+        }
+
+        .sqm-auth-emp-meta {
+            font-size: 0.75rem;
+            color: var(--sqm-cream-muted);
+        }
+
+        .sqm-auth-level-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3rem 0.7rem;
+            border-radius: 2rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: var(--sqm-gold-soft);
+            border: 1px solid rgba(212, 165, 116, 0.25);
+            color: var(--sqm-cream-muted);
+            white-space: nowrap;
+        }
+
+        .sqm-auth-level-badge[data-level="2"] {
+            color: var(--sqm-gold);
+            border-color: rgba(212, 165, 116, 0.45);
+        }
+
+        .sqm-auth-assign-action .sqm-btn-primary:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
     </style>
 }
 
@@ -572,6 +729,13 @@
                             <span class="badge-count">@Model.MenuItems.Count</span>
                         </button>
                     </li>
+                    <li class="nav-item w-100">
+                        <button class="nav-link @(active == "authorization" ? "active" : "")"
+                                data-bs-toggle="tab" data-bs-target="#tab-authorization" type="button" role="tab">
+                            <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+                            Yetkilendirme
+                        </button>
+                    </li>
                 </ul>
             </nav>
 
@@ -584,6 +748,9 @@
                 </div>
                 <div class="tab-pane fade @(active == "menu" ? "show active" : "")" id="tab-menu" role="tabpanel">
                     <partial name="_OwnerMenuItems" model="Model" />
+                </div>
+                <div class="tab-pane fade @(active == "authorization" ? "show active" : "")" id="tab-authorization" role="tabpanel">
+                    <partial name="_EmployeeAuthorization" model="Model" />
                 </div>
             </div>
         </div>

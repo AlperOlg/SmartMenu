@@ -1,0 +1,330 @@
+@model Project.Web.Models.OwnerManageViewModel
+
+@{
+    var restaurantId = Model.RestaurantId;
+}
+
+<div class="sqm-owner-panel" id="sqm-auth-panel"
+     data-restaurant-id="@restaurantId"
+     data-search-url="@Url.Action("SearchUsers", "Owner")"
+     data-assign-url="@Url.Action("AssignEmployee", "Owner")"
+     data-remove-url="@Url.Action("RemoveEmployee", "Owner")">
+    @Html.AntiForgeryToken()
+
+    <div class="sqm-owner-panel-head">
+        <h2 class="sqm-owner-panel-title">
+            <i class="fa-solid fa-user-shield" aria-hidden="true"></i> Yetkilendirme
+        </h2>
+    </div>
+
+    <div id="sqm-auth-feedback" class="sqm-auth-feedback" aria-live="polite"></div>
+
+    @* ── A. Arama & Yetkilendirme ── *@
+    <div class="sqm-auth-section">
+        <h3 class="sqm-auth-section-title">Çalışan Ara ve Yetkilendir</h3>
+
+        <div class="sqm-auth-assign">
+            <div class="sqm-field sqm-auth-search-wrap">
+                <label for="sqm-auth-search">Kullanıcı adı veya e-posta</label>
+                <div class="sqm-auth-search-row">
+                    <input type="text" id="sqm-auth-search" class="sqm-input" autocomplete="off"
+                           placeholder="Ara…" />
+                    <button type="button" id="sqm-auth-search-btn" class="sqm-btn-outline">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Ara
+                    </button>
+                </div>
+                <ul id="sqm-auth-results" class="sqm-auth-results" hidden></ul>
+                <input type="hidden" id="sqm-auth-selected-id" value="" />
+                <p id="sqm-auth-selected-label" class="sqm-auth-selected" hidden></p>
+            </div>
+
+            <div class="sqm-field">
+                <label for="sqm-auth-level">Yetki seviyesi</label>
+                <select id="sqm-auth-level" class="sqm-select">
+                    <option value="1">1 — Sadece Sipariş Görme / Yönetme</option>
+                    <option value="2">2 — Tam Yetki (Restoran Yönetimi)</option>
+                </select>
+                <p class="sqm-auth-hint">1 = Sadece siparişleri görebilir, 2 = Tam yetki (Restoran yönetimi)</p>
+            </div>
+
+            <div class="sqm-field sqm-auth-assign-action">
+                <label>&nbsp;</label>
+                <button type="button" id="sqm-auth-assign-btn" class="sqm-btn-primary" disabled>
+                    <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Yetkilendir / Ekle
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* ── B. Mevcut Çalışanlar ── *@
+    <div class="sqm-auth-section">
+        <h3 class="sqm-auth-section-title">Mevcut Çalışanlar</h3>
+
+        <div id="sqm-auth-employee-list" class="sqm-owner-list">
+            @if (!Model.Employees.Any())
+            {
+                <div class="sqm-owner-empty" id="sqm-auth-empty">
+                    <i class="fa-solid fa-users" aria-hidden="true"></i>
+                    Bu restorana henüz çalışan atanmamış.
+                </div>
+            }
+            else
+            {
+                @foreach (var emp in Model.Employees)
+                {
+                    <div class="sqm-owner-row sqm-auth-emp-row" data-user-id="@emp.UserId">
+                        <div class="sqm-auth-emp-info">
+                            <span class="sqm-auth-emp-name">
+                                @(string.IsNullOrWhiteSpace(emp.FullName) ? emp.UserName : emp.FullName)
+                            </span>
+                            <span class="sqm-auth-emp-meta">@emp.UserName · @emp.Email</span>
+                        </div>
+                        <span class="sqm-auth-level-badge" data-level="@emp.AccessLevel">@emp.AccessLevelLabel</span>
+                        <div class="sqm-owner-row-actions">
+                            <button type="button" class="sqm-btn-danger sqm-auth-remove-btn"
+                                    data-user-id="@emp.UserId"
+                                    data-display="@(string.IsNullOrWhiteSpace(emp.FullName) ? emp.UserName : emp.FullName)">
+                                <i class="fa-solid fa-user-xmark" aria-hidden="true"></i> Kov / Yetkiyi Kaldır
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var panel = document.getElementById('sqm-auth-panel');
+    if (!panel) return;
+
+    var restaurantId = panel.getAttribute('data-restaurant-id');
+    var searchUrl = panel.getAttribute('data-search-url');
+    var assignUrl = panel.getAttribute('data-assign-url');
+    var removeUrl = panel.getAttribute('data-remove-url');
+    var tokenInput = panel.querySelector('input[name="__RequestVerificationToken"]');
+
+    var searchInput = document.getElementById('sqm-auth-search');
+    var searchBtn = document.getElementById('sqm-auth-search-btn');
+    var resultsEl = document.getElementById('sqm-auth-results');
+    var selectedIdEl = document.getElementById('sqm-auth-selected-id');
+    var selectedLabel = document.getElementById('sqm-auth-selected-label');
+    var levelSelect = document.getElementById('sqm-auth-level');
+    var assignBtn = document.getElementById('sqm-auth-assign-btn');
+    var listEl = document.getElementById('sqm-auth-employee-list');
+    var feedbackEl = document.getElementById('sqm-auth-feedback');
+
+    var debounceTimer = null;
+    var lastQuery = '';
+
+    function play(name) {
+        if (window.SoundManager && typeof window.SoundManager.play === 'function') {
+            window.SoundManager.play(name);
+        }
+    }
+
+    function setFeedback(message, tone) {
+        if (!feedbackEl) return;
+        if (!message) {
+            feedbackEl.innerHTML = '';
+            return;
+        }
+        var cls = tone === 'error' ? 'alert alert-danger' : 'alert alert-success';
+        feedbackEl.innerHTML = '<div class="' + cls + ' mb-0 py-2 px-3">' + message + '</div>';
+    }
+
+    function clearSelection() {
+        selectedIdEl.value = '';
+        selectedLabel.hidden = true;
+        selectedLabel.textContent = '';
+        assignBtn.disabled = true;
+    }
+
+    function selectUser(user) {
+        selectedIdEl.value = String(user.id);
+        selectedLabel.hidden = false;
+        selectedLabel.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i> Seçildi: <strong>' +
+            escapeHtml(user.fullName || user.userName) + '</strong> <span>(' + escapeHtml(user.email || user.userName) + ')</span>';
+        assignBtn.disabled = false;
+        resultsEl.hidden = true;
+        resultsEl.innerHTML = '';
+        searchInput.value = user.userName || user.email || '';
+    }
+
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    async function searchUsers(query) {
+        query = (query || '').trim();
+        if (query.length < 2) {
+            resultsEl.hidden = true;
+            resultsEl.innerHTML = '';
+            return;
+        }
+        lastQuery = query;
+        var url = searchUrl + '?restaurantId=' + encodeURIComponent(restaurantId) + '&q=' + encodeURIComponent(query);
+        try {
+            var res = await fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error('search failed');
+            var data = await res.json();
+            if (query !== lastQuery) return;
+            renderResults(data.users || []);
+        } catch (err) {
+            console.error(err);
+            resultsEl.hidden = false;
+            resultsEl.innerHTML = '<li class="sqm-auth-result-empty">Arama başarısız.</li>';
+        }
+    }
+
+    function renderResults(users) {
+        resultsEl.innerHTML = '';
+        if (!users.length) {
+            resultsEl.hidden = false;
+            resultsEl.innerHTML = '<li class="sqm-auth-result-empty">Eşleşen kullanıcı yok.</li>';
+            return;
+        }
+        users.forEach(function (u) {
+            var li = document.createElement('li');
+            li.className = 'sqm-auth-result-item';
+            li.innerHTML =
+                '<span class="sqm-auth-result-name">' + escapeHtml(u.fullName || u.userName) + '</span>' +
+                '<span class="sqm-auth-result-meta">' + escapeHtml(u.userName) + ' · ' + escapeHtml(u.email) + '</span>';
+            li.addEventListener('click', function () { selectUser(u); });
+            resultsEl.appendChild(li);
+        });
+        resultsEl.hidden = false;
+    }
+
+    function renderEmployees(employees) {
+        listEl.innerHTML = '';
+        if (!employees || !employees.length) {
+            listEl.innerHTML =
+                '<div class="sqm-owner-empty" id="sqm-auth-empty">' +
+                '<i class="fa-solid fa-users" aria-hidden="true"></i>' +
+                'Bu restorana henüz çalışan atanmamış.</div>';
+            return;
+        }
+        employees.forEach(function (emp) {
+            var display = emp.fullName && emp.fullName.trim() ? emp.fullName : emp.userName;
+            var row = document.createElement('div');
+            row.className = 'sqm-owner-row sqm-auth-emp-row';
+            row.setAttribute('data-user-id', emp.userId);
+            row.innerHTML =
+                '<div class="sqm-auth-emp-info">' +
+                    '<span class="sqm-auth-emp-name">' + escapeHtml(display) + '</span>' +
+                    '<span class="sqm-auth-emp-meta">' + escapeHtml(emp.userName) + ' · ' + escapeHtml(emp.email) + '</span>' +
+                '</div>' +
+                '<span class="sqm-auth-level-badge" data-level="' + emp.accessLevel + '">' + escapeHtml(emp.accessLevelLabel) + '</span>' +
+                '<div class="sqm-owner-row-actions">' +
+                    '<button type="button" class="sqm-btn-danger sqm-auth-remove-btn" data-user-id="' + emp.userId + '" data-display="' + escapeHtml(display) + '">' +
+                        '<i class="fa-solid fa-user-xmark" aria-hidden="true"></i> Kov / Yetkiyi Kaldır' +
+                    '</button>' +
+                '</div>';
+            listEl.appendChild(row);
+        });
+    }
+
+    async function postForm(url, fields) {
+        var params = new URLSearchParams(fields || {});
+        if (tokenInput) params.set('__RequestVerificationToken', tokenInput.value);
+        var res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': tokenInput ? tokenInput.value : '',
+                'Accept': 'application/json'
+            },
+            body: params.toString(),
+            credentials: 'same-origin'
+        });
+        return await res.json();
+    }
+
+    searchInput.addEventListener('input', function () {
+        clearSelection();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function () {
+            searchUsers(searchInput.value);
+        }, 300);
+    });
+
+    searchBtn.addEventListener('click', function () {
+        clearTimeout(debounceTimer);
+        searchUsers(searchInput.value);
+    });
+
+    assignBtn.addEventListener('click', async function () {
+        var userId = selectedIdEl.value;
+        if (!userId) return;
+        assignBtn.disabled = true;
+        try {
+            var data = await postForm(assignUrl, {
+                restaurantId: restaurantId,
+                userId: userId,
+                accessLevel: levelSelect.value
+            });
+            if (!data.success) {
+                setFeedback(data.message || 'Yetkilendirme başarısız.', 'error');
+                play('error');
+                assignBtn.disabled = false;
+                return;
+            }
+            setFeedback(data.message || 'Yetkilendirildi.', 'success');
+            play('success1');
+            renderEmployees(data.employees || []);
+            clearSelection();
+            searchInput.value = '';
+            resultsEl.hidden = true;
+            resultsEl.innerHTML = '';
+        } catch (err) {
+            console.error(err);
+            setFeedback('İstek sırasında bir hata oluştu.', 'error');
+            play('error');
+            assignBtn.disabled = false;
+        }
+    });
+
+    listEl.addEventListener('click', async function (e) {
+        var btn = e.target.closest('.sqm-auth-remove-btn');
+        if (!btn) return;
+        var userId = btn.getAttribute('data-user-id');
+        var display = btn.getAttribute('data-display') || 'bu kullanıcı';
+        if (!userId) return;
+        if (!confirm('"' + display + '" adlı çalışanın yetkisini kaldırmak istiyor musunuz?')) return;
+
+        btn.disabled = true;
+        try {
+            var data = await postForm(removeUrl, {
+                restaurantId: restaurantId,
+                userId: userId
+            });
+            if (!data.success) {
+                setFeedback(data.message || 'Yetki kaldırılamadı.', 'error');
+                play('error');
+                btn.disabled = false;
+                return;
+            }
+            setFeedback(data.message || 'Yetki kaldırıldı.', 'success');
+            play('success2');
+            renderEmployees(data.employees || []);
+        } catch (err) {
+            console.error(err);
+            setFeedback('İstek sırasında bir hata oluştu.', 'error');
+            play('error');
+            btn.disabled = false;
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!panel.contains(e.target)) {
+            resultsEl.hidden = true;
+        }
+    });
+})();
+</script>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Project.DataAccess;
 
@@ -11,9 +12,11 @@ using Project.DataAccess;
 namespace Project.DataAccess.Migrations
 {
     [DbContext(typeof(SmartMenuDbContext))]
-    partial class SmartMenuDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260723191107_AddEmployeeAccessLevelToAppUser")]
+    partial class AddEmployeeAccessLevelToAppUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -198,9 +201,6 @@ namespace Project.DataAccess.Migrations
                     b.Property<int?>("AccessLevel")
                         .HasColumnType("int");
 
-                    b.Property<int?>("AccessRestaurantId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -253,8 +253,6 @@ namespace Project.DataAccess.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AccessRestaurantId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -723,16 +721,9 @@ namespace Project.DataAccess.Migrations
 
             modelBuilder.Entity("Project.Core.Entities.AppUser", b =>
                 {
-                    b.HasOne("Project.Core.Entities.Restaurant", "AccessRestaurant")
-                        .WithMany()
-                        .HasForeignKey("AccessRestaurantId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Project.Core.Entities.Restaurant", "Restaurant")
                         .WithMany()
                         .HasForeignKey("RestaurantId");
-
-                    b.Navigation("AccessRestaurant");
 
                     b.Navigation("Restaurant");
                 });

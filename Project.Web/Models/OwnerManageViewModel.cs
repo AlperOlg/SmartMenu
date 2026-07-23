@@ -5,15 +5,26 @@ public class OwnerManageViewModel
 {
     public int RestaurantId { get; set; }
     public string RestaurantName { get; set; } = string.Empty;
-    public string ActiveTab { get; set; } = "categories"; // categories | tables | menu
+    public string ActiveTab { get; set; } = "categories"; // categories | tables | menu | authorization
 
     public List<OwnerCategoryViewModel> Categories { get; set; } = new();
     public List<OwnerTableViewModel> Tables { get; set; } = new();
     public List<OwnerMenuItemViewModel> MenuItems { get; set; } = new();
+    public List<OwnerEmployeeViewModel> Employees { get; set; } = new();
 
     public CreateCategoryForm CategoryForm { get; set; } = new();
     public CreateTableForm TableForm { get; set; } = new();
     public CreateMenuItemForm MenuItemForm { get; set; } = new();
+}
+
+public class OwnerEmployeeViewModel
+{
+    public int UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public int AccessLevel { get; set; }
+    public string AccessLevelLabel { get; set; } = string.Empty;
 }
 
 public class OwnerCategoryViewModel

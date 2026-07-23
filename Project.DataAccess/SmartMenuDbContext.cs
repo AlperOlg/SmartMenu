@@ -173,5 +173,12 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
                .WithMany(cs => cs.Messages)
                .HasForeignKey(cm => cm.ChatSessionId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        // AppUser -> AccessRestaurant: çalışan yetkisi (Owner'ın RestaurantId'sinden bağımsız)
+        builder.Entity<AppUser>()
+               .HasOne(u => u.AccessRestaurant)
+               .WithMany()
+               .HasForeignKey(u => u.AccessRestaurantId)
+               .OnDelete(DeleteBehavior.Restrict);
     }
 }

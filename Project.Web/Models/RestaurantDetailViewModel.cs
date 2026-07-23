@@ -4,7 +4,13 @@ public class RestaurantDetailViewModel
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>Level 2 / asıl Owner / Admin — "Restoranı Düzenle / Yönet" butonu.</summary>
     public bool CanManageRestaurant { get; set; }
+
+    /// <summary>Level 1+ / asıl Owner / Admin — sipariş paneli (_Orders).</summary>
+    public bool CanViewOrders { get; set; }
+
     public double AverageRating { get; set; }
     public int ReviewCount { get; set; }
     public bool IsFavorite { get; set; }

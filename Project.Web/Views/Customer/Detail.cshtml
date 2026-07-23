@@ -724,7 +724,7 @@
                                 <button type="button" class="sqm-select-table-btn" id="sqmSelectTableBtn" disabled>
                                     Masayı Seç
                                 </button>
-                                @if (Model.CanManageRestaurant)
+                                @if (Model.CanViewOrders)
                                 {
                                     <div class="col-12 my-5">
                                         @await Html.PartialAsync("~/Views/Owner/_Orders.cshtml", Model.OwnerOrders)
