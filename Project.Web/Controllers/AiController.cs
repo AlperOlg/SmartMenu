@@ -145,7 +145,7 @@ public class AiController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SendMessage(int sessionId, string message)
+    public async Task<IActionResult> SendMessage(int sessionId, string message, int? restaurantId = null)
     {
         if (string.IsNullOrWhiteSpace(message))
         {
@@ -162,8 +162,8 @@ public class AiController : Controller
             // 1) Kullanıcı mesajını kaydet (5 mesaj limiti ve başlık güncellemesi servis katmanında uygulanır).
             var userMessage = await _chatSessionService.AddUserMessageAsync(sessionId, message, userId);
 
-            // 2) AI yanıtını üret.
-            var reply = await _aiService.GenerateResponseAsync(message, userId);
+            // 2) AI yanıtını üret (restaurantId varsa RAG; yoksa / indeks boşsa genel asistan).
+            var reply = await _aiService.GenerateResponseAsync(message, userId, restaurantId);
 
             // 3) Asistan yanıtını kaydet.
             await _chatSessionService.AddAssistantMessageAsync(sessionId, reply);

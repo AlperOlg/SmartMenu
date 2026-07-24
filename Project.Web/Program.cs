@@ -52,17 +52,26 @@ builder.Services.AddDbContext<SmartMenuDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Semantic Kernel + Ollama (yerel AI)
+var ollamaEndpoint = builder.Configuration["Ollama:Endpoint"] ?? "http://localhost:11434";
+var ollamaChatModel = builder.Configuration["Ollama:ChatModel"] ?? "llama3";
+var ollamaEmbeddingModel = builder.Configuration["Ollama:EmbeddingModel"] ?? "nomic-embed-text";
+var ollamaUri = new Uri(ollamaEndpoint);
+
 #pragma warning disable SKEXP0070
 builder.Services.AddTransient<Kernel>(_ =>
 {
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddOllamaChatCompletion(
-        modelId: "llama3",
-        endpoint: new Uri("http://localhost:11434"));
+        modelId: ollamaChatModel,
+        endpoint: ollamaUri);
+    kernelBuilder.AddOllamaTextEmbeddingGeneration(
+        modelId: ollamaEmbeddingModel,
+        endpoint: ollamaUri);
     return kernelBuilder.Build();
 });
 #pragma warning restore SKEXP0070
 
+builder.Services.AddInMemoryVectorStore();
 builder.Services.AddScoped<IAiService, SemanticKernelAiService>();
 
 var app = builder.Build();
