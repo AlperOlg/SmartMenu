@@ -17,22 +17,25 @@ public class GenericManager<T> : IGenericService<T> where T : class
         return await _genericRepository.GetAsync(id, useTracking);
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, bool useTracking = true)
+    public async Task<IEnumerable<T>> GetAllAsync(
+        Expression<Func<T, bool>>? filter = null,
+        bool useTracking = true,
+        params Expression<Func<T, object>>[] includes)
     {
-        return await _genericRepository.GetAllAsync(filter, useTracking);
+        return await _genericRepository.GetAllAsync(filter, useTracking, includes);
     }
 
-    public async Task AddAsync(T entity)
+    public virtual async Task AddAsync(T entity)
     {
         await _genericRepository.AddAsync(entity);
     }
 
-    public async Task UpdateAsync(T entity)
+    public virtual async Task UpdateAsync(T entity)
     {
         await _genericRepository.UpdateAsync(entity);
     }
 
-    public async Task DeleteAsync(T entity)
+    public virtual async Task DeleteAsync(T entity)
     {
         await _genericRepository.DeleteAsync(entity);
     }

@@ -1,6 +1,3 @@
-// NOT: Eğer sorun çözülmezse Program.cs içerisine şunu ekleyin:
-// options.SignIn.RequireConfirmedAccount = false;
-// options.Tokens.ProviderMap[TokenOptions.DefaultEmailProvider] ayarlarının doğru yapıldığından emin olun.
 using Microsoft.EntityFrameworkCore;
 using Microsoft.SemanticKernel;
 using Project.Business.Abstract;
@@ -38,6 +35,8 @@ builder.Services.AddScoped<IChatSessionService, ChatSessionManager>();
 
 builder.Services.AddScoped<IGenericRepository<MenuItem>, GenericRepository<MenuItem>>();
 builder.Services.AddHostedService<TableReleaseBackgroundService>();
+
+builder.Services.AddScoped<IMenuItemService, MenuItemManager>();
 
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
 {
@@ -113,6 +112,25 @@ using (var scope = app.Services.CreateScope())
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Veritabanı seed edilirken bir hata oluştu.");
+    }
+}
+
+// RAG: in-memory vektör deposu her açılışta boş olduğu için tüm platform verisini
+// (menü, restoran/masa durumu, yorumlar) SQL'den ChunkType bazlı olarak yükle
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var aiService = services.GetRequiredService<IAiService>();
+        await aiService.SeedAllPlatformDataIndexAsync();
+        logger.LogInformation("Platform vektör indeksi (RAG) başarıyla yüklendi.");
+    }
+    catch (Exception ex)
+    {
+        // Ollama/embedding servisi kapalıysa uygulama yine de açılmalı
+        logger.LogError(ex, "Platform vektör indeksi (RAG) yüklenirken bir hata oluştu.");
     }
 }
 

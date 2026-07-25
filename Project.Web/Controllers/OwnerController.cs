@@ -18,7 +18,7 @@ public class OwnerController : Controller
     private readonly SignInManager<AppUser> _signInManager;
 
     private readonly IGenericService<Category> _categoryService;
-    private readonly IGenericService<MenuItem> _menuItemService;
+    private readonly IMenuItemService _menuItemService;
     private readonly ITableService _tableService;
     private readonly IOrderService _orderService;
     private readonly ILogger<OwnerController> _logger;
@@ -28,7 +28,7 @@ public class OwnerController : Controller
         UserManager<AppUser> userManager,
         SignInManager<AppUser> signInManager,
         IGenericService<Category> categoryService,
-        IGenericService<MenuItem> menuItemService,
+        IMenuItemService menuItemService,
         ITableService tableService,
         IOrderService orderService,
         ILogger<OwnerController> logger)
@@ -365,19 +365,22 @@ public class OwnerController : Controller
             return RedirectToAction(nameof(Manage), new { id = restaurantId, tab = "menu" });
         }
 
-        await _menuItemService.AddAsync(new MenuItem
+        var item = new MenuItem
         {
             Name = form.Name?.Trim() ?? string.Empty,
 
             // gY" 2. A?IKLAMA (DESCRIPTION) BOŞ BIRAKILMA ?-ZoMo
             // EYer formdan null geldiyse direkt null bırakır (veritabanına NULL yazar), 
             // null deYilse Trim() deYerini alır. Böylece NullReferenceException asla fırlamaz.
-            Description = string.IsNullOrWhiteSpace(form.Description) ? null : form.Description.Trim(),
+            Description = string.IsNullOrWhiteSpace(form.Description) ? string.Empty : form.Description.Trim(),
 
             Price = form.Price,
             CategoryId = form.CategoryId,
             RestaurantId = restaurantId
-        });
+        };
+
+        // Vektör deposu senkronizasyonu MenuItemManager içerisinde yapılıyor.
+        await _menuItemService.AddAsync(item);
 
         return RedirectToAction(nameof(Manage), new { id = restaurantId, tab = "menu" });
     }
@@ -404,6 +407,7 @@ public class OwnerController : Controller
         item.CategoryId = categoryId;
 
         await _menuItemService.UpdateAsync(item);
+
         return RedirectToAction(nameof(Manage), new { id = restaurantId, tab = "menu" });
     }
 
@@ -420,6 +424,7 @@ public class OwnerController : Controller
             return NotFound();
 
         await _menuItemService.DeleteAsync(item);
+
         return RedirectToAction(nameof(Manage), new { id = restaurantId, tab = "menu" });
     }
 

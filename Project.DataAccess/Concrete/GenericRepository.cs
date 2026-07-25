@@ -23,7 +23,26 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             await _dbSet.AsNoTracking().FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, bool useTracking = true)
+    public async Task<T?> GetAsync(
+        Expression<Func<T, bool>> filter,
+        bool useTracking = true,
+        params Expression<Func<T, object>>[] includes)
+    {
+        return await BuildQuery(filter, useTracking, includes).FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<T>> GetAllAsync(
+        Expression<Func<T, bool>>? filter = null,
+        bool useTracking = true,
+        params Expression<Func<T, object>>[] includes)
+    {
+        return await BuildQuery(filter, useTracking, includes).ToListAsync();
+    }
+
+    private IQueryable<T> BuildQuery(
+        Expression<Func<T, bool>>? filter,
+        bool useTracking,
+        Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet;
 
@@ -32,12 +51,20 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             query = query.Where(filter);
         }
 
+        if (includes is { Length: > 0 })
+        {
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+        }
+
         if (!useTracking)
         {
             query = query.AsNoTracking();
         }
 
-        return await query.ToListAsync();
+        return query;
     }
 
     public async Task AddAsync(T entity)
