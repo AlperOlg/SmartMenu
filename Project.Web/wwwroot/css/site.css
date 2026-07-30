@@ -196,4 +196,82 @@ body {
   font-weight: 650;
 }
 
+/* ==========================================================================
+   6. OWNER — MALZEME YÖNETİMİ (ManageIngredients)
+   Hesap ayarları / 2FA kart yapısıyla aynı dil
+   ========================================================================== */
+.sqm-ingredients-page {
+  min-height: calc(100vh - 72px);
+  padding: 2.5rem 0 4rem;
+}
+
+.sqm-ingredients-card {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--sqm-border);
+  background: var(--sqm-card-bg);
+  box-shadow: var(--sqm-shadow);
+}
+
+.sqm-ingredients-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--sqm-cream);
+  letter-spacing: -0.02em;
+}
+
+.sqm-ingredients-card .form-control,
+.sqm-ingredients-card .input-group-text {
+  color: var(--sqm-cream);
+  background: rgba(18, 18, 20, 0.45);
+  border-color: var(--sqm-border);
+}
+
+.sqm-ingredients-card .form-control::placeholder {
+  color: var(--sqm-cream-muted);
+  opacity: 0.65;
+}
+
+.sqm-ingredients-card .form-control:focus {
+  color: var(--sqm-cream);
+  background: rgba(18, 18, 20, 0.65);
+  border-color: var(--sqm-gold);
+  box-shadow: 0 0 0 3px var(--sqm-gold-soft);
+}
+
+.sqm-ingredient-feedback {
+  display: none;
+}
+
+.sqm-ingredient-option {
+  height: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--sqm-border);
+  background: rgba(18, 18, 20, 0.4);
+}
+
+.sqm-ingredient-option:hover {
+  border-color: rgba(212, 165, 116, 0.35);
+  background: rgba(212, 165, 116, 0.06);
+}
+
+.sqm-ingredient-option .form-check-label {
+  font-weight: 600;
+  color: var(--sqm-cream);
+  cursor: pointer;
+}
+
+.sqm-ingredient-option .form-check-input {
+  cursor: pointer;
+}
+
+.sqm-ingredient-option .form-check-input:checked {
+  background-color: var(--sqm-gold);
+  border-color: var(--sqm-gold);
+}
+
 

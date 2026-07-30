@@ -1,6 +1,7 @@
 @model Project.Business.Dtos.CreateRestaurantDto
 @{
     ViewData["Title"] = "Restoran Oluştur";
+    var isTwoFactorEnabled = ViewBag.IsTwoFactorEnabled is bool enabled && enabled;
 }
 
 @section Styles {
@@ -149,6 +150,41 @@
             transform: translateY(-1px);
         }
 
+        .sqm-create-submit:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+
+        .sqm-two-factor-alert {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border: 1px solid rgba(240, 160, 96, 0.45);
+            border-radius: 0.85rem;
+            background: rgba(240, 160, 96, 0.12);
+            color: var(--sqm-cream);
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .sqm-two-factor-alert i {
+            color: var(--sqm-gold);
+        }
+
+        .sqm-two-factor-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.75rem;
+            color: var(--sqm-gold);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .sqm-two-factor-link:hover {
+            color: var(--sqm-cream);
+        }
+
         .sqm-create-note {
             display: flex;
             align-items: flex-start;
@@ -185,6 +221,18 @@
                 Restoran adınızı girin, hemen ardından menü, kategori ve masa yönetimine geçebilirsiniz.
             </p>
 
+            @if (!isTwoFactorEnabled)
+            {
+                <div class="sqm-two-factor-alert" role="alert" aria-live="polite">
+                    <i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i>
+                    Sadece 2 faktörlü doğrulama kullanan hesaplar restoran açma yetkisine sahip.
+                    <a class="sqm-two-factor-link" asp-controller="Account" asp-action="AccountSettings">
+                        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                        2FA ayarlarına git
+                    </a>
+                </div>
+            }
+
             <form asp-controller="Owner" asp-action="CreateRestaurant" method="post" novalidate>
                 <div asp-validation-summary="ModelOnly" class="sqm-create-summary"></div>
 
@@ -198,10 +246,20 @@
                     <span asp-validation-for="Name" class="sqm-field-validation"></span>
                 </div>
 
-                <button type="submit" class="sqm-create-submit">
-                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                    Restoranı Oluştur
-                </button>
+                @if (isTwoFactorEnabled)
+                {
+                    <button type="submit" class="sqm-create-submit">
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        Restoranı Oluştur
+                    </button>
+                }
+                else
+                {
+                    <button type="submit" class="sqm-create-submit" disabled>
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        Restoranı Oluştur
+                    </button>
+                }
             </form>
 
             <div class="sqm-create-note">

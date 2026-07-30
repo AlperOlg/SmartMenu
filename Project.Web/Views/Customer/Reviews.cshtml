@@ -331,10 +331,41 @@
         }
 
         .sqm-review-item {
+            position: relative;
             padding: 1rem 1.15rem;
+            padding-right: 2.75rem;
             border-radius: 0.95rem;
             border: 1px solid var(--sqm-border);
             background: rgba(18, 18, 20, 0.4);
+        }
+
+        .sqm-delete-form {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            margin: 0;
+        }
+
+        .sqm-delete-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.85rem;
+            height: 1.85rem;
+            padding: 0;
+            border-radius: 0.55rem;
+            border: 1px solid rgba(229, 115, 115, 0.35);
+            background: rgba(229, 115, 115, 0.08);
+            color: #e57373;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .sqm-delete-btn:hover {
+            color: #ff8a80;
+            border-color: rgba(229, 115, 115, 0.55);
+            background: rgba(229, 115, 115, 0.16);
         }
 
         .sqm-review-item-top {
@@ -512,7 +543,9 @@
         }
 
         .sqm-reply-item {
+            position: relative;
             padding: 0.85rem 1rem;
+            padding-right: 2.75rem;
             border-radius: 0.8rem;
             border: 1px solid var(--sqm-border);
             background: rgba(18, 18, 20, 0.55);
@@ -681,6 +714,20 @@
                             .ToList();
 
                         <article class="sqm-review-item">
+                            @if (review.AppUserId == currentUserId)
+                            {
+                                <form asp-action="DeleteReview"
+                                      method="post"
+                                      class="sqm-delete-form"
+                                      onsubmit="return confirm('Bu yorumu silmek istediğinize emin misiniz?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@review.Id" />
+                                    <button type="submit" class="sqm-delete-btn" aria-label="Yorumu sil" title="Sil">
+                                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            }
+
                             <div class="sqm-review-author">
                                 <span>@authorName</span>
                                 @if (isOwnerReview)
@@ -792,6 +839,20 @@
                                         var replyLiked = reply.ReviewLikes?.Any(rl => rl.AppUserId == currentUserId) ?? false;
 
                                         <article class="sqm-reply-item">
+                                            @if (reply.AppUserId == currentUserId)
+                                            {
+                                                <form asp-action="DeleteReview"
+                                                      method="post"
+                                                      class="sqm-delete-form"
+                                                      onsubmit="return confirm('Bu yanıtı silmek istediğinize emin misiniz?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@reply.Id" />
+                                                    <button type="submit" class="sqm-delete-btn" aria-label="Yanıtı sil" title="Sil">
+                                                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                                    </button>
+                                                </form>
+                                            }
+
                                             <div class="sqm-review-author">
                                                 <span>@replyAuthor</span>
                                                 @if (replyIsOwner)

@@ -8,14 +8,17 @@ namespace Project.Business.Concrete;
 public class MenuItemManager : GenericManager<MenuItem>, IMenuItemService
 {
     private readonly IAiService _aiService;
+    private readonly IGenericRepository<MenuItemIngredient> _menuItemIngredientRepository;
     private readonly ILogger<MenuItemManager> _logger;
 
     public MenuItemManager(
         IGenericRepository<MenuItem> repository,
         IAiService aiService,
+        IGenericRepository<MenuItemIngredient> menuItemIngredientRepository,
         ILogger<MenuItemManager> logger) : base(repository)
     {
         _aiService = aiService;
+        _menuItemIngredientRepository = menuItemIngredientRepository;
         _logger = logger;
     }
 
@@ -48,7 +51,7 @@ public class MenuItemManager : GenericManager<MenuItem>, IMenuItemService
 
     /// <summary>
     /// SQL işlemi sonrası navigation property'ler yüklü olmayabileceği için ürünü
-    /// Category ve Restaurant ilişkileriyle tekrar çekip vektör deposunu günceller.
+    /// Category, Restaurant ve Ingredient ilişkileriyle tekrar çekip vektör deposunu günceller.
     /// </summary>
     private async Task SyncIndexAsync(int menuItemId)
     {
@@ -65,6 +68,11 @@ public class MenuItemManager : GenericManager<MenuItem>, IMenuItemService
                     "Menü ürünü {MenuItemId} indeksleme için veritabanından okunamadı.", menuItemId);
                 return;
             }
+
+            freshItem.MenuItemIngredients = (await _menuItemIngredientRepository.GetAllAsync(
+                mii => mii.MenuItemId == menuItemId,
+                useTracking: false,
+                includes: [mii => mii.Ingredient])).ToList();
 
             var text = SemanticKernelAiService.FormatMenuItemIndexText(freshItem);
             await _aiService.IndexMenuItemAsync(freshItem.RestaurantId, freshItem.Id, text);

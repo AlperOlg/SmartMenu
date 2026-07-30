@@ -11,16 +11,15 @@ namespace Project.DataAccess
             await context.Database.EnsureCreatedAsync();
 
             // 1. DÜZENLEME: IdentityRole yerine projenin AppRole sınıfı kullanıldı
-            string[] roles = { "Admin", "RestorantSahibi", "Customer" };
-            foreach (var role in roles)
+            string[] roles = { "Admin", "Owner", "Customer", "Employee" };
+
+            foreach (var roleName in roles)
             {
-                if (!await roleManager.RoleExistsAsync(role))
+                if (!await roleManager.RoleExistsAsync(roleName))
                 {
-                    await roleManager.CreateAsync(new AppRole { Name = role });
+                    await roleManager.CreateAsync(new AppRole { Name = roleName });
                 }
             }
-
-            // 2. DÜZENLEME: IdentityUser yerine AppUser kullanıldı ve FullName zorunlu alanı dolduruldu
             var adminEmail = "admin@test.com";
             AppUser adminUser = await userManager.FindByEmailAsync(adminEmail);
             if (adminUser == null)
@@ -30,31 +29,52 @@ namespace Project.DataAccess
                     UserName = "admin",
                     Email = adminEmail,
                     EmailConfirmed = true,
-                    FullName = "Sistem Yöneticisi" // Eklendi
+                    FullName = "Sistem Yöneticisi"
                 };
-                var result = await userManager.CreateAsync(adminUser, "Admin123!");
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(adminUser, "Admin");
-                }
+                await userManager.CreateAsync(adminUser, "Password!23");
             }
 
-            var ownerEmail = "sahip@test.com";
-            AppUser ownerUser = await userManager.FindByEmailAsync(ownerEmail);
-            if (ownerUser == null)
+            if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
             {
-                ownerUser = new AppUser
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+
+            var firstOwnerEmail = "owner.anadolu@test.com";
+            AppUser firstOwnerUser = await userManager.FindByEmailAsync(firstOwnerEmail);
+            if (firstOwnerUser == null)
+            {
+                firstOwnerUser = new AppUser
                 {
-                    UserName = "restoransahibi",
-                    Email = ownerEmail,
+                    UserName = "owner.anadolu",
+                    Email = firstOwnerEmail,
                     EmailConfirmed = true,
-                    FullName = "Ahmet Şef" // Eklendi
+                    FullName = "Ahmet Şef"
                 };
-                var result = await userManager.CreateAsync(ownerUser, "Sahip123!");
-                if (result.Succeeded)
+                await userManager.CreateAsync(firstOwnerUser, "Password!23");
+            }
+
+            if (!await userManager.IsInRoleAsync(firstOwnerUser, "Owner"))
+            {
+                await userManager.AddToRoleAsync(firstOwnerUser, "Owner");
+            }
+
+            var secondOwnerEmail = "owner.ikinci@test.com";
+            AppUser secondOwnerUser = await userManager.FindByEmailAsync(secondOwnerEmail);
+            if (secondOwnerUser == null)
+            {
+                secondOwnerUser = new AppUser
                 {
-                    await userManager.AddToRoleAsync(ownerUser, "RestorantSahibi");
-                }
+                    UserName = "owner.ikinci",
+                    Email = secondOwnerEmail,
+                    EmailConfirmed = true,
+                    FullName = "Ayşe Şef"
+                };
+                await userManager.CreateAsync(secondOwnerUser, "Password!23");
+            }
+
+            if (!await userManager.IsInRoleAsync(secondOwnerUser, "Owner"))
+            {
+                await userManager.AddToRoleAsync(secondOwnerUser, "Owner");
             }
 
             var customerEmail = "musteri@test.com";
@@ -66,44 +86,73 @@ namespace Project.DataAccess
                     UserName = "musteri",
                     Email = customerEmail,
                     EmailConfirmed = true,
-                    FullName = "Mehmet Yılmaz" // Eklendi
+                    FullName = "Mehmet Yılmaz"
                 };
-                var result = await userManager.CreateAsync(customerUser, "Musteri123!");
-                if (result.Succeeded)
+                await userManager.CreateAsync(customerUser, "Password!23");
+            }
+
+            if (!await userManager.IsInRoleAsync(customerUser, "Customer"))
+            {
+                await userManager.AddToRoleAsync(customerUser, "Customer");
+            }
+
+            var employeeEmail = "calisan.anadolu@test.com";
+            AppUser employeeUser = await userManager.FindByEmailAsync(employeeEmail);
+            if (employeeUser == null)
+            {
+                employeeUser = new AppUser
                 {
-                    await userManager.AddToRoleAsync(customerUser, "Customer");
-                }
+                    UserName = "calisan.anadolu",
+                    Email = employeeEmail,
+                    EmailConfirmed = true,
+                    FullName = "Zeynep Garson"
+                };
+                await userManager.CreateAsync(employeeUser, "Password!23");
+            }
+
+            if (!await userManager.IsInRoleAsync(employeeUser, "Employee"))
+            {
+                await userManager.AddToRoleAsync(employeeUser, "Employee");
             }
 
             // --- İŞ MANTIĞI TABLOLARI SEED İŞLEMİ ---
 
             if (!await context.Set<Restaurant>().AnyAsync())
             {
-                var sampleRestaurant = new Restaurant
+                var anadoluSofrasi = new Restaurant
                 {
-                    Name = "Gusto Bella Restoran",
-                    OwnerId = ownerUser.Id, // Artık bir int ID eşleşiyor
+                    Name = "Anadolu Sofrası",
+                    OwnerId = firstOwnerUser.Id,
+                    CreatedAt = DateTime.UtcNow
+                };
+                var secondRestaurant = new Restaurant
+                {
+                    Name = "Ege Lezzetleri",
+                    OwnerId = secondOwnerUser.Id,
                     CreatedAt = DateTime.UtcNow
                 };
 
-                await context.Set<Restaurant>().AddAsync(sampleRestaurant);
+                await context.Set<Restaurant>().AddRangeAsync(anadoluSofrasi, secondRestaurant);
                 await context.SaveChangesAsync();
 
-                var cat1 = new Category { Name = "Ana Yemekler", RestaurantId = sampleRestaurant.Id };
-                var cat2 = new Category { Name = "İçecekler", RestaurantId = sampleRestaurant.Id };
+                employeeUser.AccessRestaurantId = anadoluSofrasi.Id;
+                employeeUser.AccessLevel = EmployeeAccessLevel.FullAccess;
+                await userManager.UpdateAsync(employeeUser);
+
+                var cat1 = new Category { Name = "Ana Yemekler", RestaurantId = anadoluSofrasi.Id };
+                var cat2 = new Category { Name = "İçecekler", RestaurantId = anadoluSofrasi.Id };
                 await context.Set<Category>().AddRangeAsync(cat1, cat2);
                 await context.SaveChangesAsync();
 
-                var item1 = new MenuItem { Name = "Acılı Adana Kebap", Description = "Zırh kıyması, özel baharatlar ve közlenmiş biber ile", Price = 340.00m, CategoryId = cat1.Id, RestaurantId = sampleRestaurant.Id };
-                var item2 = new MenuItem { Name = "Kuzu Şiş", Description = "Közlenmiş domates ve pilav eşliğinde", Price = 380.00m, CategoryId = cat1.Id, RestaurantId = sampleRestaurant.Id };
-                var item3 = new MenuItem { Name = "Ev Yapımı Yayık Ayranı", Description = "Bol köpüklü soğuk ayran", Price = 45.00m, CategoryId = cat2.Id, RestaurantId = sampleRestaurant.Id };
+                var item1 = new MenuItem { Name = "Acılı Adana Kebap", Description = "Zırh kıyması, özel baharatlar ve közlenmiş biber ile", Price = 340.00m, CategoryId = cat1.Id, RestaurantId = anadoluSofrasi.Id };
+                var item2 = new MenuItem { Name = "Kuzu Şiş", Description = "Közlenmiş domates ve pilav eşliğinde", Price = 380.00m, CategoryId = cat1.Id, RestaurantId = anadoluSofrasi.Id };
+                var item3 = new MenuItem { Name = "Ev Yapımı Yayık Ayranı", Description = "Bol köpüklü soğuk ayran", Price = 45.00m, CategoryId = cat2.Id, RestaurantId = anadoluSofrasi.Id };
                 await context.Set<MenuItem>().AddRangeAsync(item1, item2, item3);
 
-                // 3. DÜZENLEME: TableNumber string tipe çevrildi ve modeldeki IsOccupied set edildi
-                var table1 = new Table { TableNumber = "1", IsOccupied = false, RestaurantId = sampleRestaurant.Id };
-                var table2 = new Table { TableNumber = "2", IsOccupied = true, RestaurantId = sampleRestaurant.Id };
-                var table3 = new Table { TableNumber = "3", IsOccupied = false, RestaurantId = sampleRestaurant.Id };
-                var table4 = new Table { TableNumber = "4", IsOccupied = false, RestaurantId = sampleRestaurant.Id };
+                var table1 = new Table { TableNumber = "1", IsOccupied = false, RestaurantId = anadoluSofrasi.Id };
+                var table2 = new Table { TableNumber = "2", IsOccupied = true, RestaurantId = anadoluSofrasi.Id };
+                var table3 = new Table { TableNumber = "3", IsOccupied = false, RestaurantId = anadoluSofrasi.Id };
+                var table4 = new Table { TableNumber = "4", IsOccupied = false, RestaurantId = anadoluSofrasi.Id };
                 await context.Set<Table>().AddRangeAsync(table1, table2, table3, table4);
 
                 await context.SaveChangesAsync();

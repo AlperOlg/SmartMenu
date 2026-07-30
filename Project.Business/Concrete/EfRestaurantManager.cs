@@ -87,14 +87,13 @@ public class EfRestaurantManager : GenericManager<Restaurant>, IRestaurantServic
         var user = await _userManager.FindByIdAsync(ownerId.ToString());
         if (user is not null)
         {
-            // AppUser.RestaurantId FK'si yalnızca silinen restorana işaret ediyorsa bağı kopar.
+            // AppUser.RestaurantId fksı yalnızca silinen restorana işaret ediyorsa bağı kopar.
             if (user.RestaurantId == restaurantId)
             {
                 user.RestaurantId = null;
                 await _userManager.UpdateAsync(user);
             }
 
-            // Kullanıcının başka AKTİF restoranı kaldı mı? (GetByOwnerIdAsync artık IsDeleted==false filtreli)
             // Yalnızca hiç aktif restoranı kalmadıysa Customer rolüne indiriyoruz.
             var stillActive = await _restaurantRepository.GetByOwnerIdAsync(ownerId);
             if (stillActive is null)
@@ -110,7 +109,7 @@ public class EfRestaurantManager : GenericManager<Restaurant>, IRestaurantServic
                 }
 
                 // Rol değişikliğini kalıcı kıl ve diğer aktif oturumları geçersiz kıl.
-                // Cookie tazeleme (RefreshSignInAsync) Web katmanında yapılır.
+                // Cookie tazeleme web katmanında yapılır.
                 await _userManager.UpdateSecurityStampAsync(user);
             }
         }

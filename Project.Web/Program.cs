@@ -37,6 +37,7 @@ builder.Services.AddScoped<IGenericRepository<MenuItem>, GenericRepository<MenuI
 builder.Services.AddHostedService<TableReleaseBackgroundService>();
 
 builder.Services.AddScoped<IMenuItemService, MenuItemManager>();
+builder.Services.AddScoped<IIngredientService, IngredientManager>();
 
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
 {

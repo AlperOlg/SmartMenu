@@ -40,7 +40,7 @@ Bu proje, bir üniversite eğitimi ve Microsoft Yaz Kampı için geliştirilmiş
   <li>Ses Efektleri eklenecek (✓) </li>
   <li>Admin ve Employee rolleri eklenecek ve işlevli hale getirelecek  (✓) </li>
   <li>Vector Store (RAG) mimarisi entegre edildi, DB senkronizasyonu ve indeksleme tamamlanacak (✓) </li>
-  <li>Ingredient/MenuIngredient sütunları veritabanı ve client side'da boş bırakılmayacak şekilde ayarlanacak</li>
+  <li>Ingredient/MenuIngredient eklenebilir olacak (✓) </li>
   <li>Sadece 2 Factor Authentication aktifleştirmiş kullanıcıların restoran oluşturmasına izin verilecek</li>
   <li>Dil Seçenekleri eklenecek</li>
 </ul>

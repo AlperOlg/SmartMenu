@@ -146,6 +146,12 @@
                         </div>
                     </form>
                     <div class="sqm-menu-row-footer">
+                        <a class="sqm-btn-outline"
+                           asp-controller="Owner"
+                           asp-action="ManageIngredients"
+                           asp-route-menuItemId="@item.Id">
+                            <i class="fa-solid fa-carrot" aria-hidden="true"></i> Malzemeler
+                        </a>
                         <form asp-controller="Owner" asp-action="DeleteMenuItem" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="restaurantId" value="@Model.RestaurantId" />

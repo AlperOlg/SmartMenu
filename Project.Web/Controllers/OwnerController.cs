@@ -19,6 +19,7 @@ public class OwnerController : Controller
 
     private readonly IGenericService<Category> _categoryService;
     private readonly IMenuItemService _menuItemService;
+    private readonly IIngredientService _ingredientService;
     private readonly ITableService _tableService;
     private readonly IOrderService _orderService;
     private readonly ILogger<OwnerController> _logger;
@@ -29,6 +30,7 @@ public class OwnerController : Controller
         SignInManager<AppUser> signInManager,
         IGenericService<Category> categoryService,
         IMenuItemService menuItemService,
+        IIngredientService ingredientService,
         ITableService tableService,
         IOrderService orderService,
         ILogger<OwnerController> logger)
@@ -38,6 +40,7 @@ public class OwnerController : Controller
         _signInManager = signInManager;
         _categoryService = categoryService;
         _menuItemService = menuItemService;
+        _ingredientService = ingredientService;
         _tableService = tableService;
         _orderService = orderService;
         _logger = logger;
@@ -98,6 +101,20 @@ public class OwnerController : Controller
     [HttpGet]
     public async Task<IActionResult> CreateRestaurant()
     {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        var isTwoFactorEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
+        ViewBag.IsTwoFactorEnabled = isTwoFactorEnabled;
+
+        if (!isTwoFactorEnabled)
+        {
+            return View();
+        }
+
         var existing = await _restaurantService.GetByOwnerIdAsync(CurrentUserId);
         if (existing is not null)
         {
@@ -111,8 +128,20 @@ public class OwnerController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateRestaurant(CreateRestaurantDto dto)
     {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Challenge();
+        }
+
+        if (!await _userManager.GetTwoFactorEnabledAsync(user))
+        {
+            return RedirectToAction(nameof(CreateRestaurant));
+        }
+
         if (!ModelState.IsValid)
         {
+            ViewBag.IsTwoFactorEnabled = true;
             return View(dto);
         }
 
@@ -123,7 +152,6 @@ public class OwnerController : Controller
             // seçilmesini önler ve doYru Id'ye yönlendirmeyi garanti eder.
             var newRestaurant = await _restaurantService.CreateRestaurantAsync(CurrentUserId, dto);
 
-            var user = await _userManager.FindByIdAsync(CurrentUserId.ToString());
             if (user is not null)
             {
                 if (await _userManager.IsInRoleAsync(user, "Customer"))
@@ -426,6 +454,90 @@ public class OwnerController : Controller
         await _menuItemService.DeleteAsync(item);
 
         return RedirectToAction(nameof(Manage), new { id = restaurantId, tab = "menu" });
+    }
+
+    [Authorize(Roles = "Owner,Admin,Employee")]
+    [HttpGet]
+    public async Task<IActionResult> ManageIngredients(int menuItemId)
+    {
+        var menuItem = await _menuItemService.GetAsync(menuItemId, useTracking: false);
+        if (menuItem is null)
+            return NotFound();
+
+        if (!await CanFullyManageRestaurantAsync(menuItem.RestaurantId))
+            return Forbid();
+
+        // Sorguları paralel (Task.WhenAll) yerine sırayla çağırıyoruz
+        var selectedIngredientIds = await _ingredientService.GetIngredientIdsByMenuItemIdAsync(menuItemId);
+        var ingredients = await _ingredientService.SearchIngredientsAsync(string.Empty);
+
+        return View(new ManageMenuItemIngredientsViewModel
+        {
+            MenuItemId = menuItem.Id,
+            RestaurantId = menuItem.RestaurantId,
+            MenuItemName = menuItem.Name,
+            Ingredients = ingredients,
+            SelectedIngredientIds = selectedIngredientIds.ToHashSet()
+        });
+    }
+
+    [Authorize(Roles = "Owner,Admin,Employee")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ManageIngredients(int menuItemId, List<int>? selectedIngredientIds)
+    {
+        var menuItem = await _menuItemService.GetAsync(menuItemId, useTracking: false);
+        if (menuItem is null)
+            return NotFound();
+
+        if (!await CanFullyManageRestaurantAsync(menuItem.RestaurantId))
+            return Forbid();
+
+        await _ingredientService.UpdateMenuItemIngredientsAsync(
+            menuItemId,
+            selectedIngredientIds ?? []);
+
+        TempData["SuccessMessage"] = $"{menuItem.Name} için malzemeler kaydedildi.";
+        return RedirectToAction(nameof(Manage), new { id = menuItem.RestaurantId, tab = "menu" });
+    }
+
+    [Authorize(Roles = "Owner,Admin,Employee")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateIngredient(int menuItemId, string ingredientName)
+    {
+        var menuItem = await _menuItemService.GetAsync(menuItemId, useTracking: false);
+        if (menuItem is null)
+            return NotFound();
+
+        if (!await CanFullyManageRestaurantAsync(menuItem.RestaurantId))
+            return Forbid();
+
+        var normalizedName = ingredientName?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedName))
+            return BadRequest(new { success = false, message = "Malzeme adı boş bırakılamaz." });
+
+        var matchingIngredients = await _ingredientService.SearchIngredientsAsync(normalizedName);
+        var existingIngredient = matchingIngredients.FirstOrDefault(i =>
+            string.Equals(i.Name, normalizedName, StringComparison.OrdinalIgnoreCase));
+        if (existingIngredient is not null)
+        {
+            return Conflict(new
+            {
+                success = false,
+                message = "Bu malzeme ortak havuzda zaten mevcut.",
+                ingredient = existingIngredient
+            });
+        }
+
+        var ingredient = new Ingredient { Name = normalizedName };
+        await _ingredientService.AddAsync(ingredient);
+
+        return Json(new
+        {
+            success = true,
+            ingredient = new { ingredient.Id, ingredient.Name }
+        });
     }
 
     [Authorize(Roles = "Owner")]

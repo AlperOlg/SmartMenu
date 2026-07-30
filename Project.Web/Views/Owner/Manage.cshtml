@@ -702,6 +702,13 @@
             </div>
         </div>
 
+        @if (TempData["SuccessMessage"] is string successMessage)
+        {
+            <div class="alert alert-success mb-4" role="alert">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i> @successMessage
+            </div>
+        }
+
         <div class="sqm-manage-shell">
             <nav class="sqm-manage-nav">
                 <ul class="nav" role="tablist">

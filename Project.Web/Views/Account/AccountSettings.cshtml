@@ -6,6 +6,44 @@
 @section Styles {
     <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        .sqm-delete-account-trigger {
+            margin-top: 0.75rem;
+            border: 1px solid rgba(229, 115, 115, 0.4);
+            background: rgba(229, 115, 115, 0.06);
+            color: #f09a9a;
+            box-shadow: none;
+        }
+
+        .sqm-delete-account-trigger:hover {
+            border-color: rgba(229, 115, 115, 0.65);
+            background: rgba(229, 115, 115, 0.12);
+            color: #ffc0c0;
+            box-shadow: none;
+            transform: translateY(-1px);
+        }
+
+        .sqm-delete-account-trigger:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(229, 115, 115, 0.2);
+        }
+
+        .sqm-delete-account-modal {
+            border-color: rgba(229, 115, 115, 0.3);
+        }
+
+        .sqm-delete-account-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: #ff8a80;
+            background: rgba(229, 115, 115, 0.14);
+            font-size: 1.5rem;
+        }
+    </style>
 }
 
 <section class="sqm-auth">
@@ -137,6 +175,12 @@
                 Şifreyi Güncelle
             </button>
         </form>
+
+        <button type="button" class="sqm-auth-submit sqm-delete-account-trigger"
+                data-bs-toggle="modal" data-bs-target="#sqmDeleteAccountModal">
+            <i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i>
+            Hesabı Sil
+        </button>
     </div>
 </section>
 
@@ -197,6 +241,40 @@
     </div>
 </div>
 
+<!-- Hesap silme onayı -->
+<div class="modal fade" id="sqmDeleteAccountModal" tabindex="-1"
+     aria-labelledby="sqmDeleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content sqm-2fa-modal sqm-delete-account-modal">
+            <div class="modal-header border-0 pb-0">
+                <h2 class="modal-title fs-5" id="sqmDeleteAccountModalLabel">
+                    <i class="fa-solid fa-triangle-exclamation text-danger me-1" aria-hidden="true"></i>
+                    Hesabı Sil
+                </h2>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body text-center">
+                <span class="sqm-delete-account-icon mb-3">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                </span>
+                <p class="mb-2 text-light fw-semibold">Hesabınızı kalıcı olarak silmek istediğinize emin misiniz?</p>
+                <p class="sqm-settings-hint mb-3">
+                    Profiliniz, beğenileriniz ve size ait yorumlar silinir. Bu işlem geri alınamaz.
+                </p>
+                <div id="sqmDeleteAccountFeedback" role="status" aria-live="polite"></div>
+                <div class="d-flex justify-content-center gap-2 mt-3">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="button" class="btn btn-danger" id="sqmDeleteAccountConfirmBtn">
+                        <i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i>
+                        Sil
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
@@ -226,6 +304,7 @@
             var sendUrl = '@Url.Action("Send2FACode", "Account")';
             var verifyUrl = '@Url.Action("Verify2FACode", "Account")';
             var disableUrl = '@Url.Action("Disable2FA", "Account")';
+            var deleteAccountUrl = '@Url.Action("DeleteAccount", "Account")';
 
             /**
              * @@param {string} message
@@ -348,6 +427,51 @@
                         setFeedback('İstek sırasında bir hata oluştu.', 'error');
                     } finally {
                         disableBtn.disabled = false;
+                    }
+                });
+            }
+
+            var deleteAccountModal = document.getElementById('sqmDeleteAccountModal');
+            var deleteAccountFeedback = document.getElementById('sqmDeleteAccountFeedback');
+            var deleteAccountConfirmBtn = document.getElementById('sqmDeleteAccountConfirmBtn');
+
+            function setDeleteAccountFeedback(message, isError) {
+                if (!deleteAccountFeedback) return;
+                deleteAccountFeedback.innerHTML = message
+                    ? '<div class="alert ' + (isError ? 'alert-danger' : 'alert-success') + ' mb-0 py-2">' + message + '</div>'
+                    : '';
+            }
+
+            if (deleteAccountModal) {
+                deleteAccountModal.addEventListener('hidden.bs.modal', function () {
+                    setDeleteAccountFeedback('', false);
+                    if (deleteAccountConfirmBtn) deleteAccountConfirmBtn.disabled = false;
+                });
+            }
+
+            if (deleteAccountConfirmBtn) {
+                deleteAccountConfirmBtn.addEventListener('click', async function () {
+                    deleteAccountConfirmBtn.disabled = true;
+                    setDeleteAccountFeedback('Hesabınız siliniyor…', false);
+
+                    try {
+                        var data = await postJson(deleteAccountUrl);
+                        if (!data.success) {
+                            setDeleteAccountFeedback(data.message || 'Hesap silinemedi.', true);
+                            return;
+                        }
+
+                        setDeleteAccountFeedback('Hesabınız silindi. Ana sayfaya yönlendiriliyorsunuz…', false);
+                        window.setTimeout(function () {
+                            window.location.assign(data.redirectUrl || '/');
+                        }, 700);
+                    } catch (err) {
+                        console.error(err);
+                        setDeleteAccountFeedback('İstek sırasında bir hata oluştu.', true);
+                    } finally {
+                        if (!deleteAccountFeedback || deleteAccountFeedback.textContent.indexOf('silindi') === -1) {
+                            deleteAccountConfirmBtn.disabled = false;
+                        }
                     }
                 });
             }

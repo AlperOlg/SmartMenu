@@ -90,5 +90,8 @@ public class EfAccountManager : IAccountService
 
         return ServiceResult.Ok("Hesap ayarlarınız güncellendi.");
     }
+
+    public Task<(bool Succeeded, string? ErrorMessage)> DeleteAccountAsync(string userId)
+        => _accountRepository.DeleteAccountCascadeAsync(userId);
 }
 

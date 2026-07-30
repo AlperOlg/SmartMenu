@@ -15,6 +15,7 @@ public class CustomerController : Controller
     private readonly IOrderService _orderService;
     private readonly IGenericService<RestaurantLoyalty> _loyaltyRepository;
     private readonly IGenericService<Review> _reviewService;
+    private readonly IGenericService<Review> _reviewRepository;
     private readonly IGenericService<Favorite> _favoriteService;
     private readonly IGenericService<ReviewLike> _reviewLikeService;
     private readonly UserManager<AppUser> _userManager;
@@ -25,6 +26,7 @@ public class CustomerController : Controller
         IOrderService orderService,
         IGenericService<RestaurantLoyalty> loyaltyRepository,
         IGenericService<Review> reviewService,
+        IGenericService<Review> reviewRepository,
         IGenericService<Favorite> favoriteService,
         IGenericService<ReviewLike> reviewLikeService,
         UserManager<AppUser> userManager)
@@ -34,6 +36,7 @@ public class CustomerController : Controller
         _orderService = orderService;
         _loyaltyRepository = loyaltyRepository;
         _reviewService = reviewService;
+        _reviewRepository = reviewRepository;
         _favoriteService = favoriteService;
         _reviewLikeService = reviewLikeService;
         _userManager = userManager;
@@ -345,6 +348,48 @@ public class CustomerController : Controller
             : "Yanıtınız eklendi.";
 
         return RedirectToAction(nameof(Reviews), new { id = parent.RestaurantId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteReview(int id)
+    {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var review = await _reviewRepository.GetAsync(id);
+        if (review is null)
+        {
+            return NotFound();
+        }
+
+        var restaurantId = review.RestaurantId;
+
+        if (review.AppUserId != user.Id)
+        {
+            TempData["Error"] = "Bu yorumu silme yetkiniz yok.";
+            return RedirectToAction(nameof(Reviews), new { id = restaurantId });
+        }
+
+        // ParentReviewId Restrict olduğu için önce alt yanıtları sil
+        var replies = (await _reviewRepository.GetAllAsync(r => r.ParentReviewId == id)).ToList();
+        foreach (var reply in replies)
+        {
+            await _reviewRepository.DeleteAsync(reply);
+        }
+
+        await _reviewRepository.DeleteAsync(review);
+        TempData["Success"] = "Yorumunuz silindi.";
+
+        return RedirectToAction(nameof(Reviews), new { id = restaurantId });
     }
 
     [HttpPost]

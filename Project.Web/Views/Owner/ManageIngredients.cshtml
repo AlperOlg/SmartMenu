@@ -1,0 +1,213 @@
+@model Project.Web.Models.ManageMenuItemIngredientsViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = $"{Model.MenuItemName} — Malzemeler";
+}
+
+<section class="sqm-ingredients-page">
+    <div class="container">
+        <div class="sqm-ingredients-card">
+            <p class="sqm-settings-section-title">Menü ürünü</p>
+            <h1 class="sqm-ingredients-title">@Model.MenuItemName - Malzeme Yönetimi</h1>
+            <p class="sqm-settings-hint">Üründe kullanılacak malzemeleri seçin.</p>
+
+            <div class="sqm-settings-divider"></div>
+
+            <form asp-action="ManageIngredients" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="menuItemId" value="@Model.MenuItemId" />
+
+                <div class="mb-3">
+                    <label class="sqm-settings-section-title" for="new-ingredient-name">Yeni Malzeme Ekle</label>
+                    <div class="input-group">
+                        <input id="new-ingredient-name" class="form-control" type="text"
+                               placeholder="Örn: Zeytinyağı" maxlength="100" autocomplete="off" />
+                        <button id="add-ingredient-button" class="sqm-2fa-btn" type="button">
+                            Ekle
+                        </button>
+                    </div>
+                </div>
+                <div id="ingredient-feedback" class="alert sqm-settings-alert sqm-ingredient-feedback" role="alert"></div>
+
+                <div class="mb-4">
+                    <label class="visually-hidden" for="ingredient-search">Malzeme ara</label>
+                    <div class="input-group">
+                        <span class="input-group-text" aria-hidden="true">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input id="ingredient-search" class="form-control" type="search"
+                               placeholder="Malzeme ara..." autocomplete="off" />
+                    </div>
+                </div>
+
+                <div id="ingredient-list" class="row row-cols-1 row-cols-md-3 g-3">
+                    @foreach (var ingredient in Model.Ingredients)
+                    {
+                        <div class="col ingredient-item" data-ingredient-name="@ingredient.Name">
+                            <div class="sqm-ingredient-option">
+                                <div class="form-check form-switch mb-0">
+                                    @if (Model.SelectedIngredientIds.Contains(ingredient.Id))
+                                    {
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="ingredient-@ingredient.Id" name="selectedIngredientIds"
+                                               value="@ingredient.Id" checked />
+                                    }
+                                    else
+                                    {
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="ingredient-@ingredient.Id" name="selectedIngredientIds"
+                                               value="@ingredient.Id" />
+                                    }
+                                    <label class="form-check-label ms-2" for="ingredient-@ingredient.Id">
+                                        @ingredient.Name
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <p id="ingredient-no-results" class="sqm-settings-hint text-center py-4 d-none mb-0">
+                    Aramanızla eşleşen malzeme bulunamadı.
+                </p>
+                <p id="ingredient-empty-state" class="sqm-settings-hint text-center py-4 mb-0 @(Model.Ingredients.Any() ? "d-none" : "")">
+                    Ortak malzeme havuzunda henüz malzeme bulunmuyor.
+                </p>
+
+                <div class="sqm-settings-divider"></div>
+
+                <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                    <a class="sqm-2fa-btn"
+                       asp-action="Manage" asp-route-id="@Model.RestaurantId" asp-route-tab="menu">
+                        Menüye Dön
+                    </a>
+                    <button type="submit" class="btn sqm-nav-cta">
+                        Değişiklikleri Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        const searchInput = document.getElementById('ingredient-search');
+        const noResults = document.getElementById('ingredient-no-results');
+        const ingredientList = document.getElementById('ingredient-list');
+        const emptyState = document.getElementById('ingredient-empty-state');
+        const newIngredientInput = document.getElementById('new-ingredient-name');
+        const addIngredientButton = document.getElementById('add-ingredient-button');
+        const ingredientFeedback = document.getElementById('ingredient-feedback');
+        const menuItemId = document.querySelector('input[name="menuItemId"]').value;
+        const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        searchInput?.addEventListener('input', () => {
+            const term = searchInput.value.trim().toLocaleLowerCase('tr-TR');
+            let visibleCount = 0;
+
+            document.querySelectorAll('.ingredient-item').forEach(option => {
+                const name = option.dataset.ingredientName.toLocaleLowerCase('tr-TR');
+                const isVisible = name.includes(term);
+                option.classList.toggle('d-none', !isVisible);
+                if (isVisible) visibleCount++;
+            });
+
+            noResults?.classList.toggle('d-none', visibleCount !== 0);
+        });
+
+        function showFeedback(message, isSuccess) {
+            ingredientFeedback.textContent = message;
+            ingredientFeedback.className = `alert sqm-ingredient-feedback alert-${isSuccess ? 'success' : 'danger'}`;
+            ingredientFeedback.style.display = 'block';
+        }
+
+        function addIngredientToList(ingredient) {
+            const column = document.createElement('div');
+            column.className = 'col ingredient-item';
+            column.dataset.ingredientName = ingredient.name;
+
+            const option = document.createElement('div');
+            option.className = 'sqm-ingredient-option';
+
+            const check = document.createElement('div');
+            check.className = 'form-check form-switch mb-0';
+
+            const input = document.createElement('input');
+            input.className = 'form-check-input';
+            input.type = 'checkbox';
+            input.role = 'switch';
+            input.id = `ingredient-${ingredient.id}`;
+            input.name = 'selectedIngredientIds';
+            input.value = ingredient.id;
+            input.checked = true;
+
+            const label = document.createElement('label');
+            label.className = 'form-check-label ms-2';
+            label.htmlFor = input.id;
+            label.textContent = ingredient.name;
+
+            check.append(input, label);
+            option.appendChild(check);
+            column.appendChild(option);
+            ingredientList.appendChild(column);
+            emptyState?.classList.add('d-none');
+        }
+
+        async function createIngredient() {
+            const ingredientName = newIngredientInput.value.trim();
+            if (!ingredientName) {
+                showFeedback('Lütfen eklenecek malzemenin adını yazın.', false);
+                newIngredientInput.focus();
+                return;
+            }
+
+            addIngredientButton.disabled = true;
+
+            try {
+                const response = await fetch('@Url.Action("CreateIngredient", "Owner")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    body: new URLSearchParams({
+                        menuItemId,
+                        ingredientName,
+                        __RequestVerificationToken: antiForgeryToken
+                    })
+                });
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    showFeedback(result.message || 'Malzeme eklenemedi.', false);
+                    return;
+                }
+
+                addIngredientToList(result.ingredient);
+                newIngredientInput.value = '';
+                showFeedback(`${result.ingredient.name} eklendi ve seçildi. Kaydettiğinizde ürüne bağlanır.`, true);
+                searchInput?.dispatchEvent(new Event('input'));
+            } catch {
+                showFeedback('Malzeme eklenirken beklenmeyen bir hata oluştu.', false);
+            } finally {
+                addIngredientButton.disabled = false;
+            }
+        }
+
+        addIngredientButton?.addEventListener('click', createIngredient);
+        newIngredientInput?.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                createIngredient();
+            }
+        });
+
+        // Kaydet: full-page POST + redirect → ses Manage sayfasında çalınır
+        document.querySelector('input[name="menuItemId"]')
+            ?.closest('form')
+            ?.addEventListener('submit', () => {
+                if (window.SoundManager && typeof window.SoundManager.playAfterRedirect === 'function') {
+                    window.SoundManager.playAfterRedirect('success1');
+                } else if (typeof Howl !== 'undefined') {
+                    new Howl({ src: ['/sounds/success1.mp3'] }).play();
+                }
+            });
+    </script>
+}

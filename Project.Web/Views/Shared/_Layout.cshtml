@@ -413,9 +413,7 @@
                     string quickController = User.IsInRole("Admin") ? "Admin" : "Customer";
 
                     <div class="sqm-mobile-quick d-xl-none ms-auto me-2">
-                        <a class="btn sqm-nav-cta btn-sm sqm-mobile-panel text-truncate" asp-area="" asp-controller="@quickController" asp-action="Index">
-                            <i class="fa-solid fa-utensils"></i> Panel
-                        </a>
+                      
                         <span class="sqm-mobile-user text-truncate">
                             <i class="fa-solid fa-user text-warning"></i>@User.Identity.Name
                             <span class="sqm-role-badge sqm-role-badge-sm">
@@ -468,20 +466,13 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="sqmNavbar">
-                    <ul class="navbar-nav mx-auto align-items-xl-center d-none d-xl-flex gap-xl-1  me-3">
-                        @if (User.Identity is not null && User.Identity.IsAuthenticated)
-                        {
-                            string centerController = User.IsInRole("Admin") ? "Admin" : "Customer";
-                            <li class="nav-item">
-                                <a class="nav-link sqm-nav-link px-3 py-2 fw-bold" style="color: var(--sqm-gold) !important; background: var(--sqm-gold-soft);" 
-                                   asp-area="" asp-controller="@centerController" asp-action="Index">
-                                    <i class="fa-solid fa-utensils me-1"></i> Restoranlar Paneli
-                                </a>
-                            </li>
-                        }
-                    </ul>
-
-                    <ul class="navbar-nav ms-auto align-items-xl-center gap-xl-2 ms-2" >
+                    <ul class="navbar-nav ms-auto align-items-xl-center gap-xl-2">
+                        <li class="nav-item d-none d-xl-block">
+                            <a class="nav-link sqm-nav-link px-3 py-2 fw-bold" style="color: var(--sqm-gold) !important; background: var(--sqm-gold-soft);"
+                               asp-area="" asp-controller="Customer" asp-action="Index">
+                                <i class="fa-solid fa-utensils me-1"></i> Restoranlar Paneli
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link sqm-nav-link" asp-area="" asp-controller="Home" asp-action="Index">
                                 <i class="fa-solid fa-house"></i> Ana Sayfa

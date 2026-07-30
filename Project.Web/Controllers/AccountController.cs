@@ -423,6 +423,27 @@ public class AccountController : Controller
         return Json(new { success = true, message = "2 Faktörlü doğrulama devre dışı bırakıldı.", isTwoFactorEnabled = false });
     }
 
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteAccount()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return Json(new { success = false, message = "Oturum bulunamadı. Lütfen tekrar giriş yapın." });
+        }
+
+        var result = await _accountService.DeleteAccountAsync(user.Id.ToString());
+        if (!result.Succeeded)
+        {
+            return Json(new { success = false, message = result.ErrorMessage ?? "Hesap silinemedi." });
+        }
+
+        await _signInManager.SignOutAsync();
+        return Json(new { success = true, redirectUrl = Url.Action("Index", "Home") });
+    }
+
     private static string MaskEmail(string? email)
     {
         if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))

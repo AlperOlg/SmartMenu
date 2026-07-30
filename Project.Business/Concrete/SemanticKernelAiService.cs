@@ -35,7 +35,8 @@ public class SemanticKernelAiService : IAiService
 
     private readonly Kernel _kernel;
     private readonly VectorStore _vectorStore;
-    private readonly IGenericRepository<MenuItem> _menuItemRepository;
+    private readonly IGenericService<MenuItem> _menuItemService;
+    private readonly IGenericService<MenuItemIngredient> _menuItemIngredientService;
     private readonly IRestaurantService _restaurantService;
     private readonly IGenericService<RestaurantLoyalty> _restaurantLoyaltyService;
     private readonly ILogger<SemanticKernelAiService> _logger;
@@ -43,20 +44,22 @@ public class SemanticKernelAiService : IAiService
     public SemanticKernelAiService(
         Kernel kernel,
         VectorStore vectorStore,
-        IGenericRepository<MenuItem> menuItemRepository,
+        IGenericService<MenuItem> menuItemService,
+        IGenericService<MenuItemIngredient> menuItemIngredientService,
         IRestaurantService restaurantService,
         IGenericService<RestaurantLoyalty> restaurantLoyaltyService,
         ILogger<SemanticKernelAiService> logger)
     {
         _kernel = kernel;
         _vectorStore = vectorStore;
-        _menuItemRepository = menuItemRepository;
+        _menuItemService = menuItemService;
+        _menuItemIngredientService = menuItemIngredientService;
         _restaurantService = restaurantService;
         _restaurantLoyaltyService = restaurantLoyaltyService;
         _logger = logger;
     }
 
-    /// <summary>RAG indeks metni: restoran, kategori ve diyet bayraklarını birleştirir.</summary>
+    /// <summary>RAG indeks metni: restoran, kategori ve ürün malzemelerini birleştirir.</summary>
     public static string FormatMenuItemIndexText(MenuItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -68,10 +71,18 @@ public class SemanticKernelAiService : IAiService
             ? "Genel"
             : item.Category.Name;
         var description = item.Description ?? string.Empty;
-        var glutenFree = !item.ContainsGluten;
+        var ingredientNames = item.MenuItemIngredients?
+            .Select(menuItemIngredient => menuItemIngredient.Ingredient?.Name)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList() ?? [];
+        var ingredients = ingredientNames.Count > 0
+            ? string.Join(", ", ingredientNames)
+            : "Belirtilmemiş";
 
         return
-            $"Restoran: {restaurantName} | Kategori: {categoryName} | Ürün: {item.Name} | Fiyat: {item.Price} TL | Açıklama: {description} | Vegan: {item.IsVegan} | Glutensiz: {glutenFree}";
+            $"Restoran: {restaurantName} | Kategori: {categoryName} | Ürün: {item.Name} | Fiyat: {item.Price} TL | Açıklama: {description} | Malzemeler: {ingredients}";
     }
 
     /// <summary>RestaurantInfo chunk metni: restoran adı, puan durumu ve masa doluluk bilgisi.</summary>
@@ -306,7 +317,8 @@ public class SemanticKernelAiService : IAiService
         CancellationToken cancellationToken)
     {
         var restaurants = await _restaurantService.GetAllRestaurantsWithDetailsAsync(justActive: true);
-        var menuItems = await _menuItemRepository.GetAllAsync(useTracking: false);
+        var menuItems = (await _menuItemService.GetAllAsync(useTracking: false)).ToList();
+        await PopulateIngredientsAsync(menuItems);
         var userLoyalties = await _restaurantLoyaltyService.GetAllAsync(x => x.AppUserId == currentUserId, useTracking: false);
 
         var systemContext = BuildAdvancedSystemContext(restaurants, menuItems, userLoyalties, currentUserId);
@@ -334,7 +346,7 @@ public class SemanticKernelAiService : IAiService
     2. Müşterinin sadakat puanı (Loyalty Points) varsa, bunu harcayabileceğini samimi bir dille hatırlat (Her 1 puan = 1 TL değerindedir).
     3. Eğer müşteri kalabalık bir grup için rezervasyon veya masa durumu sorarsa, restoranların toplam masa sayısına ve doluluk oranına (IsOccupied durumlarına) bakarak mantıklı çıkarımlar yap.
     4. Cevaplarını her zaman KESİNLİKLE TÜRKÇE cevap ver, samimi, yardımsever, net ve profesyonel bir dille yaz.
-    5. Eğer menüde vegan/gluten free gibi detaylar varsa, bunları akıllıca analiz edip müşteriye sun.
+    5. Alerjen veya diyet sorularını yalnızca her ürün için verilen "Malzemeler" listesine göre yanıtla. Malzeme listesi bir bilgiyi doğrulamıyorsa kesin hüküm verme; kullanıcıyı restorana doğrulatmaya yönlendir.
     6. SİSTEM VERİLERİNİ OLDUĞU GİBİ KOPYALAMA: Sana sağlanan "GERÇEK ZAMANLI SİSTEM VERİLERİ" alanındaki teknik ibareleri (ID, Giriş Yapan Müşteri, IsOccupied vb.) doğrudan müşteriye söyleme. O verileri oku, anlamlandır ve sanki o restoranın şefiymişsin gibi doğal bir cümle yapısıyla müşteriye aktar.
     7. ODAKLI CEVAP VER: Müşteri sadece "yorumları göster" dediyse, önce yorumları öne çıkar başka bir şeyi gösterme. eğer gerekliyse de tek bir cümle ile bahset.
 
@@ -417,9 +429,10 @@ public class SemanticKernelAiService : IAiService
     public async Task SeedAllPlatformDataIndexAsync(CancellationToken cancellationToken = default)
     {
         var restaurants = await _restaurantService.GetAllRestaurantsWithDetailsAsync(justActive: true);
-        var menuItems = (await _menuItemRepository.GetAllAsync(
+        var menuItems = (await _menuItemService.GetAllAsync(
             useTracking: false,
             includes: [m => m.Category, m => m.Restaurant])).ToList();
+        await PopulateIngredientsAsync(menuItems);
 
         foreach (var restaurant in restaurants)
         {
@@ -554,12 +567,43 @@ public class SemanticKernelAiService : IAiService
             var rItems = menuItems.Where(m => m.RestaurantId == r.Id);
             foreach (var item in rItems)
             {
-                sb.AppendLine($"    > [{item.Category?.Name ?? "Genel"}] {item.Name} - Fiyat: {item.Price} TL | Açıklama: {item.Description} | (Vegan: {(item.IsVegan ? "Evet" : "Hayır")}, GlutenFree: {(item.ContainsGluten ? "Hayır" : "Evet")})");
+                var ingredientNames = item.MenuItemIngredients?
+                    .Select(menuItemIngredient => menuItemIngredient.Ingredient?.Name)
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Select(name => name!)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList() ?? [];
+                var ingredients = ingredientNames.Count > 0
+                    ? string.Join(", ", ingredientNames)
+                    : "Belirtilmemiş";
+
+                sb.AppendLine($"    > [{item.Category?.Name ?? "Genel"}] {item.Name} - Fiyat: {item.Price} TL | Açıklama: {item.Description} | Malzemeler: {ingredients}");
             }
 
             sb.AppendLine(new string('-', 40));
         }
 
         return sb.ToString();
+    }
+
+    private async Task PopulateIngredientsAsync(IEnumerable<MenuItem> menuItems)
+    {
+        var items = menuItems.ToList();
+        var menuItemIds = items.Select(item => item.Id).ToHashSet();
+
+        if (menuItemIds.Count == 0)
+            return;
+
+        var menuItemIngredients = (await _menuItemIngredientService.GetAllAsync(
+            menuItemIngredient => menuItemIds.Contains(menuItemIngredient.MenuItemId),
+            useTracking: false,
+            includes: [menuItemIngredient => menuItemIngredient.Ingredient]))
+            .GroupBy(menuItemIngredient => menuItemIngredient.MenuItemId)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
+        foreach (var item in items)
+        {
+            item.MenuItemIngredients = menuItemIngredients.GetValueOrDefault(item.Id, []);
+        }
     }
 }

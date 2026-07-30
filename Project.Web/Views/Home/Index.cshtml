@@ -433,8 +433,7 @@
                 <div class="sqm-hero-actions justify-content-center justify-content-lg-start">
                     @if (User.Identity is not null && User.Identity.IsAuthenticated)
                     {
-                        string panelController = User.IsInRole("Admin") ? "Admin" : "Customer";
-                        <a asp-area="" asp-controller="@panelController" asp-action="Index" class="sqm-btn-primary">
+                        <a asp-area="" asp-controller="Customer" asp-action="Index" class="sqm-btn-primary">
                             <i class="fa-solid fa-utensils" aria-hidden="true"></i>
                             Restorantları Keşfet
                         </a>
