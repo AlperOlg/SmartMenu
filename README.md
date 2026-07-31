@@ -36,11 +36,11 @@ Bu proje, bir üniversite eğitimi ve Microsoft Yaz Kampı için geliştirilmiş
 </div>
 <h1>TODO:</h1>
 <ul style="list-style-type:square">
-  <li>Yapay zekaya sohbet geçmişi eklenecek (✓) </li>
-  <li>Ses Efektleri eklenecek (✓) </li>
-  <li>Admin ve Employee rolleri eklenecek ve işlevli hale getirelecek  (✓) </li>
-  <li>Vector Store (RAG) mimarisi entegre edildi, DB senkronizasyonu ve indeksleme tamamlanacak (✓) </li>
-  <li>Ingredient/MenuIngredient eklenebilir olacak (✓) </li>
-  <li>Sadece 2 Factor Authentication aktifleştirmiş kullanıcıların restoran oluşturmasına izin verilecek</li>
-  <li>Dil Seçenekleri eklenecek</li>
+  <li>Yapay zekaya sohbet geçmişi eklenecek [X] </li>
+  <li>Ses Efektleri eklenecek [X] </li>
+  <li>Admin ve Employee rolleri eklenecek ve işlevli hale getirelecek  [X] </li>
+  <li>Vector Store (RAG) mimarisi entegre edildi, DB senkronizasyonu ve indeksleme tamamlanacak [X] </li>
+  <li>Ingredient/MenuIngredient eklenebilir olacak [X] </li>
+  <li>Sadece 2 Factor Authentication aktifleştirmiş kullanıcıların restoran oluşturmasına izin verilecek [X] </li>
+  <li>Dil Seçenekleri eklenecek []</li>
 </ul>
