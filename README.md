@@ -71,8 +71,8 @@ Proje, herhangi bir ek bağımlılık (MS SQL Server veya LLM kurulumu) gerektir
 
    <h1>Ekran Görüntüleri</h1>
  <h1>Ana Ekran</h1>
-<img width="1265" height="534" alt="image" src="https://github.com/user-attachments/assets/a59e252c-55d9-4d13-9fc4-295495cf906f" />
-        
+ <img width="1421" height="1012" alt="Ekran görüntüsü 2026-08-03 130907" src="https://github.com/user-attachments/assets/03ade4ee-1ef8-4222-ac05-d218193c6243" />
+
 <h1>Giriş Ekranı</h1>
 <img width="685" height="829" alt="image" src="https://github.com/user-attachments/assets/fb99791e-d8e1-45ec-abe4-8b133a421345" />
         
