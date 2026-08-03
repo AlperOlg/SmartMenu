@@ -58,13 +58,13 @@ namespace Project.DataAccess
                 await userManager.AddToRoleAsync(firstOwnerUser, "Owner");
             }
 
-            var secondOwnerEmail = "owner.ikinci@test.com";
+            var secondOwnerEmail = "owner.ege@test.com";
             AppUser secondOwnerUser = await userManager.FindByEmailAsync(secondOwnerEmail);
             if (secondOwnerUser == null)
             {
                 secondOwnerUser = new AppUser
                 {
-                    UserName = "owner.ikinci",
+                    UserName = "owner.ege",
                     Email = secondOwnerEmail,
                     EmailConfirmed = true,
                     FullName = "Ayşe Şef"
@@ -154,6 +154,11 @@ namespace Project.DataAccess
                 var table3 = new Table { TableNumber = "3", IsOccupied = false, RestaurantId = anadoluSofrasi.Id };
                 var table4 = new Table { TableNumber = "4", IsOccupied = false, RestaurantId = anadoluSofrasi.Id };
                 await context.Set<Table>().AddRangeAsync(table1, table2, table3, table4);
+
+                var order = new Order { AppUser = customerUser, AppUserId = customerUser.Id, Table = table2, TableId = table2.Id, Restaurant = anadoluSofrasi, RestaurantId = anadoluSofrasi.Id, IsPaid = false, PaidAt = null, OrderDate = DateTime.UtcNow, TotalAmount = 340m, DiscountAmount = 0, PointsEarned = 34, PointsSpent = 0 };
+                var orderItem = new OrderItem { Order = order, OrderId = order.Id, MenuItem = item1, MenuItemId = item1.Id, Quantity = 1, UnitPrice = item1.Price };
+                await context.Set<Order>().AddAsync(order);
+                await context.Set<OrderItem>().AddAsync(orderItem);
 
                 await context.SaveChangesAsync();
             }

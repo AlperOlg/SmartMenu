@@ -97,6 +97,25 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+// Otomatik Migration: container/uygulama ilk kez ayaga kalktiginda bekleyen tum
+// migration'lari uygulayarak veritabanini ve tablolari otomatik olusturur.
+// Not: Asagidaki seed islemleri tablolara ihtiyac duydugu icin bu blok seed'den once calisir.
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var context = services.GetRequiredService<SmartMenuDbContext>();
+        context.Database.Migrate();
+        logger.LogInformation("Veritabanı migration'ları başarıyla uygulandı.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Veritabanı migration'ları uygulanırken bir hata oluştu.");
+    }
+}
+
 //Seed
 using (var scope = app.Services.CreateScope())
 {
@@ -106,7 +125,6 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<SmartMenuDbContext>();
         var userManager = services.GetRequiredService<UserManager<AppUser>>();
         var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
-        await RoleSeeder.SeedRolesAsync(scope.ServiceProvider);
         await DbSeeder.SeedAsync(context, userManager, roleManager);
     }
     catch (Exception ex)
