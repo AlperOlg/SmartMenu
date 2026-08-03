@@ -1,0 +1,17 @@
+# Build ve Geliştirme Çıktıları (Konteynere girmesin, boyut küçülsün)
+**/bin/
+**/obj/
+
+# IDE ve Editör Ayarları
+**/.vs/
+**/.vscode/
+**/.idea/
+*.user
+*.suo
+
+# Git Geçmişi (Konteyner içinde Git geçmişine gerek yok)
+**/.git/
+**/.gitignore
+
+# Diğer
+**/node_modules/
