@@ -1,40 +1,39 @@
 <div align="center">
 
 # SmartQRMenu
-### *Akıllı Restoran, QR Menü ve Yapay Zekâ Destekli Restoran Platformu*
+
+### _Akıllı Restoran, QR Menü ve Yapay Zekâ Destekli Restoran Platformu_
 
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-512BD4?style=for-the-badge&logo=dotnet)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)
 ![MS SQL Server](https://img.shields.io/badge/MSSQL-2022-CC292B?style=for-the-badge&logo=microsoftsqlserver)
 ![Semantic Kernel](https://img.shields.io/badge/AI-Semantic%20Kernel-blue?style=for-the-badge)
 
-*Microsoft Yaz Kampı projesi olarak N-Tier Architecture prensiplerine uygun geliştirilmiş, Docker destekli, RAG tabanlı akıllı restoran platformu.*
+_Microsoft Yaz Kampı projesi olarak N-Tier Architecture prensiplerine uygun geliştirilmiş, Docker destekli, RAG tabanlı akıllı restoran platformu._
 
 </div>
 
----
-
  <h1>Proje Hakkında</h1>
 
-**SmartQRMenu AI**, geleneksel restoran menülerini yapay zekâ destekli bir müşteri deneyimine dönüştüren web platformudur. Kullanıcılar QR kodlar üzerinden dinamik menülere erişebilir, ürün yorumları ve değerlendirmeleri yapabilir. 
+**SmartQRMenu AI**, geleneksel restoran menülerini yapay zekâ destekli bir müşteri deneyimine dönüştüren web platformudur. Kullanıcılar QR kodlar üzerinden dinamik menülere erişebilir, ürün yorumları ve değerlendirmeleri yapabilir.
 
 Sistem arka planda yerel LLM modellerini (**Ollama / Llama 3**) ve **Semantic Kernel** mimarisini kullanarak müşterilerin sorularına restoran verilerine RAG dayalı akıllı yanıtlar sunar.
-
----
 
  <h1>Hızlı Başlangıç </h1>
 
 Proje, herhangi bir ek bağımlılıkların (MS SQL Server veya LLM) manuel olarak kurulmasına gerek kalmadan **tek komutla** çalışacak şekilde Docker ile konteynerize edilmiştir.
-   ### <h1>Ön Koşullar</h1>
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/) 'ın bilgisayarınızda çalışıyor olması yeterlidir.
+
+### <h1>Ön Koşullar</h1>
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) 'ın bilgisayarınızda çalışıyor olması yeterlidir.
 
  <h1>Çalıştırma Adımları</h1>
 
  <h3>1. Repoyu klonlayın:</h3>
    <br>
    <ul>
-      <li>git clone https://github.com/AlperOlg/SmartMenu.git</li>
-      <li>cd SmartMenu</li>
+      <li>git clone https://github.com/AlperOlg/SmartMenu.git SmartQRMenu</li>
+      <li>cd SmartQRMenu</li>
    </ul>
 
    <h3>2. Tüm mimariyi (Web API/MVC, MSSQL, Ollama) başlatın:</h3>
@@ -71,7 +70,7 @@ Proje, herhangi bir ek bağımlılıkların (MS SQL Server veya LLM) manuel olar
 
    <h1>Ekran Görüntüleri</h1>
  <h1>Ana Ekran</h1>
-<img width="1265" height="534" alt="image" src="https://github.com/user-attachments/assets/a59e252c-55d9-4d13-9fc4-295495cf906f" />
+<img width="1421" height="1012" alt="image" src="https://github.com/user-attachments/assets/03ade4ee-1ef8-4222-ac05-d218193c6243" />
         
 <h1>Giriş Ekranı</h1>
 <img width="685" height="829" alt="image" src="https://github.com/user-attachments/assets/fb99791e-d8e1-45ec-abe4-8b133a421345" />
@@ -87,7 +86,6 @@ Proje, herhangi bir ek bağımlılıkların (MS SQL Server veya LLM) manuel olar
 <img width="1360" height="1250" alt="image" src="https://github.com/user-attachments/assets/76343b7e-ed51-4dcf-ac6b-2d36411b770f" />
 <img width="1331" height="1014" alt="image" src="https://github.com/user-attachments/assets/6c89588d-560f-4626-9222-19387f1353dc" />
 
-
    <h1>TODO:</h1>
       <h3>[x] Yapay zekâ sohbet geçmişi (Chat History) entegrasyonu</h3>
       <h3>[x] Ses efektleri ve bildirim sistemleri</h3>
@@ -98,4 +96,3 @@ Proje, herhangi bir ek bağımlılıkların (MS SQL Server veya LLM) manuel olar
       <h3>[x] Dockerizasyon </h3>
       <h3>[ ] Çoklu dil desteği</h3>
    <br>
-   
