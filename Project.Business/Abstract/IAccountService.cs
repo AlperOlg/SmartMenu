@@ -11,6 +11,8 @@ public interface IAccountService
     Task<ServiceResult> LogoutAsync();
     Task<ServiceResult<AppUser>> GetUserByIdAsync(int id);
     Task<ServiceResult> UpdateSettingsAsync(int userId, string email, string currentPassword, string newPassword);
+    Task<ServiceResult> UpdateEmailAsync(int userId, string newEmail);
+    Task<ServiceResult> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
     Task<(bool Succeeded, string? ErrorMessage)> DeleteAccountAsync(string userId);
 }
 

@@ -180,5 +180,7 @@ public class SmartMenuDbContext : IdentityDbContext<AppUser, AppRole, int>
                .WithMany()
                .HasForeignKey(u => u.AccessRestaurantId)
                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<AppUser>().HasIndex(u => u.Email).IsUnique();
     }
 }

@@ -43,6 +43,7 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
 {
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 6;
+    options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<SmartMenuDbContext>()
 .AddDefaultTokenProviders();

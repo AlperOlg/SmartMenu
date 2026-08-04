@@ -43,9 +43,7 @@ public class EfAccountRepository : GenericRepository<AppUser>, IAccountRepositor
 
     public async Task<IdentityResult> UpdateEmailAsync(AppUser user, string newEmail)
     {
-        user.Email = newEmail;
-        user.NormalizedEmail = _userManager.NormalizeEmail(newEmail);
-        return await _userManager.UpdateAsync(user);
+        return await _userManager.SetEmailAsync(user, newEmail);
     }
 
     public async Task<(bool Succeeded, string? ErrorMessage)> DeleteAccountCascadeAsync(string userId)
@@ -108,6 +106,11 @@ public class EfAccountRepository : GenericRepository<AppUser>, IAccountRepositor
             await transaction.RollbackAsync();
             return (false, "Hesap silinirken bir hata oluştu.");
         }
+    }
+
+    public Task<AppUser?> GetUserByEmailAsync(string email)
+    {
+        return _userManager.FindByEmailAsync(email);
     }
 }
 

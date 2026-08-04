@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -247,41 +248,23 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateEmail(string email)
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdString, out var userId))
         {
             return RedirectToAction(nameof(Login));
         }
 
-        email = (email ?? string.Empty).Trim();
+        var result = await _accountService.UpdateEmailAsync(userId, email);
 
-        if (string.IsNullOrWhiteSpace(email))
+        if (result.Success)
         {
-            TempData["Error"] = "E-posta adresi zorunludur.";
-            return RedirectToAction(nameof(AccountSettings));
+            TempData["Success"] = result.Message;
+        }
+        else
+        {
+            TempData["Error"] = result.Message ?? result.Errors.FirstOrDefault() ?? "Bir hata oluştu.";
         }
 
-        var emailAttr = new System.ComponentModel.DataAnnotations.EmailAddressAttribute();
-        if (!emailAttr.IsValid(email))
-        {
-            TempData["Error"] = "Geçerli bir e-posta adresi giriniz.";
-            return RedirectToAction(nameof(AccountSettings));
-        }
-
-        if (string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
-        {
-            TempData["Success"] = "E-posta adresiniz zaten bu değerle kayıtlı.";
-            return RedirectToAction(nameof(AccountSettings));
-        }
-
-        var result = await _userManager.SetEmailAsync(user, email);
-        if (!result.Succeeded)
-        {
-            TempData["Error"] = result.Errors.FirstOrDefault()?.Description ?? "E-posta güncellenemedi.";
-            return RedirectToAction(nameof(AccountSettings));
-        }
-
-        TempData["Success"] = "E-posta adresiniz başarıyla güncellendi.";
         return RedirectToAction(nameof(AccountSettings));
     }
 
@@ -290,38 +273,41 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePassword(AccountSettingsViewModel model)
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdString, out var userId))
         {
             return RedirectToAction(nameof(Login));
         }
 
-        // E-posta alanları bu formda yok; şifre validasyonunu etkilemesin
-        ModelState.Remove(nameof(AccountSettingsViewModel.Email));
-        ModelState.Remove(nameof(AccountSettingsViewModel.MaskedCurrentEmail));
+        var result = await _accountService.ChangePasswordAsync(userId, model.CurrentPassword, model.NewPassword);
 
-        model.Email = user.Email ?? string.Empty;
-        model.MaskedCurrentEmail = MaskEmail(user.Email);
-        model.IsTwoFactorEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
-
-        if (!ModelState.IsValid)
+        if (result.Success)
         {
-            return View(nameof(AccountSettings), model);
+            TempData["Success"] = result.Message;
+            return RedirectToAction(nameof(AccountSettings));
         }
 
-        var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
-        if (!result.Succeeded)
+        if (result.Errors is not null && result.Errors.Any())
         {
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                ModelState.AddModelError(string.Empty, error);
             }
-
-            return View(nameof(AccountSettings), model);
         }
 
-        TempData["Success"] = "Şifreniz başarıyla güncellendi.";
-        return RedirectToAction(nameof(AccountSettings));
+        if (!string.IsNullOrEmpty(result.Message) && (result.Errors is null || !result.Errors.Any()))
+        {
+            ModelState.AddModelError(string.Empty, result.Message);
+        }
+
+        var user = await _accountService.GetUserByIdAsync(userId);
+        if (user.Data is not null)
+        {
+            model.Email = user.Data.Email ?? string.Empty;
+            model.MaskedCurrentEmail = MaskEmail(user.Data.Email);
+        }
+
+        return View(nameof(AccountSettings), model);
     }
 
     [Authorize]
