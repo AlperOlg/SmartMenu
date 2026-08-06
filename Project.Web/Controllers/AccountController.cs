@@ -47,15 +47,6 @@ public class AccountController : Controller
             return View(dto);
         }
 
-        var user = await _userManager.FindByNameAsync(dto.UserName);
-        if (user != null)
-        {
-            if (!await _userManager.IsEmailConfirmedAsync(user))
-            {
-                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                await _userManager.ConfirmEmailAsync(user, token);
-            }
-        }
 
         var result = await _signInManager.PasswordSignInAsync(
             dto.UserName,
